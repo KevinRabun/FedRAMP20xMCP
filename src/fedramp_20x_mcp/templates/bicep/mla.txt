@@ -4,6 +4,8 @@
 // main.bicep - Monitoring, Logging & Analysis Infrastructure
 param location string = resourceGroup().location
 param environmentName string = 'fedramp'
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period.')
+param logRetentionDays int
 
 // Sentinel Workspace (includes Log Analytics)
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -13,7 +15,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 730
+    retentionInDays: logRetentionDays  // organization-defined (KSI-MLA-OSM)
   }
 }
 

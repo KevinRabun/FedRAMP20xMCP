@@ -49,7 +49,7 @@ Relates to #
 2. 
 3. 
 
-## Security Checklist (KSI-SVC-07, KSI-SVC-08)
+## Security Checklist (KSI-SVC-07, KSI-SVC-PRR)
 
 - [ ] No secrets, API keys, or sensitive data committed
 - [ ] Ran `safety check` - no vulnerable dependencies detected

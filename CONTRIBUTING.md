@@ -90,11 +90,11 @@ pytest --cov=src --cov-report=html
 Before submitting pull requests, run security checks:
 
 ```bash
-# Scan dependencies for known vulnerabilities (KSI-SVC-08)
+# Scan dependencies for known vulnerabilities (KSI-SVC-PRR)
 pip install safety
 safety check --json
 
-# Scan code for security issues (KSI-SVC-08)
+# Scan code for security issues (KSI-SVC-PRR)
 pip install bandit
 bandit -r src/
 

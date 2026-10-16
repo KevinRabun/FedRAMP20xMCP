@@ -1,34 +1,83 @@
 # -*- coding: utf-8 -*-
 """
-FRR (FedRAMP Requirement) Pattern Validation Tests
+FRR (FedRAMP Requirement) Pattern Validation Tests - CR26
 
-Validates that FRR analyzer patterns correctly detect compliant and non-compliant
-code for all FedRAMP requirements across 11 families:
+Validates that code-detectable FedRAMP Consolidated Rules for 2026 (CR26)
+requirements are analyzed by the FRR analyzer factory and return findings.
 
-- ADS (Authorization Data Sharing)
-- CCM (Collaborative Continuous Monitoring)
-- FSI (FedRAMP Security Inbox)
-- ICP (Incident Communications Procedures)
-- KSI (Key Security Indicators)
-- MAS (Minimum Assessment Scope)
-- PVA (Persistent Validation and Assessment)
-- SCG (Secure Configuration Guide) - fka RSC
-- SCN (Significant Change Notifications)
-- UCM (Using Cryptographic Modules)
-- VDR (Vulnerability Detection and Response)
+CR26 FRR families (17): AFC, AGU, CCM, CDS, CMU, CPO, FRC, IEC, IVV, MAS, MKT,
+REC, SCG, SCN, SDR, VDR, VER.
 
-Note: FedRAMP 20x v0.9.0-beta changed FRR IDs from 'FRR-FAMILY-XX' format
-to 'FAMILY-GROUP-XXX' format (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01').
+Only requirements referenced by at least one code pattern (``related_frrs`` or
+``related_ksis`` in data/patterns/*_patterns.yaml) are parametrized. Process,
+agency, assessor-recognition and marketplace rules (for example AGU, REC, MKT,
+FRC, CPO) are not code-detectable and are deliberately not asserted here.
 
-This file validates PATTERN LOGIC and ANALYZER IMPLEMENTATION, not just data loading
-(data loading is covered by test_mcp_server_understanding.py).
+Also validates that every pattern-referenced FRR id exists in the CR26 rules.
+
+This file validates PATTERN LOGIC and ANALYZER IMPLEMENTATION, not just data
+loading (data loading is covered by test_rules_alignment.py).
 """
 
 import asyncio
+from pathlib import Path
+
 import pytest
-from fedramp_20x_mcp.analyzers.base import Severity
+import yaml
+
 from fedramp_20x_mcp.analyzers.frr.factory import get_factory
 from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
+
+PATTERNS_DIR = Path(__file__).resolve().parent.parent / "data" / "patterns"
+
+
+def _load_rule_ids():
+    loader = FedRAMPDataLoader()
+    asyncio.run(loader.load_data())
+    return {
+        r["id"]
+        for r in loader.search_controls("")
+        if r.get("family") and not r["id"].startswith(("FRD-", "KSI-"))
+    }
+
+
+def _pattern_referenced_frrs():
+    """FRR ids referenced by any pattern (related_frrs / related_ksis).
+
+    Also records, per id, the languages the referencing patterns support in
+    PATTERN_LANGUAGES so each case is analyzed in a language that can match.
+    """
+    refs = set()
+    for f in sorted(PATTERNS_DIR.glob("*_patterns.yaml")):
+        with open(f, encoding="utf-8") as fh:
+            for doc in yaml.safe_load_all(fh):
+                if not doc:
+                    continue
+                for key in ("related_frrs", "related_ksis"):
+                    for rid in doc.get(key) or []:
+                        refs.add(str(rid).upper())
+                        PATTERN_LANGUAGES.setdefault(str(rid).upper(), set()).update(
+                            (doc.get("languages") or {}).keys()
+                        )
+    return refs
+
+
+def _language_for(frr_id):
+    langs = PATTERN_LANGUAGES.get(frr_id, set())
+    for preferred in ("terraform", "python"):
+        if preferred in langs:
+            return preferred
+    return sorted(langs)[0] if langs else "python"
+
+
+PATTERN_LANGUAGES = {}
+RULE_IDS = _load_rule_ids()
+REFERENCED_FRRS = sorted(r for r in _pattern_referenced_frrs() if r in RULE_IDS)
+UNKNOWN_REFS = sorted(
+    r for r in _pattern_referenced_frrs()
+    if not r.startswith(("KSI-", "FRD-")) and r not in RULE_IDS
+    and r.split("-")[0] in {i.split("-")[0] for i in RULE_IDS}
+)
 
 
 @pytest.fixture
@@ -37,28 +86,9 @@ def factory():
     return get_factory()
 
 
-@pytest.fixture
-def frr_ids():
-    """Get all FRR IDs from data loader
-    
-    Note: FedRAMP 20x v0.9.0-beta changed FRR IDs from 'FRR-FAMILY-XX' format
-    to 'FAMILY-GROUP-XXX' format (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01').
-    Requirements are now identified by having a 'family' field.
-    """
-    loader = FedRAMPDataLoader()
-    asyncio.run(loader.load_data())
-    # Search for requirements that have a 'family' field (not definitions)
-    # Get all requirements that are FRRs (have family field, not FRD definitions)
-    all_requirements = loader.search_controls("")
-    frr_data = [r for r in all_requirements 
-                if r.get('family') and not r.get('id', '').startswith('FRD-') 
-                and not r.get('id', '').startswith('KSI-')]
-    return sorted([frr['id'] for frr in frr_data])
-
-
 # Generate family-appropriate test code
 FAMILY_POSITIVE_PATTERNS = {
-    "ADS": ("""
+    "CDS": ("""
 # COMPLIANT: Authorization data sharing per {frr_id}
 resource "azurerm_storage_account" "authorization_data" {{
   name                     = "fedrampauthorization"
@@ -80,7 +110,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "ccm" {{
 }}
 """, "terraform"),
     
-    "FSI": ("""
+    "AFC": ("""
 # COMPLIANT: Secure inbox per {frr_id}
 resource "azurerm_storage_queue" "fedramp_inbox" {{
   name                 = "fedramp-security-inbox"
@@ -89,7 +119,7 @@ resource "azurerm_storage_queue" "fedramp_inbox" {{
 }}
 """, "terraform"),
     
-    "ICP": ("""
+    "IEC": ("""
 # COMPLIANT: Incident communications per {frr_id}
 resource "azurerm_monitor_action_group" "fedramp_incident" {{
   name       = "fedramp-incident-notifications"
@@ -99,7 +129,7 @@ resource "azurerm_monitor_action_group" "fedramp_incident" {{
 }}
 """, "terraform"),
     
-    "KSI": ("""
+    "SDR": ("""
 # COMPLIANT: KSI tracking per {frr_id}
 resource "azurerm_application_insights" "ksi_tracking" {{
   name                = "ksi-compliance-tracking"
@@ -118,7 +148,7 @@ resource "azurerm_resource_group" "fedramp_scope" {{
 }}
 """, "terraform"),
     
-    "PVA": ("""
+    "IVV": ("""
 # COMPLIANT: Persistent validation per {frr_id}
 resource "azurerm_security_center_auto_provisioning" "validation" {{ auto_provision = "On" }}
 resource "azurerm_policy_assignment" "continuous" {{
@@ -150,7 +180,7 @@ resource "azurerm_monitor_activity_log_alert" "changes" {{
 }}
 """, "terraform"),
     
-    "UCM": ("""
+    "CMU": ("""
 # COMPLIANT: Cryptographic modules per {frr_id}
 resource "azurerm_key_vault" "fips" {{
   name                        = "fips-keyvault"
@@ -173,7 +203,7 @@ resource "azurerm_monitor_metric_alert" "vuln_sla" {{
 }
 
 FAMILY_NEGATIVE_PATTERNS = {
-    "ADS": ("""
+    "CDS": ("""
 # NON-COMPLIANT: {frr_id} violation
 # No authorization data sharing
 # Manual PDF-only documentation
@@ -187,7 +217,7 @@ FAMILY_NEGATIVE_PATTERNS = {
 # No automated reporting
 """, "python"),
     
-    "FSI": ("""
+    "AFC": ("""
 # NON-COMPLIANT: {frr_id} violation
 # Using regular email for critical communications  
 # No secure inbox, no encryption
@@ -197,7 +227,7 @@ resource "azurerm_storage_queue" "insecure_inbox" {{
 }}
 """, "terraform"),
     
-    "ICP": ("""
+    "IEC": ("""
 # NON-COMPLIANT: {frr_id} violation
 # Internal incident response only
 # No FedRAMP notification integration
@@ -207,7 +237,7 @@ resource "azurerm_monitor_action_group" "internal_only" {{
 }}
 """, "terraform"),
     
-    "KSI": ("""
+    "SDR": ("""
 # NON-COMPLIANT: {frr_id} violation
 # No KSI tracking, no automated validation
 resource "azurerm_application_insights" "no_ksi" {{
@@ -226,7 +256,7 @@ resource "azurerm_resource_group" "undefined_scope" {{
 }}
 """, "terraform"),
     
-    "PVA": ("""
+    "IVV": ("""
 # NON-COMPLIANT: {frr_id} violation
 # Point-in-time assessments only
 # No continuous validation
@@ -252,7 +282,7 @@ resource "azurerm_storage_account" "insecure" {{
 # No change tracking
 """, "python"),
     
-    "UCM": ("""
+    "CMU": ("""
 # NON-COMPLIANT: {frr_id} violation
 import hashlib
 hash_value = hashlib.md5(data).hexdigest()  # MD5 not FIPS approved
@@ -268,80 +298,36 @@ hash_value = hashlib.md5(data).hexdigest()  # MD5 not FIPS approved
 
 
 def generate_test_cases():
-    """Generate positive and negative test cases for all FRRs
-    
-    Note: FedRAMP 20x v0.9.0-beta changed FRR IDs from 'FRR-FAMILY-XX' format
-    to 'FAMILY-GROUP-XXX' format (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01').
-    """
-    # Load FRR IDs from data loader
-    loader = FedRAMPDataLoader()
-    asyncio.run(loader.load_data())
-    # Get all requirements that are FRRs (have family field)
-    all_requirements = loader.search_controls("")
-    frr_data = [r for r in all_requirements 
-                if r.get('family') and not r.get('id', '').startswith('FRD-')
-                and not r.get('id', '').startswith('KSI-')]
-    frr_ids = sorted([frr['id'] for frr in frr_data])
-    
+    """Positive and negative cases for every pattern-referenced FRR."""
     cases = []
-    for frr_id in frr_ids:
-        # New format: FAMILY-GROUP-XXX (e.g., ADS-CSX-UTC)
-        # Family is the first part of the ID
-        family = frr_id.split('-')[0]
-        
-        # Positive test
-        pos_template, pos_lang = FAMILY_POSITIVE_PATTERNS.get(family, ("# Compliant: {frr_id}", "python"))
+    for frr_id in REFERENCED_FRRS:
+        family = frr_id.split("-")[0]
+        pos_template, pos_lang = FAMILY_POSITIVE_PATTERNS.get(family, ("# Compliant: {frr_id}", _language_for(frr_id)))
         cases.append((frr_id, "positive", pos_template.format(frr_id=frr_id), pos_lang))
-        
-        # Negative test
-        neg_template, neg_lang = FAMILY_NEGATIVE_PATTERNS.get(family, ("# Non-compliant: {frr_id}", "python"))
+        neg_template, neg_lang = FAMILY_NEGATIVE_PATTERNS.get(family, ("# Non-compliant: {frr_id}", _language_for(frr_id)))
         cases.append((frr_id, "negative", neg_template.format(frr_id=frr_id), neg_lang))
-    
     return cases
 
 
 class TestFRRPatternValidation:
-    """Validate FRR analyzer patterns for all 199 requirements (398 tests)"""
+    """Validate FRR analysis for pattern-covered CR26 requirements"""
+
+    def test_referenced_frrs_exist_in_rules(self):
+        """Every FRR id referenced by a pattern must exist in the CR26 rules."""
+        missing = [r for r in UNKNOWN_REFS]
+        assert not missing, f"Patterns reference FRR ids not in CR26 rules: {missing}"
+
+    def test_some_frrs_are_pattern_covered(self):
+        assert len(REFERENCED_FRRS) > 0
 
     @pytest.mark.parametrize("frr_id,test_type,code,language",
                              generate_test_cases(),
                              ids=lambda val: f"{val[0]}_{val[1]}" if isinstance(val, tuple) else str(val))
     def test_frr_pattern(self, factory, frr_id, test_type, code, language):
-        """Test FRR pattern detection for compliant and non-compliant code
-        
-        Validates that:
-        1. Positive tests: Compliant code is analyzed successfully
-        2. Negative tests: Non-compliant code is analyzed (violations may be detected)
-        
-        This parametrized test covers all 199 FRRs × 2 (positive + negative) = 398 tests.
-        """
+        """Pattern-covered requirements return findings for the sample code."""
         result = asyncio.run(factory.analyze(frr_id, code, language))
         assert len(result.findings) > 0, f"{frr_id} {test_type} test should return analysis result"
 
 
-def run_tests():
-    """Run FRR pattern validation tests"""
-    # Load FRR count dynamically
-    loader = FedRAMPDataLoader()
-    asyncio.run(loader.load_data())
-    # Get all requirements that are FRRs (have family field)
-    all_requirements = loader.search_controls("")
-    frr_data = [r for r in all_requirements 
-                if r.get('family') and not r.get('id', '').startswith('FRD-')
-                and not r.get('id', '').startswith('KSI-')]
-    frr_count = len(frr_data)
-    
-    print("\n" + "=" * 80)
-    print("FRR REQUIREMENT PATTERN VALIDATION TESTS")
-    print("=" * 80)
-    print(f"\nValidating pattern coverage for all {frr_count} FRRs")
-    print(f"Total tests: {frr_count * 2} (positive + negative for each FRR)")
-    print("\nNote: FedRAMP 20x v0.9.0-beta changed ID format from 'FRR-FAMILY-XX'")
-    print("      to 'FAMILY-GROUP-XXX' (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01')")
-    print("=" * 80)
-    print()
-    pytest.main([__file__, "-v"])
-
-
 if __name__ == "__main__":
-    run_tests()
+    pytest.main([__file__, "-v"])

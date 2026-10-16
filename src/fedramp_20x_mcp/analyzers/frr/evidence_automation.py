@@ -17,7 +17,7 @@ class EvidenceQuery:
     query: str
     purpose: str
     frequency: str = "daily"  # How often to run
-    retention_days: int = 730  # FedRAMP requires 2 years
+    retention_days: int = 730  # organizational default; CR26 sets no numeric retention
 
 
 @dataclass
@@ -28,7 +28,7 @@ class EvidenceArtifact:
     description: str
     collection_method: str
     storage_location: str
-    retention_months: int = 24  # FedRAMP 2 years
+    retention_months: int = 24  # organizational default; CR26 sets no numeric retention
 
 
 @dataclass
@@ -54,7 +54,7 @@ class FRREvidenceAutomation:
 # =============================================================================
 
 VDR_EVIDENCE_QUERIES = {
-    "FRR-VDR-01": [
+    "VDR-CSO-DET": [
         EvidenceQuery(
             query_type="Azure Resource Graph",
             query_name="Defender for Cloud Coverage",
@@ -97,11 +97,11 @@ SecurityRecommendation
 | project ResourceId, RecommendationName, DaysOpen, FirstEvaluationDate
 | order by DaysOpen desc
 """,
-            purpose="Identify critical vulnerabilities exceeding 15-day SLA (FRR-VDR-01)",
+            purpose="Identify critical vulnerabilities exceeding 15-day SLA (VDR-CSO-DET)",
             frequency="daily"
         ),
     ],
-    "FRR-VDR-08": [
+    "VER-EVA-EIR": [
         EvidenceQuery(
             query_type="Azure Resource Graph",
             query_name="VM Patch Status",
@@ -139,11 +139,11 @@ Update
 
 
 # =============================================================================
-# RSC (Recommended Secure Configuration) Evidence Queries
+# SCG (Secure Configuration Guide) Evidence Queries
 # =============================================================================
 
-RSC_EVIDENCE_QUERIES = {
-    "FRR-RSC-01": [
+SCG_EVIDENCE_QUERIES = {
+    "SCG-CSO-RSC": [
         EvidenceQuery(
             query_type="Azure Resource Graph",
             query_name="Security Baseline Compliance",
@@ -193,11 +193,11 @@ AzureActivity
 
 
 # =============================================================================
-# ADS (Audit and Data Security) Evidence Queries  
+# CDS (Certification Data Sharing) Evidence Queries  
 # =============================================================================
 
-ADS_EVIDENCE_QUERIES = {
-    "FRR-ADS-01": [
+CDS_EVIDENCE_QUERIES = {
+    "CDS-CSO-PUB": [
         EvidenceQuery(
             query_type="Azure Monitor KQL",
             query_name="Audit Log Completeness",
@@ -237,7 +237,7 @@ resources
             frequency="daily"
         ),
     ],
-    "FRR-ADS-02": [
+    "CDS-CSO-CBF": [
         EvidenceQuery(
             query_type="Azure Resource Graph",
             query_name="Data Encryption at Rest",
@@ -266,7 +266,7 @@ resources
 # =============================================================================
 
 SCN_EVIDENCE_QUERIES = {
-    "FRR-SCN-01": [
+    "SCN-CSO-EVA": [
         EvidenceQuery(
             query_type="Azure Resource Graph",
             query_name="Network Security Configuration",
@@ -312,7 +312,7 @@ resources
 # =============================================================================
 
 CCM_EVIDENCE_QUERIES = {
-    "FRR-CCM-01": [
+    "CCM-OCR-AVL": [
         EvidenceQuery(
             query_type="Azure Monitor KQL",
             query_name="Change Management Audit Trail",
@@ -360,7 +360,7 @@ AzureActivity
 # =============================================================================
 
 MAS_EVIDENCE_QUERIES = {
-    "FRR-MAS-01": [
+    "MAS-CSO-IIR": [
         EvidenceQuery(
             query_type="Azure Monitor KQL",
             query_name="Defender Antimalware Status",
@@ -406,17 +406,17 @@ def get_frr_evidence_automation(frr_id: str) -> Optional[FRREvidenceAutomation]:
     Get evidence automation recommendations for a specific FRR.
     
     Args:
-        frr_id: FRR identifier (e.g., "FRR-VDR-01")
+        frr_id: FRR identifier (e.g., "VDR-CSO-DET")
         
     Returns:
         FRREvidenceAutomation with queries and recommendations, or None if not found
     """
-    # Parse family from FRR ID
+    # Parse family from CR26 rule ID (<FAMILY>-<GROUP>-<RULE>, e.g. VDR-CSO-DET)
     parts = frr_id.split("-")
     if len(parts) < 3:
         return None
     
-    family = parts[1].upper()
+    family = parts[0].upper()
     
     # Build evidence automation based on family
     automation = _get_family_automation(frr_id, family)
@@ -424,8 +424,8 @@ def get_frr_evidence_automation(frr_id: str) -> Optional[FRREvidenceAutomation]:
     # Add specific queries if available
     query_sources = {
         "VDR": VDR_EVIDENCE_QUERIES,
-        "RSC": RSC_EVIDENCE_QUERIES,
-        "ADS": ADS_EVIDENCE_QUERIES,
+        "SCG": SCG_EVIDENCE_QUERIES,
+        "CDS": CDS_EVIDENCE_QUERIES,
         "SCN": SCN_EVIDENCE_QUERIES,
         "CCM": CCM_EVIDENCE_QUERIES,
         "MAS": MAS_EVIDENCE_QUERIES,
@@ -461,7 +461,7 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
             ],
             implementation_steps=[
                 "Enable Defender for Cloud at Standard tier",
-                "Configure Log Analytics workspace with 730-day retention",
+                "Configure Log Analytics workspace retention to your organization-defined period (CR26 sets no number)",
                 "Deploy Azure Automation account for scheduled queries",
                 "Create Logic App for evidence export to blob storage",
                 "Set up Azure Function for REST API integration"
@@ -485,10 +485,10 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
             update_frequency="daily",
             estimated_effort_hours=16
         ),
-        "RSC": FRREvidenceAutomation(
+        "SCG": FRREvidenceAutomation(
             frr_id=frr_id,
-            frr_name="Recommended Secure Configuration",
-            family="RSC",
+            frr_name="Secure Configuration Guide",
+            family="SCG",
             evidence_type="config-based",
             automation_feasibility="high",
             azure_services=[
@@ -514,16 +514,16 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
                     artifact_type="JSON",
                     description="Azure Policy compliance results for all resources",
                     collection_method="Policy Insights REST API",
-                    storage_location="Azure Blob Storage - fedramp-evidence/rsc/"
+                    storage_location="Azure Blob Storage - fedramp-evidence/scg/"
                 ),
             ],
             update_frequency="daily",
             estimated_effort_hours=8
         ),
-        "ADS": FRREvidenceAutomation(
+        "CDS": FRREvidenceAutomation(
             frr_id=frr_id,
-            frr_name="Audit and Data Security",
-            family="ADS",
+            frr_name="Certification Data Sharing",
+            family="CDS",
             evidence_type="log-based",
             automation_feasibility="high",
             azure_services=[
@@ -540,7 +540,7 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
             ],
             implementation_steps=[
                 "Configure diagnostic settings on all resources",
-                "Set Log Analytics retention to 730 days",
+                "Set Log Analytics retention to your organization-defined period (CR26 sets no number)",
                 "Enable Entra ID audit log streaming",
                 "Create scheduled export jobs for evidence"
             ],
@@ -550,7 +550,7 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
                     artifact_type="JSON",
                     description="Complete audit trail from Azure Activity Log",
                     collection_method="Activity Log export to Event Hub/Storage",
-                    storage_location="Azure Blob Storage - fedramp-evidence/ads/"
+                    storage_location="Azure Blob Storage - fedramp-evidence/cds/"
                 ),
             ],
             update_frequency="continuous",
@@ -558,7 +558,7 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
         ),
         "SCN": FRREvidenceAutomation(
             frr_id=frr_id,
-            frr_name="Secure Configuration",
+            frr_name="Significant Change Notifications",
             family="SCN",
             evidence_type="config-based",
             automation_feasibility="high",
@@ -593,7 +593,7 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
         ),
         "CCM": FRREvidenceAutomation(
             frr_id=frr_id,
-            frr_name="Configuration Change Management",
+            frr_name="Collaborative Continuous Monitoring",
             family="CCM",
             evidence_type="log-based",
             automation_feasibility="high",
@@ -628,7 +628,7 @@ def _get_family_automation(frr_id: str, family: str) -> FRREvidenceAutomation:
         ),
         "MAS": FRREvidenceAutomation(
             frr_id=frr_id,
-            frr_name="Malware and Antivirus",
+            frr_name="Minimum Assessment Scope",
             family="MAS",
             evidence_type="log-based",
             automation_feasibility="high",
@@ -699,15 +699,15 @@ def get_all_frr_evidence_queries(family: Optional[str] = None) -> Dict[str, List
     Get all evidence queries, optionally filtered by family.
     
     Args:
-        family: Optional family code to filter (e.g., "VDR", "RSC")
+        family: Optional family code to filter (e.g., "VDR", "SCG")
         
     Returns:
         Dictionary mapping FRR IDs to their evidence queries
     """
     all_queries = {
         **VDR_EVIDENCE_QUERIES,
-        **RSC_EVIDENCE_QUERIES,
-        **ADS_EVIDENCE_QUERIES,
+        **SCG_EVIDENCE_QUERIES,
+        **CDS_EVIDENCE_QUERIES,
         **SCN_EVIDENCE_QUERIES,
         **CCM_EVIDENCE_QUERIES,
         **MAS_EVIDENCE_QUERIES,
@@ -717,7 +717,7 @@ def get_all_frr_evidence_queries(family: Optional[str] = None) -> Dict[str, List
         return {
             frr_id: queries 
             for frr_id, queries in all_queries.items() 
-            if frr_id.startswith(f"FRR-{family.upper()}-")
+            if frr_id.startswith(f"{family.upper()}-")
         }
     
     return all_queries

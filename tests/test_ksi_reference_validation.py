@@ -20,8 +20,8 @@ from typing import Dict, List, Tuple
 import pytest
 
 
-# Authoritative KSI definitions from FedRAMP 20x v0.9.0-beta
-# Source: https://github.com/FedRAMP/docs
+# Authoritative KSI definitions from the FedRAMP Consolidated Rules for 2026 (CR26)
+# Source: https://github.com/FedRAMP/rules (bundled snapshot in rules_data/)
 # Note: IDs changed from numbered (KSI-PIY-01) to descriptive (KSI-PIY-GIV)
 AUTHORITATIVE_KSI_DEFINITIONS = {
     # PIY - Policy and Inventory (NOT Privacy!)
@@ -33,7 +33,6 @@ AUTHORITATIVE_KSI_DEFINITIONS = {
     
     # SVC - Service Configuration
     "KSI-SVC-EIS": "Evaluating and Improving Security",  # fka: KSI-SVC-01
-    "KSI-SVC-SNT": "Securing Network Traffic",  # fka: KSI-SVC-02
     "KSI-SVC-ACM": "Automating Configuration Management",  # fka: KSI-SVC-04
     "KSI-SVC-VRI": "Validating Resource Integrity",  # fka: KSI-SVC-05
     "KSI-SVC-ASM": "Automating Secret Management",  # fka: KSI-SVC-06
@@ -42,7 +41,6 @@ AUTHORITATIVE_KSI_DEFINITIONS = {
     "KSI-SVC-RUD": "Removing Unwanted Data",  # fka: KSI-SVC-10
     
     # IAM - Identity and Access Management
-    "KSI-IAM-MFA": "Enforcing Phishing-Resistant MFA",  # fka: KSI-IAM-01
     "KSI-IAM-APM": "Adopting Passwordless Methods",  # fka: KSI-IAM-02
     "KSI-IAM-SNU": "Securing Non-User Authentication",  # fka: KSI-IAM-03
     "KSI-IAM-JIT": "Authorizing Just-in-Time",  # fka: KSI-IAM-04
@@ -75,16 +73,8 @@ AUTHORITATIVE_KSI_DEFINITIONS = {
     
     # SCR - Supply Chain Risk (fka TPR - Third Party Risk)
     "KSI-SCR-MIT": "Mitigating Supply Chain Risk",  # fka: KSI-TPR-03
-    "KSI-RSC-MON": "Monitoring Supply Chain Risk",  # fka: KSI-TPR-04
     
     # Additional categories
-    "KSI-AFR-VDR": "Vulnerability Detection and Response",  # fka: KSI-AFR-04
-    "KSI-AFR-SCN": "Significant Change Notifications",  # fka: KSI-AFR-05
-    "KSI-AFR-ADS": "Authorization Data Sharing",  # fka: KSI-AFR-03
-    "KSI-CED-RGT": "Reviewing General Training",  # fka: KSI-CED-01
-    "KSI-CED-RST": "Reviewing Role-Specific Training",  # fka: KSI-CED-02
-    "KSI-CED-DET": "Reviewing Development and Engineering Training",  # fka: KSI-CED-03
-    "KSI-CED-RRT": "Reviewing Response and Recovery Training",  # fka: KSI-CED-04
     "KSI-INR-RIR": "Reviewing Incident Response Procedures",  # fka: KSI-INR-01
     "KSI-INR-RPI": "Reviewing Past Incidents",  # fka: KSI-INR-02
     "KSI-INR-AAR": "Generating After Action Reports",  # fka: KSI-INR-03
@@ -92,6 +82,11 @@ AUTHORITATIVE_KSI_DEFINITIONS = {
     "KSI-RPL-ARP": "Aligning Recovery Plan",  # fka: KSI-RPL-02
     "KSI-RPL-ABO": "Aligning Backups with Objectives",  # fka: KSI-RPL-03
     "KSI-RPL-TRC": "Testing Recovery Capabilities",  # fka: KSI-RPL-04
+    
+    # Added or merged in CR26 (legacy SVC-SNT merged into SVC-SIN; TPR-04 is SCR-MON)
+    "KSI-SVC-SIN": "Securing Information",
+    "KSI-SCR-MON": "Monitoring Supply Chain Risk",
+    "KSI-CED-RAT": "Reviewing All Training",
 }
 
 # Known wrong descriptions that should never appear
@@ -111,7 +106,7 @@ FORBIDDEN_DESCRIPTIONS = {
         "error handling",
         "logging",
     ],
-    "KSI-SVC-SNT": [  # fka: KSI-SVC-02 - Securing Network Traffic
+    "KSI-SVC-SIN": [  # Securing Information (legacy KSI-SVC-SNT merged here)
         "secrets",
         "key vault",
         "input validation",
@@ -136,12 +131,16 @@ def get_project_root() -> Path:
 
 
 def load_authoritative_ksi_data() -> Dict:
-    """Load KSI definitions from cached authoritative data."""
-    cache_file = get_project_root() / "src" / "fedramp_20x_mcp" / "__fedramp_cache__" / "fedramp_controls.json"
-    if cache_file.exists():
-        with open(cache_file, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+    """Load KSI definitions through the data loader (bundled CR26 snapshot offline).
+
+    The loader only writes a disk cache after a successful remote fetch, so the
+    tests must not depend on a cache file existing.
+    """
+    import asyncio
+    from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
+
+    loader = FedRAMPDataLoader()
+    return asyncio.run(loader.load_data())
 
 
 def is_negated_phrase(context_lower: str, forbidden: str) -> bool:
@@ -227,10 +226,18 @@ class TestKSIReferenceValidation:
     def authoritative_data(self) -> Dict:
         return load_authoritative_ksi_data()
     
-    def test_authoritative_cache_exists(self, project_root):
-        """Verify authoritative KSI cache exists."""
-        cache_file = project_root / "src" / "fedramp_20x_mcp" / "__fedramp_cache__" / "fedramp_controls.json"
-        assert cache_file.exists(), "Authoritative FedRAMP cache file not found"
+    def test_definition_table_matches_loader(self, authoritative_data):
+        """The static name table covers exactly the 46 CR26 KSIs with current names."""
+        ksis = authoritative_data.get("ksi", {})
+        assert len(ksis) == 46
+        assert set(AUTHORITATIVE_KSI_DEFINITIONS) == set(ksis)
+        for ksi_id, name in AUTHORITATIVE_KSI_DEFINITIONS.items():
+            assert ksis[ksi_id].get("name") == name, ksi_id
+
+    def test_bundled_rules_snapshot_exists(self, project_root):
+        """Verify the bundled CR26 rules snapshot (offline authoritative source) exists."""
+        rules_file = project_root / "src" / "fedramp_20x_mcp" / "rules_data" / "fedramp-consolidated-rules.json"
+        assert rules_file.exists(), "Bundled FedRAMP consolidated rules snapshot not found"
     
     def test_authoritative_data_has_ksi_definitions(self, authoritative_data):
         """Verify authoritative data contains KSI definitions."""
@@ -388,9 +395,9 @@ class TestKSIDefinitionAccuracy:
         # Using new KSI IDs from v0.9.0-beta
         ("KSI-PIY-GIV", "Generating Inventories"),  # fka: KSI-PIY-01
         ("KSI-SVC-EIS", "Evaluating and Improving Security"),  # fka: KSI-SVC-01
-        ("KSI-SVC-SNT", "Securing Network Traffic"),  # fka: KSI-SVC-02
+        ("KSI-SVC-SIN", "Securing Information"),  # legacy KSI-SVC-SNT merged here
         ("KSI-SVC-ASM", "Automating Secret Management"),  # fka: KSI-SVC-06
-        ("KSI-IAM-MFA", "Enforcing Phishing-Resistant MFA"),  # fka: KSI-IAM-01
+        ("KSI-IAM-APM", "Adopting Passwordless Methods"),  # legacy KSI-IAM-MFA merged here
         ("KSI-CNA-RNT", "Restricting Network Traffic"),  # fka: KSI-CNA-01
         ("KSI-MLA-OSM", "Operating SIEM Capability"),  # fka: KSI-MLA-01
     ])

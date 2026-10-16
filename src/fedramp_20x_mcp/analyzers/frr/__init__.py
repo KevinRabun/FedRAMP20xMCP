@@ -3,13 +3,17 @@ FedRAMP Requirement (FRR) Analyzers - Pattern-Based Architecture
 
 This package provides pattern-based analysis for FedRAMP 20x requirements families:
 - VDR: Vulnerability Detection and Response
-- RSC: Recommended Secure Configuration
+- VER: Vulnerability Evaluation and Reporting
+- SCG: Secure Configuration Guide
 - SCN: Significant Change Notifications
-- UCM: Using Cryptographic Modules
-- ADS: Authorization Data Sharing
+- CMU: Cryptographic Module Use
+- CDS: Certification Data Sharing
 - CCM: Collaborative Continuous Monitoring
 - MAS: Minimum Assessment Scope
-- ICP: Incident Communications Procedures
+- IEC: Incident Evaluation and Communication
+- IVV: Independent Verification and Validation
+- AFC: Addressing FedRAMP Communication
+- AGU, FRC, SDR: agency use, certification and security decision records
 
 Uses GenericPatternAnalyzer for code detection across:
 - Application code (Python, C#, Java, TypeScript/JavaScript)

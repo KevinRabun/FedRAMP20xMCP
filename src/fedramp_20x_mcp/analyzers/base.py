@@ -24,7 +24,7 @@ class Finding:
     Represents a single compliance finding in code.
     
     Attributes:
-        requirement_id: FedRAMP requirement ID (e.g., "KSI-MLA-05") - can be None if ksi_id is provided
+        requirement_id: FedRAMP requirement ID (e.g., "KSI-MLA-EVC") - can be None if ksi_id is provided
         severity: Severity level of the finding
         title: Short description of the issue
         description: Detailed explanation of the issue

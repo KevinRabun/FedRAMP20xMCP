@@ -47,28 +47,64 @@ class TestDataLoader:
             assert len(data) > 0, "Data loaded but structure unexpected"
     
     @pytest.mark.asyncio
-    async def test_caching(self, loader):
-        """Test data caching mechanism"""
-        # First load
+    async def test_caching(self, tmp_path, monkeypatch):
+        """Cache is written after a successful (non-bundled) fetch and reused.
+
+        The fetch is patched to return the bundled bytes under a non-bundled
+        source label, and CACHE_DIR points at tmp_path so nothing is written
+        into the package directory.
+        """
+        from fedramp_20x_mcp import data_loader as dl
+
+        monkeypatch.setattr(dl, "CACHE_DIR", tmp_path)
+        loader = FedRAMPDataLoader()
+        raw = dl.BUNDLED_RULES_FILE.read_bytes()
+        calls = []
+
+        async def fake_fetch():
+            calls.append(1)
+            return raw, "https://example.invalid/fedramp-consolidated-rules.json"
+
+        monkeypatch.setattr(loader, "_fetch_rules_bytes", fake_fetch)
+        assert not loader._get_cache_file().exists()
+
         data1 = await loader.load_data()
-        
-        # Second load (should use cache)
+        assert len(calls) == 1
+        assert loader._get_cache_file().exists(), "Cache written after a successful remote fetch"
+        assert data1["metadata"]["cache_format"] == dl.CACHE_FORMAT
+
+        # Second load (should use cache, not fetch again)
         data2 = await loader.load_data()
-        
-        # Data should be identical
+        assert len(calls) == 1
         assert data1 == data2
-        
-        # Cache file should exist
-        cache_file = loader._get_cache_file()
-        assert cache_file.exists()
-    
+
+        # A fresh loader reads the same cache without fetching
+        loader2 = FedRAMPDataLoader()
+        monkeypatch.setattr(loader2, "_fetch_rules_bytes", fake_fetch)
+        data3 = await loader2.load_data()
+        assert len(calls) == 1
+        assert len(data3["requirements"]) == len(data1["requirements"])
+
+    @pytest.mark.asyncio
+    async def test_bundled_load_does_not_write_cache(self, tmp_path, monkeypatch):
+        """Offline/bundled loads must not write a cache file."""
+        from fedramp_20x_mcp import data_loader as dl
+
+        monkeypatch.setattr(dl, "CACHE_DIR", tmp_path)
+        monkeypatch.setenv("FEDRAMP_RULES_OFFLINE", "1")
+        monkeypatch.delenv("FEDRAMP_RULES_FILE", raising=False)
+        loader = FedRAMPDataLoader()
+        data = await loader.load_data()
+        assert data["metadata"]["source"].startswith("bundled:")
+        assert not loader._get_cache_file().exists()
+
     @pytest.mark.asyncio
     async def test_get_family_requirements(self, loader):
         """Test retrieving requirements by family"""
         await loader.load_data()
         
         # Test with known families
-        for family in ["VDR", "IAM", "SCN", "RSC", "ADS"]:
+        for family in ["VDR", "IAM", "SCN", "SCG", "CDS"]:
             requirements = loader.get_family_controls(family)
             # Family might not have requirements or might be organized differently
             assert requirements is not None
@@ -80,7 +116,7 @@ class TestDataLoader:
         await loader.load_data()
         
         # Test with known FRR IDs (new format: FAMILY-GROUP-ID)
-        for req_id in ["VDR-EVA-EFA", "ADS-CSX-UTC", "SCN-SIG-NTF"]:
+        for req_id in ["VDR-EVA-EFA", "CDS-CSO-PUB", "SCN-CSO-EVA"]:
             req = loader.get_control(req_id)
             # Requirement might not exist in test data
             if req:

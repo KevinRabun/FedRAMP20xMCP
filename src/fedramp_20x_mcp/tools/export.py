@@ -84,8 +84,8 @@ async def export_to_excel(
     
     Args:
         export_type: Type of data to export. Options:
-            - "ksi" - All 72 Key Security Indicators
-            - "all_requirements" - All 329 requirements across all families
+            - "ksi" - All Key Security Indicators in the loaded CR26 rules
+            - "all_requirements" - All FRR requirements and KSIs across all families (CR26)
             - "definitions" - All FedRAMP definitions
         output_path: Optional custom output path. If not provided, saves to Downloads folder
         data_loader: FedRAMPDataLoader instance (created if not provided)
@@ -164,7 +164,7 @@ async def export_to_excel(
             ksi_id = ksi.get('id', '')
             name = ksi.get('name', '')
             category = ksi.get('category', '')
-            retired = ksi.get('retired', False)
+            retired = ksi.get('retired', False) or str(ksi.get('status', '')).lower() in ('retired', 'removed')
             status = 'Retired' if retired else 'Active'
             statement = ksi.get('statement', '')
             
@@ -331,8 +331,8 @@ async def export_to_csv(
     
     Args:
         export_type: Type of data to export. Options:
-            - "ksi" - All 72 Key Security Indicators
-            - "all_requirements" - All 329 requirements across all families
+            - "ksi" - All Key Security Indicators in the loaded CR26 rules
+            - "all_requirements" - All FRR requirements and KSIs across all families (CR26)
             - "definitions" - All FedRAMP definitions
         output_path: Optional custom output path. If not provided, saves to Downloads folder
         
@@ -376,7 +376,7 @@ async def export_to_csv(
                 ksi_id = ksi.get('id', '')
                 name = ksi.get('name', '')
                 category = ksi.get('category', '')
-                retired = ksi.get('retired', False)
+                retired = ksi.get('retired', False) or str(ksi.get('status', '')).lower() in ('retired', 'removed')
                 status = 'Retired' if retired else 'Active'
                 statement = ksi.get('statement', '')
                 note = ksi.get('note', '')
@@ -459,7 +459,7 @@ async def generate_ksi_specification(
     Generate a product specification document for a KSI aligned with FedRAMP 20x requirements.
     
     Args:
-        ksi_id: The KSI identifier (e.g., "KSI-AFR-01")
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-APM")
         evidence_collection_strategy: High-level evidence collection strategy description
         output_path: Optional custom output path. If not provided, saves to Downloads folder
         
@@ -484,6 +484,8 @@ async def generate_ksi_specification(
     
     # Get the KSI
     ksi = data_loader.get_ksi(ksi_id.upper())
+    if ksi:
+        ksi_id = ksi.get('id', ksi_id)
     if not ksi:
         return f"Error: KSI '{ksi_id}' not found"
     
@@ -591,8 +593,12 @@ async def generate_ksi_specification(
             "Implementation must address these control requirements:"
         )
         for control in controls:
-            control_id = control.get('control_id', '').upper()
-            control_title = control.get('title', 'N/A')
+            if isinstance(control, dict):
+                control_id = control.get('control_id', '').upper()
+                control_title = control.get('title', 'N/A')
+            else:
+                control_id = str(control).upper()
+                control_title = 'FedRAMP-mapped NIST 800-53 control (see get_control_parameters for FedRAMP parameter values)'
             p = doc.add_paragraph(style='List Bullet')
             p.add_run(f"{control_id}: ").bold = True
             p.add_run(control_title)
@@ -864,7 +870,7 @@ def _get_azure_recommendations(category: str, controls: list) -> list:
         ])
     
     # Control-based recommendations
-    control_ids = [c.get('control_id', '').upper() for c in controls]
+    control_ids = [(c.get('control_id', '') if isinstance(c, dict) else str(c)).upper() for c in controls]
     
     if any(c.startswith('AU-') for c in control_ids):  # Audit controls
         recommendations.append(('Azure Log Analytics', 'Centralized audit log collection and analysis'))

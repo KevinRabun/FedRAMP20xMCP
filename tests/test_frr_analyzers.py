@@ -547,299 +547,298 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 
 class TestFRREvidenceAutomation:
-    """Test FRR Evidence Automation module with Azure KQL queries."""
-    
+    """Test FRR Evidence Automation module with Azure KQL queries (CR26 rule IDs)."""
+
     def test_get_frr_evidence_automation_vdr(self):
         """Test VDR family evidence automation returns correct structure."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
-        
-        automation = get_frr_evidence_automation("FRR-VDR-01")
-        
+
+        automation = get_frr_evidence_automation("VDR-CSO-DET")
+
         assert automation is not None
-        assert automation.frr_id == "FRR-VDR-01"
+        assert automation.frr_id == "VDR-CSO-DET"
         assert automation.family == "VDR"
         assert automation.evidence_type == "log-based"
         assert automation.automation_feasibility == "high"
         assert len(automation.azure_services) > 0
         assert "Microsoft Defender for Cloud" in automation.azure_services
         assert len(automation.queries) >= 2  # Should have KQL queries
-    
-    def test_get_frr_evidence_automation_rsc(self):
-        """Test RSC family evidence automation."""
+
+    def test_get_frr_evidence_automation_scg(self):
+        """Test SCG (Secure Configuration Guide) family evidence automation."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
-        
-        automation = get_frr_evidence_automation("FRR-RSC-01")
-        
+
+        automation = get_frr_evidence_automation("SCG-CSO-RSC")
+
         assert automation is not None
-        assert automation.family == "RSC"
+        assert automation.family == "SCG"
         assert "Azure Policy" in automation.azure_services
         assert len(automation.queries) > 0
-    
-    def test_get_frr_evidence_automation_ads(self):
-        """Test ADS family evidence automation."""
+
+    def test_get_frr_evidence_automation_cds(self):
+        """Test CDS (Authorization Data Sharing) family evidence automation."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
-        
-        automation = get_frr_evidence_automation("FRR-ADS-01")
-        
+
+        automation = get_frr_evidence_automation("CDS-CSO-PUB")
+
         assert automation is not None
-        assert automation.family == "ADS"
+        assert automation.family == "CDS"
         assert "Azure Monitor Log Analytics" in automation.azure_services
         # Should have audit log completeness query
         query_names = [q.query_name for q in automation.queries]
         assert any("Audit" in name for name in query_names)
-    
+
     def test_get_frr_evidence_automation_scn(self):
         """Test SCN family evidence automation."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
-        
-        automation = get_frr_evidence_automation("FRR-SCN-01")
-        
+
+        automation = get_frr_evidence_automation("SCN-CSO-EVA")
+
         assert automation is not None
         assert automation.family == "SCN"
         # Should include network security queries
         assert len(automation.queries) > 0
-    
+
+    def test_family_parsed_from_first_id_segment(self):
+        """Family is the first segment of the CR26 ID, never a generic 'FRR'."""
+        from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
+
+        for frr_id, family in [("CCM-OCR-AVL", "CCM"), ("MAS-CSO-IIR", "MAS"), ("VER-EVA-EIR", "VER")]:
+            automation = get_frr_evidence_automation(frr_id)
+            assert automation is not None
+            assert automation.family == family
+
+    def test_malformed_id_returns_none(self):
+        from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
+
+        assert get_frr_evidence_automation("VDR") is None
+
     def test_evidence_queries_have_kql(self):
         """Test that evidence queries contain valid KQL syntax."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import VDR_EVIDENCE_QUERIES
-        
+
         for frr_id, queries in VDR_EVIDENCE_QUERIES.items():
             for query in queries:
                 # All queries should have content
                 assert query.query is not None
                 assert len(query.query.strip()) > 0
-                
+
                 # KQL queries should have typical operators
                 query_text = query.query.lower()
                 assert any(op in query_text for op in [
                     'where', 'project', 'summarize', 'extend', 'order', 'join', '|'
                 ]), f"Query {query.query_name} missing KQL operators"
-    
+
     def test_format_evidence_automation_markdown(self):
         """Test markdown formatting of evidence automation."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import (
             get_frr_evidence_automation,
             format_evidence_automation_markdown
         )
-        
-        automation = get_frr_evidence_automation("FRR-VDR-01")
-        assert automation is not None, "Expected automation for FRR-VDR-01"
+
+        automation = get_frr_evidence_automation("VDR-CSO-DET")
+        assert automation is not None, "Expected automation for VDR-CSO-DET"
         markdown = format_evidence_automation_markdown(automation)
-        
+
         assert markdown is not None
-        assert "# Evidence Automation for FRR-VDR-01" in markdown
+        assert "# Evidence Automation for VDR-CSO-DET" in markdown
+        assert "**Family:** VDR" in markdown
         assert "Azure Services Required" in markdown
         assert "Implementation Steps" in markdown
         assert "Evidence Collection Queries" in markdown
         assert "```kql" in markdown  # Should have KQL code blocks
-    
+
     def test_get_all_frr_evidence_queries(self):
         """Test retrieving all evidence queries."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_all_frr_evidence_queries
-        
+
         all_queries = get_all_frr_evidence_queries()
-        
+
         assert len(all_queries) > 0
         # Should have queries for multiple FRRs
-        assert "FRR-VDR-01" in all_queries
-        assert "FRR-RSC-01" in all_queries
-        assert "FRR-ADS-01" in all_queries
-    
+        assert "VDR-CSO-DET" in all_queries
+        assert "SCG-CSO-RSC" in all_queries
+        assert "CDS-CSO-PUB" in all_queries
+
     def test_get_all_frr_evidence_queries_filtered(self):
         """Test filtering evidence queries by family."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_all_frr_evidence_queries
-        
+
         vdr_queries = get_all_frr_evidence_queries("VDR")
-        
+
         assert len(vdr_queries) > 0
         for frr_id in vdr_queries.keys():
-            assert frr_id.startswith("FRR-VDR-")
-    
+            assert frr_id.startswith("VDR-")
+
+    def test_all_evidence_query_ids_exist_in_rules(self):
+        """Every FRR id with bundled evidence queries is a real CR26 rule."""
+        import asyncio
+        from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_all_frr_evidence_queries
+        from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
+
+        loader = FedRAMPDataLoader()
+        asyncio.run(loader.load_data())
+        for frr_id in get_all_frr_evidence_queries():
+            assert loader.get_control(frr_id) is not None, f"{frr_id} not in CR26 rules"
+
     def test_evidence_artifacts_have_required_fields(self):
         """Test evidence artifacts have all required fields."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
-        
-        automation = get_frr_evidence_automation("FRR-VDR-01")
-        assert automation is not None, "Expected automation for FRR-VDR-01"
-        
+
+        automation = get_frr_evidence_automation("VDR-CSO-DET")
+        assert automation is not None, "Expected automation for VDR-CSO-DET"
+
         for artifact in automation.artifacts:
             assert artifact.artifact_name is not None
             assert artifact.artifact_type is not None
             assert artifact.description is not None
             assert artifact.collection_method is not None
             assert artifact.storage_location is not None
-            assert artifact.retention_months >= 24  # FedRAMP 2 year requirement
-    
+            # Retention is an organizational default (CR26 sets no numeric period)
+            assert artifact.retention_months > 0
+
     def test_evidence_queries_have_retention(self):
-        """Test evidence queries specify retention aligned with FedRAMP (730 days)."""
+        """Evidence queries carry a positive retention default (not a FedRAMP number)."""
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
-        
-        automation = get_frr_evidence_automation("FRR-VDR-01")
-        assert automation is not None, "Expected automation for FRR-VDR-01"
-        
+
+        automation = get_frr_evidence_automation("VDR-CSO-DET")
+        assert automation is not None, "Expected automation for VDR-CSO-DET"
+
         for query in automation.queries:
-            assert query.retention_days >= 730, f"Query {query.query_name} has insufficient retention"
+            assert query.retention_days > 0, f"Query {query.query_name} has no retention default"
+
+
+def _template_path(*parts):
+    import os
+    return os.path.join(os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp', 'templates', *parts)
+
+
+def _read_template(*parts):
+    with open(_template_path(*parts), 'r', encoding='utf-8') as f:
+        return f.read()
+
+
+_CODE_TEMPLATES = (
+    'frr_evidence_python.txt', 'frr_evidence_csharp.txt',
+    'frr_evidence_java.txt', 'frr_evidence_typescript.txt',
+)
 
 
 class TestFRREvidenceTemplates:
-    """Test FRR Evidence Collection Templates exist and have required content."""
-    
+    """Test FRR Evidence Collection Templates exist and have required content (CR26)."""
+
     def test_python_template_exists(self):
         """Test Python evidence collection template exists."""
         import os
-        template_path = os.path.join(
-            os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-            'templates', 'code', 'frr_evidence_python.txt'
-        )
-        assert os.path.exists(template_path), "Python template not found"
-        
-        with open(template_path, 'r') as f:
-            content = f.read()
-        
-        # Verify required content
+        assert os.path.exists(_template_path('code', 'frr_evidence_python.txt')), "Python template not found"
+        content = _read_template('code', 'frr_evidence_python.txt')
+
         assert "FRREvidenceCollector" in content
         assert "azure-identity" in content
-        assert "FRR-VDR-01" in content
+        assert "VDR-CSO-DET" in content
         assert "collect_vdr_01_evidence" in content
-    
+
     def test_csharp_template_exists(self):
         """Test C# evidence collection template exists."""
         import os
-        template_path = os.path.join(
-            os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-            'templates', 'code', 'frr_evidence_csharp.txt'
-        )
-        assert os.path.exists(template_path), "C# template not found"
-        
-        with open(template_path, 'r') as f:
-            content = f.read()
-        
-        # Verify required content
+        assert os.path.exists(_template_path('code', 'frr_evidence_csharp.txt')), "C# template not found"
+        content = _read_template('code', 'frr_evidence_csharp.txt')
+
         assert "FRREvidenceCollector" in content
         assert "Azure.Identity" in content
-        assert "FRR-VDR-01" in content
+        assert "VDR-CSO-DET" in content
         assert "CollectVdr01Evidence" in content
-    
+
     def test_java_template_exists(self):
         """Test Java evidence collection template exists."""
         import os
-        template_path = os.path.join(
-            os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-            'templates', 'code', 'frr_evidence_java.txt'
-        )
-        assert os.path.exists(template_path), "Java template not found"
-        
-        with open(template_path, 'r') as f:
-            content = f.read()
-        
-        # Verify required content
+        assert os.path.exists(_template_path('code', 'frr_evidence_java.txt')), "Java template not found"
+        content = _read_template('code', 'frr_evidence_java.txt')
+
         assert "FRREvidenceCollector" in content
         assert "azure-identity" in content
-        assert "FRR-VDR-01" in content
+        assert "VDR-CSO-DET" in content
         assert "collectVdr01Evidence" in content
-    
+
     def test_typescript_template_exists(self):
         """Test TypeScript evidence collection template exists."""
         import os
-        template_path = os.path.join(
-            os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-            'templates', 'code', 'frr_evidence_typescript.txt'
-        )
-        assert os.path.exists(template_path), "TypeScript template not found"
-        
-        with open(template_path, 'r') as f:
-            content = f.read()
-        
-        # Verify required content
+        assert os.path.exists(_template_path('code', 'frr_evidence_typescript.txt')), "TypeScript template not found"
+        content = _read_template('code', 'frr_evidence_typescript.txt')
+
         assert "FRREvidenceCollector" in content
         assert "@azure/identity" in content
-        assert "FRR-VDR-01" in content
+        assert "VDR-CSO-DET" in content
         assert "collectVdr01Evidence" in content
-    
+
     def test_bicep_template_exists(self):
-        """Test Bicep infrastructure template exists."""
+        """Test Bicep infrastructure template exists and is a hardened immutable store."""
         import os
-        template_path = os.path.join(
-            os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-            'templates', 'bicep', 'frr_evidence_collection.txt'
-        )
-        assert os.path.exists(template_path), "Bicep template not found"
-        
-        with open(template_path, 'r') as f:
-            content = f.read()
-        
-        # Verify required content
-        assert "logRetentionDays" in content or "log_retention_days" in content
-        assert "730" in content  # FedRAMP 2-year retention
-        assert "Microsoft.OperationalInsights/workspaces" in content
+        assert os.path.exists(_template_path('bicep', 'frr_evidence_collection.txt')), "Bicep template not found"
+        content = _read_template('bicep', 'frr_evidence_collection.txt')
+
         assert "Microsoft.Storage/storageAccounts" in content
-    
+        assert "immutabilityPolicies" in content
+        assert "immutabilityPeriodDays" in content
+
     def test_terraform_template_exists(self):
-        """Test Terraform infrastructure template exists."""
+        """Test Terraform infrastructure template exists and is a hardened immutable store."""
         import os
-        template_path = os.path.join(
-            os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-            'templates', 'bicep', 'frr_evidence_terraform.txt'
-        )
-        assert os.path.exists(template_path), "Terraform template not found"
-        
-        with open(template_path, 'r') as f:
-            content = f.read()
-        
-        # Verify required content
+        assert os.path.exists(_template_path('bicep', 'frr_evidence_terraform.txt')), "Terraform template not found"
+        content = _read_template('bicep', 'frr_evidence_terraform.txt')
+
         assert "terraform" in content
         assert "azurerm" in content
-        assert "log_retention_days" in content
-        assert "730" in content  # FedRAMP 2-year retention
-        assert "azurerm_log_analytics_workspace" in content
         assert "azurerm_storage_account" in content
-    
+        assert "azurerm_storage_container_immutability_policy" in content
+        assert "immutability_period_in_days" in content
+
     def test_all_templates_cover_frr_families(self):
-        """Test all code templates cover the same FRR families."""
-        import os
-        
-        templates = {
-            'python': 'frr_evidence_python.txt',
-            'csharp': 'frr_evidence_csharp.txt',
-            'java': 'frr_evidence_java.txt',
-            'typescript': 'frr_evidence_typescript.txt',
-        }
-        
-        expected_frrs = ["FRR-VDR-01", "FRR-VDR-08", "FRR-RSC-01", "FRR-ADS-01", "FRR-SCN-01", "FRR-CCM-01"]
-        
-        for lang, filename in templates.items():
-            template_path = os.path.join(
-                os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-                'templates', 'code', filename
-            )
-            
-            with open(template_path, 'r') as f:
-                content = f.read()
-            
+        """Test all code templates cover the same CR26 rules."""
+        expected_frrs = ["VDR-CSO-DET", "VER-EVA-EIR", "SCG-CSO-RSC", "CDS-CSO-PUB", "SCN-CSO-EVA", "CCM-OCR-AVL"]
+
+        for filename in _CODE_TEMPLATES:
+            content = _read_template('code', filename)
             for frr_id in expected_frrs:
-                assert frr_id in content, f"{lang} template missing {frr_id}"
-    
-    def test_infrastructure_templates_have_fedramp_retention(self):
-        """Test infrastructure templates specify FedRAMP-compliant retention (730 days)."""
-        import os
-        
-        templates = [
-            ('bicep', 'frr_evidence_collection.txt'),
-            ('terraform', 'frr_evidence_terraform.txt'),
-        ]
-        
-        for iac_type, filename in templates:
-            # Terraform is in bicep folder for now
-            template_path = os.path.join(
-                os.path.dirname(__file__), '..', 'src', 'fedramp_20x_mcp',
-                'templates', 'bicep', filename
-            )
-            
-            with open(template_path, 'r') as f:
-                content = f.read()
-            
-            # Check for 730-day retention
-            assert "730" in content, f"{iac_type} template missing 730-day retention"
+                assert frr_id in content, f"{filename} missing {frr_id}"
+
+    def test_templates_use_no_retired_ids(self):
+        """No template still uses legacy FRR-<family>-NN identifiers."""
+        import re
+        files = [('code', f) for f in _CODE_TEMPLATES]
+        files += [('bicep', 'frr_evidence_collection.txt'), ('bicep', 'frr_evidence_terraform.txt')]
+        for parts in files:
+            content = _read_template(*parts)
+            assert not re.search(r'FRR-[A-Z]{3}-[0-9]{2}\b', content), f"{parts[-1]} has legacy FRR-XXX-NN ids"
+
+    def test_templates_do_not_present_retention_as_fedramp_requirement(self):
+        """CR26 has no numeric log retention rule: templates must not claim one."""
+        import re
+        iac = [('bicep', 'frr_evidence_collection.txt'), ('bicep', 'frr_evidence_terraform.txt')]
+        files = iac + [('code', f) for f in _CODE_TEMPLATES]
+        for parts in files:
+            content = _read_template(*parts)
+            assert "730" not in content, f"{parts[-1]} hardcodes the legacy 730 day retention"
+            assert not re.search(
+                r'fedramp[^\n]{0,40}(requires|requirement)[^\n]{0,40}(retention|[0-9]+ ?(days|years))',
+                content, re.I), f"{parts[-1]} presents retention as a FedRAMP requirement"
+        for parts in iac:
+            content = _read_template(*parts)
+            assert "organizational choice" in content, f"{parts[-1]} should label retention as organizational"
+
+    def test_infrastructure_templates_are_immutable_and_no_shared_key(self):
+        """Evidence storage templates enforce immutability and Entra-only access."""
+        bicep = _read_template('bicep', 'frr_evidence_collection.txt')
+        assert "allowSharedKeyAccess: false" in bicep
+        assert "allowBlobPublicAccess: false" in bicep
+        assert "immutabilityPeriodSinceCreationInDays" in bicep
+
+        tf = _read_template('bicep', 'frr_evidence_terraform.txt')
+        assert "shared_access_key_enabled         = false" in tf
+        assert "allow_nested_items_to_be_public   = false" in tf
+        assert "immutability_period_in_days" in tf
+        # Locking is a deliberate out-of-band step: never locked in code by default
+        assert "lock_immutability_policy" in tf
 
 
 def run_tests():

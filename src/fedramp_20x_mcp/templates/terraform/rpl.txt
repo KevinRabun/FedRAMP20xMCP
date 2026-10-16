@@ -2,6 +2,11 @@
 
 ```hcl
 # main.tf - Backup & Recovery Evidence Collection
+variable "backup_retention_days" {
+  description = "Daily backup retention in days. Set from your recovery objectives (KSI-RPL-RRO, KSI-RPL-ABO); CR26 sets no numeric value."
+  type        = number
+}
+
 resource "azurerm_recovery_services_vault" "backup" {
   name                = "rsv-fedramp-backup"
   location            = var.location
@@ -22,7 +27,7 @@ resource "azurerm_backup_policy_vm" "daily" {
   }
 
   retention_daily {
-    count = 30
+    count = var.backup_retention_days
   }
 }
 

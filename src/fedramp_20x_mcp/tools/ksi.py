@@ -7,6 +7,8 @@ import json
 import logging
 from typing import Any
 from ..analyzers.ksi.factory import get_factory
+from ._cr26 import legacy_resolution_note, rules_version
+from .ksi_status import build_ksi_rows
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ async def get_ksi_impl(ksi_id: str, data_loader) -> str:
     Get detailed information about a specific Key Security Indicator.
 
     Args:
-        ksi_id: The KSI identifier (e.g., "KSI-IAM-01")
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-APM")
 
     Returns:
         Detailed KSI information
@@ -24,14 +26,31 @@ async def get_ksi_impl(ksi_id: str, data_loader) -> str:
         # Ensure data is loaded
         await data_loader.load_data()
         
+        # Explain legacy IDs (crosswalk basis and confidence)
+        note = legacy_resolution_note(data_loader, ksi_id)
+
         # Get the KSI
         ksi = data_loader.get_ksi(ksi_id)
-        
+
+        if not ksi and note:
+            entry = data_loader.resolve_legacy_id(ksi_id) or {}
+            for target in entry.get("current_ids", []):
+                ksi = data_loader.get_ksi(target)
+                if ksi:
+                    break
+
         if not ksi:
-            return f"Key Security Indicator {ksi_id} not found. Use list_ksi() to see all available indicators."
-        
+            return (f"Key Security Indicator {ksi_id} not found in FedRAMP Consolidated Rules for 2026 "
+                    f"(version {rules_version(data_loader)}). Use list_ksi() to see all available indicators."
+                    + (f"\n\n{note}" if note else ""))
+
+        resolved = ksi.get("id", ksi_id)
+        if not note and resolved.upper() != ksi_id.upper():
+            note = f"> Requested `{ksi_id}` resolved to `{resolved}` (formerly-known-as match).\n\n"
+
         # Format the KSI information
-        result = f"# Key Security Indicator: {ksi.get('id', ksi_id)}\n\n"
+        result = note
+        result += f"# Key Security Indicator: {ksi.get('id', ksi_id)}\n\n"
         
         # Add all KSI fields
         for key, value in ksi.items():
@@ -43,10 +62,11 @@ async def get_ksi_impl(ksi_id: str, data_loader) -> str:
                     result += f"{value}\n\n"
         
         # Add context
-        result += f"**Document:** {ksi.get('document_name', 'Unknown')}\n"
-        
+        result += f"**Document:** {ksi.get('document_name') or ksi.get('document', 'Unknown')}\n"
+        result += f"\n*Rules version: {rules_version(data_loader)}*\n"
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Error fetching KSI {ksi_id}: {e}")
         return f"Error retrieving KSI {ksi_id}: {str(e)}"
@@ -61,28 +81,26 @@ async def list_ksi_impl(data_loader) -> str:
         Complete list of all Key Security Indicators with status
     """
     try:
-        # Get all KSI metadata from data loader
-        ksis = data_loader.list_all_ksi()
-        
+        # Get all KSI rows (CR26 rules data plus pattern coverage)
+        await data_loader.load_data()
+        ksis = await build_ksi_rows(data_loader)
+
         if not ksis:
             return "No Key Security Indicators found."
-        
-        # Sort by KSI ID
-        sorted_ksis = sorted(ksis, key=lambda x: x.get('id', ''))
-        
+
         # Group by family
         families = {}
-        for ksi in sorted_ksis:
-            ksi_id = ksi.get('id')
+        for ksi in ksis:
             family = ksi.get('family', 'UNKNOWN')
             if family not in families:
                 families[family] = []
             families[family].append(ksi)
-        
+
         # Format the results
         result = f"# Key Security Indicators\n\n"
-        result += f"**Total:** {len(ksis)} KSIs\n\n"
-        
+        result += f"*FedRAMP Consolidated Rules for 2026, version {rules_version(data_loader)}*\n\n"
+        result += f"**Total:** {len(ksis)} KSIs in {len(families)} families\n\n"
+
         # Count by status
         implemented = sum(1 for k in ksis if k.get('implementation_status') == 'IMPLEMENTED')
         not_implemented = sum(1 for k in ksis if k.get('implementation_status') == 'NOT_IMPLEMENTED')
@@ -149,12 +167,13 @@ async def get_ksi_implementation_summary_impl(data_loader) -> str:
         Summary statistics and breakdown by family
     """
     try:
-        # Get all KSI metadata from data loader
-        ksis = data_loader.list_all_ksi()
-        
+        # Get all KSI rows (CR26 rules data plus pattern coverage)
+        await data_loader.load_data()
+        ksis = await build_ksi_rows(data_loader)
+
         if not ksis:
             return "No Key Security Indicators found."
-        
+
         # Calculate statistics
         total_ksis = len(ksis)
         active_ksis = sum(1 for k in ksis if not k.get('retired', False))
@@ -193,6 +212,7 @@ async def get_ksi_implementation_summary_impl(data_loader) -> str:
         
         # Format the results
         result = "# KSI Implementation Summary\n\n"
+        result += f"*FedRAMP Consolidated Rules for 2026, version {rules_version(data_loader)}*\n\n"
         result += f"## Overall Status\n\n"
         result += f"- **Total KSIs:** {total_ksis}\n"
         result += f"- **Active KSIs:** {active_ksis} ({retired} retired)\n"
@@ -231,189 +251,244 @@ async def get_ksi_implementation_summary_impl(data_loader) -> str:
         return f"Error getting implementation summary: {str(e)}"
 
 
+WORM_STORAGE_NOTE = (
+    "## Evidence Storage (WORM conventions)\n\n"
+    "- Authenticate with Microsoft Entra ID only (disable shared key and SAS access).\n"
+    "- Use container-level time-based immutability (WORM); never overwrite or delete evidence.\n"
+    "- Layout: `<container>/<report>/<yyyy-MM-dd>/<runId>/` containing the evidence files plus "
+    "`run.json` and `sha256-manifest.txt`.\n"
+    "- CR26 defines no numeric evidence retention period; set immutability duration per your policy "
+    "and agency agreements.\n\n"
+)
+
+
+def _patterns_for_ksi(ksi_id: str) -> list:
+    """Return the loaded pattern objects whose related_ksis include ksi_id."""
+    try:
+        from ..analyzers.generic_adapter import get_generic_analyzer
+        loader = get_generic_analyzer().pattern_loader
+        return [p for p in loader.get_all_patterns() if ksi_id in (p.related_ksis or [])]
+    except Exception as e:  # pragma: no cover - defensive
+        logger.warning(f"Pattern lookup failed for {ksi_id}: {e}")
+        return []
+
+
+async def _resolve_ksi(ksi_id: str, data_loader):
+    """Load data, resolve legacy IDs, and return (ksi_record_or_None, note)."""
+    await data_loader.load_data()
+    note = legacy_resolution_note(data_loader, ksi_id)
+    ksi = data_loader.get_ksi(ksi_id)
+    if not ksi and note:
+        entry = data_loader.resolve_legacy_id(ksi_id) or {}
+        for target in entry.get("current_ids", []):
+            ksi = data_loader.get_ksi(target)
+            if ksi:
+                break
+    return ksi, note
+
+
+def _ksi_header(ksi: dict, note: str, title: str, data_loader) -> str:
+    out = note + f"# {title}: {ksi['id']} - {ksi.get('name', '')}\n\n"
+    out += f"*FedRAMP Consolidated Rules for 2026, version {rules_version(data_loader)}*\n\n"
+    if ksi.get("statement"):
+        out += f"**KSI statement:** {ksi['statement']}\n\n"
+    if ksi.get("controls"):
+        out += f"**NIST controls:** {', '.join(ksi['controls'])}\n\n"
+    return out
+
+
+def _default_artifacts_section(data_loader) -> str:
+    try:
+        arts = data_loader.get_rules_metadata().get("default_artifacts", {}).get("KSI", [])
+    except Exception:
+        arts = []
+    if not arts:
+        return ""
+    out = "## CR26 Default KSI Artifacts\n\n"
+    for a in arts:
+        out += f"- {a}\n"
+    return out + "\n"
+
+
+def _not_found(ksi_id: str, data_loader, note: str) -> str:
+    return (f"KSI '{ksi_id}' not found in FedRAMP Consolidated Rules for 2026 "
+            f"(version {rules_version(data_loader)}). Use list_ksi to see all available KSIs."
+            + (f"\n\n{note}" if note else ""))
+
+
 async def get_ksi_evidence_automation_impl(ksi_id: str, data_loader) -> str:
     """
     Get evidence automation recommendations for a specific KSI.
-    
-    Provides detailed guidance on how to automate evidence collection including:
-    - Azure services needed
-    - Collection methods and queries
-    - Storage requirements
-    - Code examples and infrastructure templates
-    
+
+    Built from the CR26 KSI record plus the pattern library entries that
+    reference the KSI (recommended services, automation, evidence artifacts).
+
     Args:
-        ksi_id: The KSI identifier (e.g., "KSI-IAM-01")
-    
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-APM")
+
     Returns:
-        Evidence automation recommendations in structured format
+        Evidence automation recommendations in markdown
     """
     try:
-        # Ensure data is loaded
-        await data_loader.load_data()
-        
-        # Get the analyzer from factory
-        factory = get_factory()
-        analyzer = factory.get_analyzer(ksi_id)
-        
-        if not analyzer:
-            return f"KSI '{ksi_id}' not found. Use list_ksi to see all available KSIs."
-        
-        # Check if KSI is retired
-        if analyzer.RETIRED:
-            return f"KSI '{ksi_id}' is retired. Evidence automation recommendations not available."
-        
-        # Get recommendations
-        recommendations = analyzer.get_evidence_automation_recommendations()
-        
-        # Format the output
-        result = f"# Evidence Automation: {recommendations['ksi_id']} - {recommendations['ksi_name']}\n\n"
-        
-        result += f"**Evidence Type:** {recommendations['evidence_type']}\n"
-        result += f"**Automation Feasibility:** {recommendations['automation_feasibility'].upper()}\n"
-        result += f"**Implementation Effort:** {recommendations['implementation_effort'].upper()}\n\n"
-        
-        if recommendations.get('implementation_time'):
-            result += f"**Estimated Time:** {recommendations['implementation_time']}\n\n"
-        
-        # Azure Services
-        if recommendations.get('azure_services'):
+        ksi, note = await _resolve_ksi(ksi_id, data_loader)
+        if not ksi:
+            return _not_found(ksi_id, data_loader, note)
+
+        result = _ksi_header(ksi, note, "Evidence Automation", data_loader)
+        patterns = _patterns_for_ksi(ksi["id"])
+
+        if not patterns:
+            result += "No code patterns reference this KSI, so there is no pattern-derived automation guidance. "
+            result += "Evidence for this KSI is process or evidence based; collect it per the CR26 default artifacts below.\n\n"
+            result += _default_artifacts_section(data_loader)
+            result += WORM_STORAGE_NOTE
+            return result
+
+        result += f"**Patterns referencing this KSI:** {len(patterns)}\n\n"
+
+        # Recommended Azure services (merged across patterns)
+        services = {}
+        for p in patterns:
+            guide = p.azure_guidance or {}
+            for svc in guide.get("recommended_services", []) or []:
+                name = svc.get("service")
+                if name and name not in services:
+                    services[name] = svc
+        if services:
             result += "## Azure Services\n\n"
-            result += "*Note: Microsoft Defender for Cloud is recommended (not mandatory) for streamlining compliance. Alternative tools like Qualys, Tenable, or Trivy can be used for vulnerability scanning.*\n\n"
-            for svc in recommendations['azure_services']:
-                result += f"### {svc['service']}\n"
-                result += f"- **Purpose:** {svc['purpose']}\n"
-                result += f"- **Configuration:** {svc['configuration']}\n\n"
-        
-        # Collection Methods
-        if recommendations.get('collection_methods'):
-            result += "## Evidence Collection Methods\n\n"
-            for method in recommendations['collection_methods']:
-                result += f"### {method['method']}\n"
-                result += f"{method['description']}\n\n"
-                result += f"**Frequency:** {method['frequency']}\n\n"
-                if method.get('data_points'):
-                    result += "**Data Points:**\n"
-                    for dp in method['data_points']:
-                        result += f"- {dp}\n"
-                    result += "\n"
-        
-        # Storage Requirements
-        if recommendations.get('storage_requirements'):
-            storage = recommendations['storage_requirements']
-            result += "## Storage Requirements\n\n"
-            for key, value in storage.items():
-                result += f"- **{key.replace('_', ' ').title()}:** {value}\n"
+            result += ("*Note: Microsoft Defender for Cloud is recommended (not mandatory) for streamlining compliance. "
+                       "Alternative tools can be used.*\n\n")
+            for name, svc in sorted(services.items()):
+                result += f"- **{name}**"
+                if svc.get("purpose"):
+                    result += f": {svc['purpose']}"
+                result += "\n"
             result += "\n"
-        
-        # API Integration
-        if recommendations.get('api_integration') and recommendations['api_integration'].get('frr_ads_endpoints'):
-            api = recommendations['api_integration']
-            result += "## FRR-ADS API Integration\n\n"
-            result += f"**Authentication:** {api.get('authentication', 'N/A')}\n"
-            result += f"**Response Format:** {api.get('response_format', 'JSON')}\n\n"
-            result += "**Endpoints:**\n"
-            for endpoint in api.get('frr_ads_endpoints', []):
-                result += f"- `{endpoint}`\n"
+
+        # Collection methods (automation blocks)
+        methods = []
+        for p in patterns:
+            for key, auto in sorted((p.automation or {}).items()):
+                if isinstance(auto, dict) and auto.get("description"):
+                    methods.append((p.pattern_id, auto["description"]))
+        if methods:
+            result += "## Automation Methods\n\n"
+            seen = set()
+            for pid, desc in methods:
+                if desc in seen:
+                    continue
+                seen.add(desc)
+                result += f"- {desc} (pattern `{pid}`)\n"
             result += "\n"
-        
-        # Prerequisites
-        if recommendations.get('prerequisites'):
-            result += "## Prerequisites\n\n"
-            for prereq in recommendations['prerequisites']:
-                result += f"- {prereq}\n"
-            result += "\n"
-        
-        # Available Code Examples
-        if recommendations.get('code_examples'):
-            result += "## Available Code Examples\n\n"
-            for lang, desc in recommendations['code_examples'].items():
-                result += f"- **{lang.upper()}:** {desc}\n"
-            result += "\n"
-            result += "*Use `get_evidence_collection_code` tool to retrieve actual code.*\n\n"
-        
-        # Available Infrastructure Templates
-        if recommendations.get('infrastructure_templates'):
-            result += "## Available Infrastructure Templates\n\n"
-            for iac, desc in recommendations['infrastructure_templates'].items():
-                result += f"- **{iac.upper()}:** {desc}\n"
-            result += "\n"
-            result += "*Use `get_infrastructure_code_for_ksi` tool to retrieve actual templates.*\n\n"
-        
-        # Notes
-        if recommendations.get('notes'):
-            result += "## Implementation Notes\n\n"
-            result += f"{recommendations['notes']}\n\n"
-        
-        # Retention Policy
-        result += "## Retention Policy\n\n"
-        result += f"{recommendations.get('retention_policy', 'Per FedRAMP requirements')}\n\n"
-        
-        result += "---\n"
-        result += "*Generated by FedRAMP 20x MCP Server - Evidence Automation Tool*\n"
-        
+
+        # Evidence artifacts
+        artifacts = _collect_artifacts(patterns)
+        if artifacts:
+            result += "## Evidence Artifacts\n\n"
+            for a in artifacts:
+                result += f"- **{a['name']}** ({a['artifact_type']}, {a['frequency']}, {a['format']}) from {a['source']}\n"
+            result += "\n*Use `get_ksi_evidence_artifacts` for details and `get_ksi_evidence_queries` for queries.*\n\n"
+
+        result += WORM_STORAGE_NOTE
+        result += "---\n*Generated by FedRAMP 20x MCP Server - Evidence Automation Tool*\n"
         return result
-        
+
     except Exception as e:
         logger.error(f"Error getting evidence automation for {ksi_id}: {e}")
         return f"Error retrieving evidence automation recommendations: {str(e)}"
 
 
+def _collect_artifacts(patterns: list) -> list:
+    """Unique evidence artifacts across patterns, keyed by name and source."""
+    out, seen = [], set()
+    for p in patterns:
+        for a in p.evidence_artifacts or []:
+            if not isinstance(a, dict):
+                continue
+            name = a.get("name") or a.get("artifact_name") or "Artifact"
+            source = a.get("source", "N/A")
+            key = (name, source)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({
+                "name": name,
+                "artifact_type": a.get("artifact_type", "other"),
+                "source": source,
+                "frequency": a.get("frequency", "N/A"),
+                "format": a.get("format", "N/A"),
+                "description": a.get("description", ""),
+                "pattern_id": p.pattern_id,
+            })
+    return out
+
+
 async def get_ksi_evidence_queries_impl(ksi_id: str, data_loader) -> str:
     """
     Get evidence collection queries for a specific KSI.
-    
-    Returns KQL, Resource Graph, and REST API queries for collecting evidence
-    from Azure services.
-    
+
+    Returns KQL, Azure CLI and PowerShell queries from the pattern library
+    entries that reference the KSI.
+
     Args:
-        ksi_id: The KSI identifier (e.g., "KSI-IAM-01")
-    
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-APM")
+
     Returns:
-        Collection queries in structured format
+        Collection queries in markdown
     """
     try:
-        # Ensure data is loaded
-        await data_loader.load_data()
-        
-        # Get the analyzer from factory
-        factory = get_factory()
-        analyzer = factory.get_analyzer(ksi_id)
-        
-        if not analyzer:
-            return f"KSI '{ksi_id}' not found. Use list_ksi to see all available KSIs."
-        
-        if analyzer.RETIRED:
-            return f"KSI '{ksi_id}' is retired. Evidence queries not available."
-        
-        # Get queries
-        queries = analyzer.get_evidence_collection_queries()
-        
+        ksi, note = await _resolve_ksi(ksi_id, data_loader)
+        if not ksi:
+            return _not_found(ksi_id, data_loader, note)
+
+        result = _ksi_header(ksi, note, "Evidence Collection Queries", data_loader)
+        patterns = _patterns_for_ksi(ksi["id"])
+
+        queries = []  # (kind, description, text, pattern_id)
+        seen = set()
+        for p in patterns:
+            ec = p.evidence_collection or {}
+            for q in ec.get("azure_monitor_kql", []) or []:
+                text = q.get("query", "")
+                if text and text not in seen:
+                    seen.add(text)
+                    queries.append(("KQL (Log Analytics)", q.get("description", ""), text, p.pattern_id))
+            for q in ec.get("azure_cli", []) or []:
+                text = q.get("command", "")
+                if text and text not in seen:
+                    seen.add(text)
+                    queries.append(("Azure CLI", q.get("description", ""), text, p.pattern_id))
+            for q in ec.get("powershell", []) or []:
+                text = q.get("script", "")
+                if text and text not in seen:
+                    seen.add(text)
+                    queries.append(("PowerShell", q.get("description", ""), text, p.pattern_id))
+            for q in ec.get("validation_queries", []) or []:
+                text = q.get("query", "") if isinstance(q, dict) else str(q)
+                if text and text not in seen:
+                    seen.add(text)
+                    desc = q.get("description", "") if isinstance(q, dict) else ""
+                    queries.append(("Validation query", desc, text, p.pattern_id))
+
         if not queries:
-            return f"No evidence collection queries available for {ksi_id}. This KSI may require manual evidence collection."
-        
-        # Format output
-        result = f"# Evidence Collection Queries: {ksi_id}\n\n"
+            result += (f"No evidence collection queries are defined for {ksi['id']} "
+                       f"({len(patterns)} pattern(s) reference it). This KSI may require manual evidence collection.\n\n")
+            result += _default_artifacts_section(data_loader)
+            result += WORM_STORAGE_NOTE
+            return result
+
         result += f"**Total Queries:** {len(queries)}\n\n"
-        
-        for i, query in enumerate(queries, 1):
-            result += f"## Query {i}: {query['name']}\n\n"
-            result += f"**Type:** {query['query_type']}\n"
-            result += f"**Data Source:** {query['data_source']}\n"
-            result += f"**Schedule:** {query['schedule']}\n"
-            result += f"**Output Format:** {query['output_format']}\n\n"
-            
-            if query.get('description'):
-                result += f"**Description:** {query['description']}\n\n"
-            
-            result += "**Query:**\n```\n"
-            result += query['query']
-            result += "\n```\n\n"
-        
-        result += "---\n"
-        result += "*Use these queries with Azure CLI, PowerShell, or Azure SDKs to automate evidence collection.*\n"
-        
+        for i, (kind, desc, text, pid) in enumerate(queries, 1):
+            result += f"## Query {i}: {kind}\n\n"
+            result += f"**Source pattern:** `{pid}`\n\n"
+            if desc:
+                result += f"**Description:** {desc}\n\n"
+            result += f"```\n{text}\n```\n\n"
+
+        result += WORM_STORAGE_NOTE
+        result += "---\n*Run these with Azure CLI, PowerShell, or Azure SDKs and write results to the WORM layout above.*\n"
         return result
-        
+
     except Exception as e:
         logger.error(f"Error getting evidence queries for {ksi_id}: {e}")
         return f"Error retrieving evidence queries: {str(e)}"
@@ -422,65 +497,48 @@ async def get_ksi_evidence_queries_impl(ksi_id: str, data_loader) -> str:
 async def get_ksi_evidence_artifacts_impl(ksi_id: str, data_loader) -> str:
     """
     Get list of evidence artifacts that should be collected for a specific KSI.
-    
-    Returns detailed information about what files, logs, and reports to collect
-    to demonstrate compliance.
-    
+
     Args:
-        ksi_id: The KSI identifier (e.g., "KSI-IAM-01")
-    
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-APM")
+
     Returns:
         Evidence artifacts list with collection details
     """
     try:
-        # Ensure data is loaded
-        await data_loader.load_data()
-        
-        # Get the analyzer from factory
-        factory = get_factory()
-        analyzer = factory.get_analyzer(ksi_id)
-        
-        if not analyzer:
-            return f"KSI '{ksi_id}' not found. Use list_ksi to see all available KSIs."
-        
-        if analyzer.RETIRED:
-            return f"KSI '{ksi_id}' is retired. Evidence artifacts not available."
-        
-        # Get artifacts
-        artifacts = analyzer.get_evidence_artifacts()
-        
+        ksi, note = await _resolve_ksi(ksi_id, data_loader)
+        if not ksi:
+            return _not_found(ksi_id, data_loader, note)
+
+        result = _ksi_header(ksi, note, "Evidence Artifacts", data_loader)
+        artifacts = _collect_artifacts(_patterns_for_ksi(ksi["id"]))
+
         if not artifacts:
-            return f"No evidence artifacts defined for {ksi_id}. This KSI may require manual evidence collection or custom artifact definitions."
-        
-        # Format output
-        result = f"# Evidence Artifacts: {ksi_id}\n\n"
+            result += (f"No pattern-defined evidence artifacts exist for {ksi['id']}. "
+                       "Use the CR26 default KSI artifacts below.\n\n")
+            result += _default_artifacts_section(data_loader)
+            result += WORM_STORAGE_NOTE
+            return result
+
         result += f"**Total Artifacts:** {len(artifacts)}\n\n"
-        
-        # Group by type
         by_type = {}
-        for artifact in artifacts:
-            atype = artifact['artifact_type']
-            if atype not in by_type:
-                by_type[atype] = []
-            by_type[atype].append(artifact)
-        
-        for atype in sorted(by_type.keys()):
+        for a in artifacts:
+            by_type.setdefault(a["artifact_type"], []).append(a)
+
+        for atype in sorted(by_type):
             result += f"## {atype.upper()} Artifacts\n\n"
-            
-            for artifact in by_type[atype]:
-                result += f"### {artifact['artifact_name']}\n\n"
-                result += f"**Description:** {artifact['description']}\n\n"
-                result += f"**Collection Method:** {artifact['collection_method']}\n\n"
-                result += f"**Details:**\n"
-                result += f"- Format: {artifact['format']}\n"
-                result += f"- Frequency: {artifact['frequency']}\n"
-                result += f"- Retention: {artifact['retention']}\n\n"
-        
-        result += "---\n"
-        result += "*Store all artifacts in immutable Azure Blob Storage with legal hold or time-based retention policies.*\n"
-        
+            for a in by_type[atype]:
+                result += f"### {a['name']}\n\n"
+                if a["description"]:
+                    result += f"**Description:** {a['description']}\n\n"
+                result += f"**Collection source:** {a['source']}\n\n"
+                result += f"- Format: {a['format']}\n"
+                result += f"- Frequency: {a['frequency']}\n"
+                result += f"- Pattern: `{a['pattern_id']}`\n\n"
+
+        result += _default_artifacts_section(data_loader)
+        result += WORM_STORAGE_NOTE
         return result
-        
+
     except Exception as e:
         logger.error(f"Error getting evidence artifacts for {ksi_id}: {e}")
         return f"Error retrieving evidence artifacts: {str(e)}"

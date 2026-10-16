@@ -26,7 +26,7 @@ class BaseFRRAnalyzer(ABC):
     """
     
     # Must be set by subclass
-    FRR_ID: str  # e.g., "FRR-VDR-01"
+    FRR_ID: str  # e.g., "VDR-CSO-DET"
     FRR_NAME: str  # e.g., "Critical Vulnerability Remediation"
     FRR_STATEMENT: str  # Official requirement statement
     FAMILY: str  # e.g., "VDR"
@@ -36,14 +36,14 @@ class BaseFRRAnalyzer(ABC):
     NIST_CONTROLS: List[tuple[str, str]]  # [(control_id, control_name), ...]
     CODE_DETECTABLE: bool = True  # Set to False for process/documentation-based requirements
     IMPLEMENTATION_STATUS: str = "NOT_IMPLEMENTED"  # "IMPLEMENTED", "NOT_IMPLEMENTED", or "PARTIAL"
-    RELATED_KSIS: List[str] = []  # Related KSI IDs (e.g., ["KSI-AFR-04", "KSI-SVC-07"])
+    RELATED_KSIS: List[str] = []  # Related KSI IDs (e.g., ["VDR-CSO-DET", "KSI-SVC-07"])
     
     def __init__(self, frr_id: str, frr_name: str, frr_statement: str):
         """
         Initialize FRR analyzer.
         
         Args:
-            frr_id: FRR identifier (e.g., "FRR-VDR-01")
+            frr_id: FRR identifier (e.g., "VDR-CSO-DET")
             frr_name: Human-readable name (e.g., "Critical Vulnerability Remediation")
             frr_statement: Official FedRAMP 20x statement
         """

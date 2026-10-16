@@ -1,615 +1,497 @@
 ## Terraform Configuration for FRR Evidence Collection
 
 ```hcl
-# frr_evidence_collection.tf - FRR-Specific Evidence Collection Infrastructure
-# Comprehensive infrastructure for FedRAMP 20x FRR evidence automation
+# frr_evidence_collection.tf - FRR evidence storage
+# Hardened evidence account with one immutable container per FRR family plus the build-artifact streams, and alerting on the supplied workspace.
 #
-# FRR Families Covered:
-# - VDR: Vulnerability Detection and Response
-# - RSC: Recommended Secure Configuration
-# - ADS: Audit and Data Security
-# - SCN: Secure Configuration
-# - CCM: Configuration Change Management
-# - MAS: Malware and Antivirus
+# CR26 (FedRAMP Consolidated Rules for 2026) references for evidence storage:
+#   KSI-MLA-RVL / KSI-MLA-OSM / KSI-MLA-ALA  log review, SIEM/log aggregation, log access
+#   KSI-SVC-SIN  information secured       KSI-SVC-RUD  removing unwanted data
+#   KSI-CMT-LMC  logging changes           VER-TFR-MRH  historical activity
+#   IVV-CSO-SEI / IVV-CSO-SEE  supply evidence of implementation / effectiveness
+#   FRC-CSX-VVK / FRC-CSX-VVR  automated verification and validation (KSIs / rules)
+#   SDR-CSX-KMT  KSI metrics
+# CR26 sets no numeric log or evidence retention period. The 1095 day (3 year) default is an
+# organizational choice; keep it configurable.
 #
-# Evidence Collection Methods:
-# 1. Azure Monitor Log Analytics with KQL queries
-# 2. Azure Resource Graph for configuration auditing
-# 3. Microsoft Defender for Cloud integration
-# 4. Azure Policy compliance state export
-# 5. Automated evidence export to blob storage
+# Blob layout convention (one container per evidence stream):
+#   <container>/<report-or-app>/<yyyy-MM-dd or version>/<runId or buildId>/<files>
+#   Each run folder also carries:
+#     run.json             provenance: pipeline, buildId, commit, rulesVersion, collectedAt
+#     sha256-manifest.txt  SHA-256 of every evidence file in the folder
+#   Upload with Entra auth and WITHOUT --overwrite (versioning is off on purpose; with
+#   container-level WORM an overwrite of an existing blob name fails instead of silently
+#   creating a version):
+#     az storage blob upload-batch --auth-mode login --account-name <account> \
+#       --destination <container> --destination-path <report-or-app>/<date>/<runId> --source ./out
+#
+# Locking is a deliberate, one-way, out-of-band step. Once a time-based retention policy is
+# locked it can only be extended (never shortened or removed) and the storage account cannot
+# be deleted while retained blobs exist. Review the unlocked policy first, then lock it with
+# `az storage container immutability-policy lock` (or the portal).
+# Keep lock_immutability_policy = false in code; lock out of band after review.
+#
+# Lifecycle: tier to cool after 30 days since creation. There is deliberately NO delete
+# rule. Expiry of retained evidence is a records-management decision, not a lifecycle default.
+#
+# Baseline: StorageV2 Standard RA-GRS (parameterized), Hot tier, shared key and SAS disabled,
+# public network access disabled, private endpoint (blob) with private DNS zone group,
+# optional customer-managed key (user-assigned identity + versionless Key Vault key),
+# infrastructure encryption, no SFTP/NFSv3, versioning OFF, change feed ON, no blob soft
+# delete or point-in-time restore (incompatible with immutability), container soft delete 90d.
+# Writers: one user-assigned managed identity per stream with Storage Blob Data Contributor
+# scoped to its own container. Readers: an Entra group with Storage Blob Data Reader on the
+# account. No access keys, SAS tokens or connection strings with AccountKey anywhere.
 
 terraform {
-  required_version = ">= 1.5.0"
-  
+  required_version = ">= 1.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.85.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.47.0"
+      version = "~> 4.0"
     }
   }
 }
 
 provider "azurerm" {
-  features {
-    key_vault {
-      purge_soft_delete_on_destroy    = false
-      recover_soft_deleted_key_vaults = true
-    }
-  }
+  features {}
+  subscription_id     = var.subscription_id
+  storage_use_azuread = true # Entra auth for storage; shared keys are disabled
 }
 
-# =============================================================================
-# Variables
-# =============================================================================
-
-variable "location" {
-  description = "Primary deployment location"
-  type        = string
-  default     = "eastus"
+variable "subscription_id" {
+  type = string
 }
 
 variable "resource_group_name" {
-  description = "Resource group name"
+  description = "Existing resource group for the evidence account"
   type        = string
-  default     = "rg-frr-evidence"
 }
 
-variable "name_suffix" {
-  description = "Unique suffix for resource naming"
+variable "location" {
+  type    = string
+  default = "eastus"
+}
+
+variable "replication_type" {
+  description = "Storage replication. RAGRS by default (organizational baseline)."
   type        = string
-  default     = ""
+  default     = "RAGRS"
 }
 
-variable "log_retention_days" {
-  description = "Log Analytics retention in days (730 = 2 years for FedRAMP)"
+variable "immutability_period_in_days" {
+  description = "Container WORM period in days since creation. 1095 (3 years) is an organizational choice, not a FedRAMP requirement."
   type        = number
-  default     = 730
+  default     = 1095
 }
 
-variable "evidence_retention_days" {
-  description = "Evidence storage retention in days (2555 = 7 years)"
-  type        = number
-  default     = 2555
+variable "lock_immutability_policy" {
+  description = "Keep false. Locking is one-way: once locked the policy can only be extended and the account cannot be deleted while retained blobs exist."
+  type        = bool
+  default     = false
 }
 
-variable "enable_defender" {
-  description = "Enable Defender for Cloud integration"
+variable "enable_cmk" {
+  description = "Use a customer-managed key when cmk_key_vault_key_id and cmk_identity_id are provided"
   type        = bool
   default     = true
 }
 
-variable "alert_email" {
-  description = "Alert email address for compliance notifications"
+variable "cmk_key_vault_key_id" {
+  description = "Versionless Key Vault key ID (empty = Microsoft-managed key)"
+  type        = string
+  default     = ""
+}
+
+variable "cmk_identity_id" {
+  description = "User-assigned identity ID with Key Vault Crypto Service Encryption User on the key (empty = Microsoft-managed key)"
+  type        = string
+  default     = ""
+}
+
+variable "private_endpoint_subnet_id" {
+  type = string
+}
+
+variable "blob_private_dns_zone_id" {
+  description = "Resource ID of privatelink.blob.core.windows.net"
   type        = string
 }
 
-variable "tags" {
-  description = "Tags to apply to all resources"
-  type        = map(string)
-  default     = {}
+variable "log_analytics_workspace_id" {
+  description = "Workspace for StorageRead/StorageWrite/StorageDelete diagnostics"
+  type        = string
 }
 
-# =============================================================================
-# Locals
-# =============================================================================
+variable "reader_group_object_id" {
+  description = "Entra group object ID granted Storage Blob Data Reader on the account (group, not individuals)"
+  type        = string
+}
+
+variable "alert_email" {
+  type = string
+}
+
+variable "vuln_age_threshold_days" {
+  description = "Age in days after which an open high-severity recommendation raises an alert (organizational threshold, not a FedRAMP number)"
+  type        = number
+  default     = 15
+}
 
 locals {
-  name_suffix = var.name_suffix != "" ? var.name_suffix : random_string.suffix.result
-  
-  # FedRAMP 20x Compliance Tags
-  fr_compliance_tags = merge(var.tags, {
-    Compliance      = "FedRAMP 20x"
-    Requirements    = "FRR-VDR-01, FRR-RSC-01, FRR-ADS-01, FRR-SCN-01, FRR-CCM-01"
-    Purpose         = "Evidence Collection"
-    RetentionDays   = tostring(var.evidence_retention_days)
-    ManagedBy       = "Terraform"
-  })
-  
-  # FRR family containers for evidence storage
-  frr_containers = [
-    "frr-vdr",
-    "frr-rsc",
-    "frr-ads",
-    "frr-scn",
-    "frr-ccm",
-    "frr-mas",
-    "frr-ucm",
-    "frr-icp",
-    "frr-fsi",
-    "frr-pva"
-  ]
+  name_suffix = substr(md5(var.subscription_id), 0, 8)
+  cmk_enabled = var.enable_cmk && var.cmk_key_vault_key_id != "" && var.cmk_identity_id != ""
+  # FRR families (CR26): VDR, SCG, CDS, SCN, CCM, MAS, CMU, IEC, IVV, AFC.
+  # Retired names: ADS->CDS, RSC->SCG, UCM->CMU, ICP->IEC, PVA->IVV, FSI->AFC.
+  streams = toset(["frr-vdr", "frr-scg", "frr-cds", "frr-scn", "frr-ccm", "frr-mas", "frr-cmu", "frr-iec", "frr-ivv", "frr-afc", "vdr-reports", "sbom", "grype-reports", "scap-reports"])
+
+  tags = {
+    Compliance       = "FedRAMP 20x CR26"
+    Purpose          = "Evidence Storage"
+    ImmutabilityDays = tostring(var.immutability_period_in_days)
+  }
 }
 
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
+# ============================================================================
+# Evidence Storage Account
+# Supports: KSI-SVC-SIN (information secured), KSI-SVC-RUD (removing unwanted data)
+# ============================================================================
 
-# =============================================================================
-# Resource Group
-# =============================================================================
-
-resource "azurerm_resource_group" "frr_evidence" {
-  name     = var.resource_group_name
-  location = var.location
-  tags     = local.fr_compliance_tags
-}
-
-# =============================================================================
-# Log Analytics Workspace - Central Evidence Repository
-# Addresses: FRR-ADS-01 (Audit Logging), FRR-MLA-01 (Monitoring)
-# =============================================================================
-
-resource "azurerm_log_analytics_workspace" "frr_evidence" {
-  name                = "law-frr-evidence-${local.name_suffix}"
-  location            = azurerm_resource_group.frr_evidence.location
-  resource_group_name = azurerm_resource_group.frr_evidence.name
-  sku                 = "PerGB2018"
-  retention_in_days   = var.log_retention_days
-  
-  # FedRAMP requires immediate purge protection
-  daily_quota_gb = -1  # No cap for compliance
-  
-  tags = local.fr_compliance_tags
-}
-
-# =============================================================================
-# Evidence Storage Account - Immutable Evidence Archive
-# Addresses: FRR-ADS-02 (Data Protection), FRR-RSC-01 (Secure Config)
-# =============================================================================
-
-resource "azurerm_storage_account" "frr_evidence" {
-  name                     = "stfrrevidence${local.name_suffix}"
-  resource_group_name      = azurerm_resource_group.frr_evidence.name
-  location                 = azurerm_resource_group.frr_evidence.location
-  account_tier             = "Standard"
-  account_replication_type = "GRS"  # Geo-redundant for compliance
+resource "azurerm_storage_account" "evidence" {
+  name                     = "stevidfrr${local.name_suffix}"
+  resource_group_name      = var.resource_group_name
+  location                 = var.location
   account_kind             = "StorageV2"
-  
-  # Security configuration
-  min_tls_version                 = "TLS1_2"
-  allow_nested_items_to_be_public = false
-  shared_access_key_enabled       = true
-  
-  # Network security
-  public_network_access_enabled = false
-  
+  account_tier             = "Standard"
+  account_replication_type = var.replication_type
+  access_tier              = "Hot"
+
+  shared_access_key_enabled         = false # Entra only
+  default_to_oauth_authentication   = true
+  public_network_access_enabled     = false
+  allow_nested_items_to_be_public   = false
+  https_traffic_only_enabled        = true
+  min_tls_version                   = "TLS1_2"
+  local_user_enabled                = false
+  sftp_enabled                      = false # SFTP and NFSv3 are incompatible with immutability
+  nfsv3_enabled                     = false
+  infrastructure_encryption_enabled = true
+  cross_tenant_replication_enabled  = false
+  allowed_copy_scope                = "AAD"
+
+  dynamic "identity" {
+    for_each = local.cmk_enabled ? [1] : []
+    content {
+      type         = "UserAssigned"
+      identity_ids = [var.cmk_identity_id]
+    }
+  }
+
+  dynamic "customer_managed_key" {
+    for_each = local.cmk_enabled ? [1] : []
+    content {
+      key_vault_key_id          = var.cmk_key_vault_key_id # versionless: rotation is automatic
+      user_assigned_identity_id = var.cmk_identity_id
+    }
+  }
+
+  blob_properties {
+    # Versioning is OFF on purpose: with container-level WORM and no versioning, an
+    # overwrite of an existing blob name fails outright instead of silently creating a version.
+    versioning_enabled  = false
+    change_feed_enabled = true # audit trail of blob changes
+
+    container_delete_retention_policy {
+      days = 90
+    }
+    # No delete_retention_policy (blob soft delete) and no restore_policy:
+    # both are incompatible with immutability.
+  }
+
   network_rules {
     default_action = "Deny"
     bypass         = ["AzureServices"]
   }
-  
-  blob_properties {
-    versioning_enabled = true
-    
-    change_feed_enabled           = true
-    change_feed_retention_in_days = 365
-    
-    delete_retention_policy {
-      days = 365
-    }
-    
-    container_delete_retention_policy {
-      days = 30
-    }
-  }
-  
-  identity {
-    type = "SystemAssigned"
-  }
-  
-  tags = local.fr_compliance_tags
+
+  tags = local.tags
 }
 
-# Evidence containers by FRR family
-resource "azurerm_storage_container" "frr_containers" {
-  for_each              = toset(local.frr_containers)
+# ============================================================================
+# Containers (one per evidence stream), each private and WORM
+# ============================================================================
+
+resource "azurerm_storage_container" "evidence" {
+  for_each = local.streams
+
   name                  = each.value
-  storage_account_name  = azurerm_storage_account.frr_evidence.name
+  storage_account_id    = azurerm_storage_account.evidence.id
   container_access_type = "private"
 }
 
-# Immutability policy for evidence containers (7 years)
-resource "azurerm_storage_management_policy" "evidence_retention" {
-  storage_account_id = azurerm_storage_account.frr_evidence.id
-  
+resource "azurerm_storage_container_immutability_policy" "evidence" {
+  for_each = local.streams
+
+  storage_container_resource_manager_id = azurerm_storage_container.evidence[each.key].resource_manager_id
+  immutability_period_in_days           = var.immutability_period_in_days
+  protected_append_writes_enabled       = false
+  locked                                = var.lock_immutability_policy
+}
+
+# ============================================================================
+# Lifecycle management (tier only, never delete)
+# ============================================================================
+
+resource "azurerm_storage_management_policy" "evidence" {
+  storage_account_id = azurerm_storage_account.evidence.id
+
   rule {
-    name    = "evidence-retention"
+    name    = "tier-evidence-to-cool-30d"
     enabled = true
-    
+
     filters {
-      prefix_match = ["frr-"]
-      blob_types   = ["blockBlob"]
+      blob_types = ["blockBlob"]
     }
-    
+
     actions {
       base_blob {
-        tier_to_cool_after_days_since_modification_greater_than    = 90
-        tier_to_archive_after_days_since_modification_greater_than = 365
-        delete_after_days_since_modification_greater_than          = var.evidence_retention_days
+        tier_to_cool_after_days_since_creation_greater_than = 30
+        # No delete action: retention expiry is a records decision.
       }
     }
   }
 }
 
-# =============================================================================
-# Key Vault - Secrets Management
-# Addresses: FRR-SVC-01 (Secure Services), FRR-RSC-01 (Secure Config)
-# =============================================================================
+# ============================================================================
+# Private endpoint (blob) with private DNS zone group
+# ============================================================================
 
-data "azurerm_client_config" "current" {}
+resource "azurerm_private_endpoint" "blob" {
+  name                = "pe-${azurerm_storage_account.evidence.name}-blob"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  subnet_id           = var.private_endpoint_subnet_id
 
-resource "azurerm_key_vault" "frr_evidence" {
-  name                = "kv-frr-${local.name_suffix}"
-  location            = azurerm_resource_group.frr_evidence.location
-  resource_group_name = azurerm_resource_group.frr_evidence.name
-  tenant_id           = data.azurerm_client_config.current.tenant_id
-  sku_name            = "premium"  # HSM-backed keys for FedRAMP
-  
-  # Security settings
-  enabled_for_deployment          = false
-  enabled_for_disk_encryption     = true
-  enabled_for_template_deployment = false
-  enable_rbac_authorization       = true
-  purge_protection_enabled        = true
-  soft_delete_retention_days      = 90
-  
-  network_acls {
-    default_action = "Deny"
-    bypass         = "AzureServices"
+  private_service_connection {
+    name                           = "blob"
+    private_connection_resource_id = azurerm_storage_account.evidence.id
+    subresource_names              = ["blob"]
+    is_manual_connection           = false
   }
-  
-  tags = local.fr_compliance_tags
+
+  private_dns_zone_group {
+    name                 = "default"
+    private_dns_zone_ids = [var.blob_private_dns_zone_id]
+  }
+
+  tags = local.tags
 }
 
-# =============================================================================
-# Automation Account - Scheduled Evidence Collection
-# Addresses: FRR-CCM-01 (Change Management), FRR-ADS-01 (Audit)
-# =============================================================================
+# ============================================================================
+# RBAC: per-container writers, group readers. No keys, no SAS.
+# Any function, app or collector writes using one of these managed identities (Entra only).
+# ============================================================================
 
-resource "azurerm_automation_account" "frr_evidence" {
-  name                = "aa-frr-evidence-${local.name_suffix}"
-  location            = azurerm_resource_group.frr_evidence.location
-  resource_group_name = azurerm_resource_group.frr_evidence.name
-  sku_name            = "Basic"
-  
-  identity {
-    type = "SystemAssigned"
-  }
-  
-  tags = local.fr_compliance_tags
+resource "azurerm_user_assigned_identity" "writer" {
+  for_each = local.streams
+
+  name                = "id-evidence-writer-${each.value}-${local.name_suffix}"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  tags                = local.tags
 }
 
-# =============================================================================
-# Action Group - Compliance Alerts
-# Addresses: FRR-ICP-01 (Incident Communication)
-# =============================================================================
+resource "azurerm_role_assignment" "writer" {
+  for_each = local.streams
+
+  # Container scope, not account: a writer for one stream cannot touch another.
+  scope                = azurerm_storage_container.evidence[each.key].resource_manager_id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.writer[each.key].principal_id
+  principal_type       = "ServicePrincipal"
+}
+
+resource "azurerm_role_assignment" "reader" {
+  scope                = azurerm_storage_account.evidence.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = var.reader_group_object_id
+  principal_type       = "Group"
+}
+
+# ============================================================================
+# Diagnostics: StorageRead / StorageWrite / StorageDelete to Log Analytics
+# Supports: KSI-MLA-OSM, KSI-MLA-ALA, KSI-CMT-LMC
+# ============================================================================
+
+resource "azurerm_monitor_diagnostic_setting" "blob" {
+  name                       = "evidence-blob-to-law"
+  target_resource_id         = "${azurerm_storage_account.evidence.id}/blobServices/default"
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category = "StorageRead"
+  }
+  enabled_log {
+    category = "StorageWrite"
+  }
+  enabled_log {
+    category = "StorageDelete"
+  }
+  enabled_metric {
+    category = "Transaction"
+  }
+}
+
+# ============================================================================
+# Action group and alerts (queries run against the Log Analytics workspace input)
+# Supports: VDR-CSO-DET (vulnerability detection), CCM-OCR-AVL (change visibility),
+#           IEC-CSO-IIR (incident reporting)
+# ============================================================================
 
 resource "azurerm_monitor_action_group" "frr_alerts" {
   name                = "ag-frr-alerts-${local.name_suffix}"
-  resource_group_name = azurerm_resource_group.frr_evidence.name
+  resource_group_name = var.resource_group_name
   short_name          = "FRRAlerts"
-  
+
   email_receiver {
     name                    = "ComplianceTeam"
     email_address           = var.alert_email
     use_common_alert_schema = true
   }
-  
-  tags = local.fr_compliance_tags
+
+  tags = local.tags
 }
 
-# =============================================================================
-# Microsoft Defender for Cloud - Vulnerability Scanning
-# Addresses: FRR-VDR-01 (Vulnerability Detection), FRR-MAS-01 (Antimalware)
-# =============================================================================
-
-resource "azurerm_security_center_subscription_pricing" "defender_vms" {
-  count         = var.enable_defender ? 1 : 0
-  tier          = "Standard"
-  resource_type = "VirtualMachines"
-  subplan       = "P2"
-}
-
-resource "azurerm_security_center_subscription_pricing" "defender_storage" {
-  count         = var.enable_defender ? 1 : 0
-  tier          = "Standard"
-  resource_type = "StorageAccounts"
-}
-
-resource "azurerm_security_center_subscription_pricing" "defender_sql" {
-  count         = var.enable_defender ? 1 : 0
-  tier          = "Standard"
-  resource_type = "SqlServers"
-}
-
-resource "azurerm_security_center_subscription_pricing" "defender_keyvault" {
-  count         = var.enable_defender ? 1 : 0
-  tier          = "Standard"
-  resource_type = "KeyVaults"
-}
-
-# =============================================================================
-# Scheduled Query Rules - Evidence Collection Alerts
-# =============================================================================
-
-resource "azurerm_monitor_scheduled_query_rules_alert_v2" "critical_vuln" {
-  name                = "alert-frr-vdr-01-critical-vulns"
-  resource_group_name = azurerm_resource_group.frr_evidence.name
-  location            = azurerm_resource_group.frr_evidence.location
-  
-  display_name = "FRR-VDR-01: Critical Vulnerabilities Exceeding SLA"
-  description  = "Alerts when critical vulnerabilities exceed 15-day remediation SLA"
-  
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "stale_vuln" {
+  name                 = "alert-frr-vdr-stale-high-severity"
+  resource_group_name  = var.resource_group_name
+  location             = var.location
+  display_name         = "VDR-CSO-DET: High-severity recommendations open beyond threshold"
+  description          = "Alerts when high-severity recommendations stay open longer than vuln_age_threshold_days"
   evaluation_frequency = "PT1H"
   window_duration      = "PT1H"
-  scopes               = [azurerm_log_analytics_workspace.frr_evidence.id]
-  severity             = 0
-  
+  scopes               = [var.log_analytics_workspace_id]
+  severity             = 1
+
   criteria {
     query = <<-QUERY
       SecurityRecommendation
       | where RecommendationSeverity == "High"
       | where RecommendationState == "Active"
       | extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
-      | where DaysOpen > 15
+      | where DaysOpen > ${var.vuln_age_threshold_days}
       | summarize Count = count() by ResourceId
       | where Count > 0
     QUERY
-    
+
     time_aggregation_method = "Count"
     operator                = "GreaterThan"
     threshold               = 0
-    
+
     failing_periods {
       minimum_failing_periods_to_trigger_alert = 1
       number_of_evaluation_periods             = 1
     }
   }
-  
+
   action {
     action_groups = [azurerm_monitor_action_group.frr_alerts.id]
   }
-  
-  tags = merge(local.fr_compliance_tags, {
-    FRR     = "FRR-VDR-01"
-    Purpose = "Critical Vulnerability SLA Monitoring"
-  })
+
+  tags = merge(local.tags, { FRR = "VDR-CSO-DET" })
 }
 
-resource "azurerm_monitor_scheduled_query_rules_alert_v2" "config_drift" {
-  name                = "alert-frr-ccm-01-config-drift"
-  resource_group_name = azurerm_resource_group.frr_evidence.name
-  location            = azurerm_resource_group.frr_evidence.location
-  
-  display_name = "FRR-CCM-01: Unauthorized Configuration Change Detected"
-  description  = "Alerts on configuration changes outside change management process"
-  
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "config_change" {
+  name                 = "alert-frr-ccm-config-change"
+  resource_group_name  = var.resource_group_name
+  location             = var.location
+  display_name         = "CCM-OCR-AVL: Successful configuration change on critical providers"
+  description          = "Surfaces write/delete operations for review against change records (add caller exclusions for approved automation)"
   evaluation_frequency = "PT15M"
   window_duration      = "PT15M"
-  scopes               = [azurerm_log_analytics_workspace.frr_evidence.id]
-  severity             = 1
-  
+  scopes               = [var.log_analytics_workspace_id]
+  severity             = 2
+
   criteria {
     query = <<-QUERY
       AzureActivity
       | where OperationNameValue has_any ("write", "delete")
       | where ActivityStatusValue == "Success"
-      | where ResourceProviderValue in (
-          "Microsoft.Network", "Microsoft.Compute", "Microsoft.KeyVault"
-      )
+      | where ResourceProviderValue in ("Microsoft.Network", "Microsoft.Compute", "Microsoft.KeyVault", "Microsoft.Storage")
       | project TimeGenerated, Caller, OperationNameValue, ResourceId
     QUERY
-    
+
     time_aggregation_method = "Count"
     operator                = "GreaterThan"
     threshold               = 0
-    
+
     failing_periods {
       minimum_failing_periods_to_trigger_alert = 1
       number_of_evaluation_periods             = 1
     }
   }
-  
+
   action {
     action_groups = [azurerm_monitor_action_group.frr_alerts.id]
   }
-  
-  tags = merge(local.fr_compliance_tags, {
-    FRR     = "FRR-CCM-01"
-    Purpose = "Configuration Drift Detection"
-  })
+
+  tags = merge(local.tags, { FRR = "CCM-OCR-AVL" })
 }
 
-# =============================================================================
-# Diagnostic Settings - Enable All Logging
-# =============================================================================
-
-resource "azurerm_monitor_diagnostic_setting" "keyvault" {
-  name                       = "ds-kv-frr"
-  target_resource_id         = azurerm_key_vault.frr_evidence.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.frr_evidence.id
-  
-  enabled_log {
-    category = "AuditEvent"
-  }
-  
-  enabled_log {
-    category = "AzurePolicyEvaluationDetails"
-  }
-  
-  metric {
-    category = "AllMetrics"
-  }
-}
-
-resource "azurerm_monitor_diagnostic_setting" "storage" {
-  name                       = "ds-storage-frr"
-  target_resource_id         = azurerm_storage_account.frr_evidence.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.frr_evidence.id
-  
-  metric {
-    category = "Transaction"
-  }
-}
-
-resource "azurerm_monitor_diagnostic_setting" "storage_blob" {
-  name                       = "ds-storage-blob-frr"
-  target_resource_id         = "${azurerm_storage_account.frr_evidence.id}/blobServices/default"
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.frr_evidence.id
-  
-  enabled_log {
-    category = "StorageRead"
-  }
-  
-  enabled_log {
-    category = "StorageWrite"
-  }
-  
-  enabled_log {
-    category = "StorageDelete"
-  }
-  
-  metric {
-    category = "Transaction"
-  }
-}
-
-# =============================================================================
-# RBAC Assignments
-# =============================================================================
-
-# Automation Account access to Storage
-resource "azurerm_role_assignment" "automation_storage" {
-  scope                = azurerm_storage_account.frr_evidence.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_automation_account.frr_evidence.identity[0].principal_id
-}
-
-# Automation Account access to Log Analytics
-resource "azurerm_role_assignment" "automation_logs" {
-  scope                = azurerm_log_analytics_workspace.frr_evidence.id
-  role_definition_name = "Log Analytics Reader"
-  principal_id         = azurerm_automation_account.frr_evidence.identity[0].principal_id
-}
-
-# =============================================================================
+# ============================================================================
 # Outputs
-# =============================================================================
+# ============================================================================
 
-output "resource_group_name" {
-  description = "Resource group name"
-  value       = azurerm_resource_group.frr_evidence.name
+output "storage_account_name" {
+  value = azurerm_storage_account.evidence.name
 }
 
-output "log_analytics_workspace_id" {
-  description = "Log Analytics Workspace resource ID"
-  value       = azurerm_log_analytics_workspace.frr_evidence.id
+output "storage_account_id" {
+  value = azurerm_storage_account.evidence.id
 }
 
-output "log_analytics_workspace_name" {
-  description = "Log Analytics Workspace name"
-  value       = azurerm_log_analytics_workspace.frr_evidence.name
+output "container_names" {
+  value = sort(tolist(local.streams))
 }
 
-output "evidence_storage_account_name" {
-  description = "Evidence storage account name"
-  value       = azurerm_storage_account.frr_evidence.name
+output "writer_identities" {
+  description = "Per-container writer managed identities (client_id is what a collector uses with Entra auth)"
+  value = {
+    for k, v in azurerm_user_assigned_identity.writer : k => {
+      client_id    = v.client_id
+      principal_id = v.principal_id
+    }
+  }
 }
 
-output "key_vault_name" {
-  description = "Key Vault name"
-  value       = azurerm_key_vault.frr_evidence.name
-}
-
-output "key_vault_uri" {
-  description = "Key Vault URI"
-  value       = azurerm_key_vault.frr_evidence.vault_uri
-}
-
-output "automation_account_name" {
-  description = "Automation Account name"
-  value       = azurerm_automation_account.frr_evidence.name
+output "blob_layout" {
+  value = "<container>/<report-or-app>/<yyyy-MM-dd or version>/<runId or buildId>/<files> + run.json + sha256-manifest.txt"
 }
 
 output "action_group_id" {
-  description = "Action Group ID"
-  value       = azurerm_monitor_action_group.frr_alerts.id
-}
-
-output "deployment_summary" {
-  description = "Deployment summary"
-  value = {
-    log_retention_days      = var.log_retention_days
-    evidence_retention_days = var.evidence_retention_days
-    defender_enabled        = var.enable_defender
-    frrs_addressed = [
-      "FRR-VDR-01: Vulnerability scanning via Defender for Cloud",
-      "FRR-RSC-01: Secure configuration via Key Vault and Storage encryption",
-      "FRR-ADS-01: Audit logging via Log Analytics",
-      "FRR-SCN-01: Network security via storage network ACLs",
-      "FRR-CCM-01: Change management via Activity Log monitoring",
-      "FRR-MAS-01: Antimalware via Defender for Cloud",
-      "FRR-ICP-01: Incident communication via Action Groups"
-    ]
-  }
-}
-```
-
-## Variables File (terraform.tfvars.example)
-
-```hcl
-# Example Terraform variables file
-# Copy to terraform.tfvars and customize
-
-location            = "eastus"
-resource_group_name = "rg-frr-evidence"
-log_retention_days  = 730    # 2 years for FedRAMP
-evidence_retention_days = 2555  # 7 years
-enable_defender     = true
-alert_email         = "compliance@yourorg.com"
-
-tags = {
-  Environment = "Production"
-  Project     = "FedRAMP 20x Compliance"
-  CostCenter  = "Security"
+  value = azurerm_monitor_action_group.frr_alerts.id
 }
 ```
 
 ## Deployment Instructions
 
-### Prerequisites
-- Terraform >= 1.5.0
-- Azure CLI authenticated
-- Contributor role on target subscription
-
-### Deploy with Terraform
-
 ```bash
-# Initialize Terraform
 terraform init
-
-# Plan deployment
-terraform plan -out=tfplan
-
-# Apply deployment
+terraform plan -out=tfplan \
+  -var alert_email=<email> \
+  -var subscription_id=<sub> -var resource_group_name=<rg> \
+  -var private_endpoint_subnet_id=<subnet-id> \
+  -var blob_private_dns_zone_id=<privatelink.blob.core.windows.net zone id> \
+  -var log_analytics_workspace_id=<workspace-id> \
+  -var reader_group_object_id=<entra-group-object-id>
 terraform apply tfplan
-
-# Verify outputs
-terraform output
 ```
 
-### Post-Deployment Configuration
-1. Configure Defender for Cloud workload protections
-2. Assign Azure Policy FedRAMP initiative
-3. Set up scheduled evidence export runbooks
-4. Configure GRC tool webhook integration
-5. Test alert notifications
+## Usage Notes
 
-*Generated by FedRAMP 20x MCP Server - FRR Evidence Infrastructure (Terraform)*
+- Public network access is disabled: upload from a runner or agent with private connectivity to the endpoint.
+- Writers authenticate with their managed identity or federated workload identity (Entra). Shared key access is disabled, so connection strings with AccountKey and SAS tokens do not work.
+- The immutability policies are created unlocked (`lock_immutability_policy = false`). Lock out of band when ready.
+- Retention (1095 days) is an organizational choice, not a FedRAMP number. CR26 does not set one.
+- Grant the CMK identity Key Vault Crypto Service Encryption User on the key before enabling CMK. Leave the cmk variables empty to use a Microsoft-managed key.
+
+*Generated by FedRAMP 20x MCP Server - Evidence Infrastructure (Terraform)*

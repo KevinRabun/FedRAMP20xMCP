@@ -1,8 +1,8 @@
 ---
 pattern_id: pva.frr.frr_pva_01
 name: Persistent Validation Compliance
-description: Validates compliance with FRR-PVA-01 - Persistent Validation
-family: PVA
+description: Validates compliance with VDR-TFR-MVX - Persistent Validation
+family: VDR
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -11,9 +11,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-01 - Persistent Validation compliance check
-  description_template: Configuration requires validation for FRR-PVA-01 compliance
-  remediation_template: Implement FRR-PVA-01 requirements per FedRAMP 20x documentation
+  title_template: VDR-TFR-MVX - Persistent Validation compliance check
+  description_template: Configuration requires validation for VDR-TFR-MVX compliance
+  remediation_template: Implement VDR-TFR-MVX requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -22,33 +22,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-01
+- VDR-TFR-MVX
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-01 policy documentation
+  name: VDR-TFR-MVX policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-01 configuration evidence
+  name: VDR-TFR-MVX configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-01 compliance validation
+    description: Automated VDR-TFR-MVX compliance validation
     implementation: |
-      # FRR-PVA-01 compliance automation
+      # VDR-TFR-MVX compliance automation
       # GitHub Actions
-      - name: FRR-PVA-01 Validation
+      - name: VDR-TFR-MVX Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_01 \
@@ -56,30 +56,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-01 Check'
+        displayName: 'VDR-TFR-MVX Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-01'"
+            # Validate VDR-TFR-MVX compliance
+            az policy state list --filter "policyDefinitionName eq 'VDR-TFR-MVX'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-01
+    description: Evidence collection for VDR-TFR-MVX
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-01"
+        RequirementId = "VDR-TFR-MVX"
         RequirementName = "Persistent Validation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-01.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_VDR-TFR-MVX.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -87,8 +87,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_02
 name: Failures As Vulnerabilities Compliance
-description: Validates compliance with FRR-PVA-02 - Failures As Vulnerabilities
-family: PVA
+description: Validates compliance with VDR-CSO-FAV - Failures As Vulnerabilities
+family: VDR
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -97,9 +97,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-02 - Failures As Vulnerabilities compliance check
-  description_template: Configuration requires validation for FRR-PVA-02 compliance
-  remediation_template: Implement FRR-PVA-02 requirements per FedRAMP 20x documentation
+  title_template: VDR-CSO-FAV - Failures As Vulnerabilities compliance check
+  description_template: Configuration requires validation for VDR-CSO-FAV compliance
+  remediation_template: Implement VDR-CSO-FAV requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -108,33 +108,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-02
+- VDR-CSO-FAV
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-02 policy documentation
+  name: VDR-CSO-FAV policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-02 configuration evidence
+  name: VDR-CSO-FAV configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-02 compliance validation
+    description: Automated VDR-CSO-FAV compliance validation
     implementation: |
-      # FRR-PVA-02 compliance automation
+      # VDR-CSO-FAV compliance automation
       # GitHub Actions
-      - name: FRR-PVA-02 Validation
+      - name: VDR-CSO-FAV Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_02 \
@@ -142,30 +142,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-02 Check'
+        displayName: 'VDR-CSO-FAV Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-02 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-02'"
+            # Validate VDR-CSO-FAV compliance
+            az policy state list --filter "policyDefinitionName eq 'VDR-CSO-FAV'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-02
+    description: Evidence collection for VDR-CSO-FAV
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-02"
+        RequirementId = "VDR-CSO-FAV"
         RequirementName = "Failures As Vulnerabilities"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-02.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_VDR-CSO-FAV.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -173,8 +173,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_03
 name: Report Persistent Validation Compliance
-description: Validates compliance with FRR-PVA-03 - Report Persistent Validation
-family: PVA
+description: Validates compliance with VER-RPT-PER - Report Persistent Validation
+family: VER
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -183,9 +183,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-03 - Report Persistent Validation compliance check
-  description_template: Configuration requires validation for FRR-PVA-03 compliance
-  remediation_template: Implement FRR-PVA-03 requirements per FedRAMP 20x documentation
+  title_template: VER-RPT-PER - Report Persistent Validation compliance check
+  description_template: Configuration requires validation for VER-RPT-PER compliance
+  remediation_template: Implement VER-RPT-PER requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -194,33 +194,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-03
+- VER-RPT-PER
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-03 policy documentation
+  name: VER-RPT-PER policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-03 configuration evidence
+  name: VER-RPT-PER configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-03 compliance validation
+    description: Automated VER-RPT-PER compliance validation
     implementation: |
-      # FRR-PVA-03 compliance automation
+      # VER-RPT-PER compliance automation
       # GitHub Actions
-      - name: FRR-PVA-03 Validation
+      - name: VER-RPT-PER Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_03 \
@@ -228,30 +228,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-03 Check'
+        displayName: 'VER-RPT-PER Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-03 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-03'"
+            # Validate VER-RPT-PER compliance
+            az policy state list --filter "policyDefinitionName eq 'VER-RPT-PER'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-03
+    description: Evidence collection for VER-RPT-PER
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-03"
+        RequirementId = "VER-RPT-PER"
         RequirementName = "Report Persistent Validation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-03.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_VER-RPT-PER.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -259,8 +259,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_04
 name: Track Significant Changes Compliance
-description: Validates compliance with FRR-PVA-04 - Track Significant Changes
-family: PVA
+description: Validates compliance with SCN-CSO-EVA - Track Significant Changes
+family: SCN
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -269,9 +269,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-04 - Track Significant Changes compliance check
-  description_template: Configuration requires validation for FRR-PVA-04 compliance
-  remediation_template: Implement FRR-PVA-04 requirements per FedRAMP 20x documentation
+  title_template: SCN-CSO-EVA - Track Significant Changes compliance check
+  description_template: Configuration requires validation for SCN-CSO-EVA compliance
+  remediation_template: Implement SCN-CSO-EVA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -280,33 +280,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-04
+- SCN-CSO-EVA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-04 policy documentation
+  name: SCN-CSO-EVA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-04 configuration evidence
+  name: SCN-CSO-EVA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-04 compliance validation
+    description: Automated SCN-CSO-EVA compliance validation
     implementation: |
-      # FRR-PVA-04 compliance automation
+      # SCN-CSO-EVA compliance automation
       # GitHub Actions
-      - name: FRR-PVA-04 Validation
+      - name: SCN-CSO-EVA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_04 \
@@ -314,30 +314,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-04 Check'
+        displayName: 'SCN-CSO-EVA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-04 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-04'"
+            # Validate SCN-CSO-EVA compliance
+            az policy state list --filter "policyDefinitionName eq 'SCN-CSO-EVA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-04
+    description: Evidence collection for SCN-CSO-EVA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-04"
+        RequirementId = "SCN-CSO-EVA"
         RequirementName = "Track Significant Changes"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-04.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCN-CSO-EVA.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -345,8 +345,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_05
 name: Independent Assessment Compliance
-description: Validates compliance with FRR-PVA-05 - Independent Assessment
-family: PVA
+description: Validates compliance with IVV-CSO-FIA - Independent Assessment
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -355,9 +355,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-05 - Independent Assessment compliance check
-  description_template: Configuration requires validation for FRR-PVA-05 compliance
-  remediation_template: Implement FRR-PVA-05 requirements per FedRAMP 20x documentation
+  title_template: IVV-CSO-FIA - Independent Assessment compliance check
+  description_template: Configuration requires validation for IVV-CSO-FIA compliance
+  remediation_template: Implement IVV-CSO-FIA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -366,33 +366,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-05
+- IVV-CSO-FIA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-05 policy documentation
+  name: IVV-CSO-FIA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-05 configuration evidence
+  name: IVV-CSO-FIA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-05 compliance validation
+    description: Automated IVV-CSO-FIA compliance validation
     implementation: |
-      # FRR-PVA-05 compliance automation
+      # IVV-CSO-FIA compliance automation
       # GitHub Actions
-      - name: FRR-PVA-05 Validation
+      - name: IVV-CSO-FIA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_05 \
@@ -400,30 +400,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-05 Check'
+        displayName: 'IVV-CSO-FIA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-05 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-05'"
+            # Validate IVV-CSO-FIA compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-CSO-FIA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-05
+    description: Evidence collection for IVV-CSO-FIA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-05"
+        RequirementId = "IVV-CSO-FIA"
         RequirementName = "Independent Assessment"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-05.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-CSO-FIA.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -431,8 +431,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_06
 name: Complete Validation Assessment Compliance
-description: Validates compliance with FRR-PVA-06 - Complete Validation Assessment
-family: PVA
+description: Validates compliance with IVV-IAS-VEF - Complete Validation Assessment
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -441,9 +441,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-06 - Complete Validation Assessment compliance check
-  description_template: Configuration requires validation for FRR-PVA-06 compliance
-  remediation_template: Implement FRR-PVA-06 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-VEF - Complete Validation Assessment compliance check
+  description_template: Configuration requires validation for IVV-IAS-VEF compliance
+  remediation_template: Implement IVV-IAS-VEF requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -452,33 +452,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-06
+- IVV-IAS-VEF
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-06 policy documentation
+  name: IVV-IAS-VEF policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-06 configuration evidence
+  name: IVV-IAS-VEF configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-06 compliance validation
+    description: Automated IVV-IAS-VEF compliance validation
     implementation: |
-      # FRR-PVA-06 compliance automation
+      # IVV-IAS-VEF compliance automation
       # GitHub Actions
-      - name: FRR-PVA-06 Validation
+      - name: IVV-IAS-VEF Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_06 \
@@ -486,30 +486,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-06 Check'
+        displayName: 'IVV-IAS-VEF Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-06 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-06'"
+            # Validate IVV-IAS-VEF compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-VEF'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-06
+    description: Evidence collection for IVV-IAS-VEF
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-06"
+        RequirementId = "IVV-IAS-VEF"
         RequirementName = "Complete Validation Assessment"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-06.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-VEF.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -517,8 +517,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_07
 name: Provide Technical Evidence Compliance
-description: Validates compliance with FRR-PVA-07 - Provide Technical Evidence
-family: PVA
+description: Validates compliance with IVV-CSO-STE - Provide Technical Evidence
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -527,9 +527,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-07 - Provide Technical Evidence compliance check
-  description_template: Configuration requires validation for FRR-PVA-07 compliance
-  remediation_template: Implement FRR-PVA-07 requirements per FedRAMP 20x documentation
+  title_template: IVV-CSO-STE - Provide Technical Evidence compliance check
+  description_template: Configuration requires validation for IVV-CSO-STE compliance
+  remediation_template: Implement IVV-CSO-STE requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -538,33 +538,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-07
+- IVV-CSO-STE
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-07 policy documentation
+  name: IVV-CSO-STE policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-07 configuration evidence
+  name: IVV-CSO-STE configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-07 compliance validation
+    description: Automated IVV-CSO-STE compliance validation
     implementation: |
-      # FRR-PVA-07 compliance automation
+      # IVV-CSO-STE compliance automation
       # GitHub Actions
-      - name: FRR-PVA-07 Validation
+      - name: IVV-CSO-STE Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_07 \
@@ -572,30 +572,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-07 Check'
+        displayName: 'IVV-CSO-STE Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-07 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-07'"
+            # Validate IVV-CSO-STE compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-CSO-STE'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-07
+    description: Evidence collection for IVV-CSO-STE
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-07"
+        RequirementId = "IVV-CSO-STE"
         RequirementName = "Provide Technical Evidence"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-07.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-CSO-STE.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -603,8 +603,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_08
 name: Receiving Assessor Advice Compliance
-description: Validates compliance with FRR-PVA-08 - Receiving Assessor Advice
-family: PVA
+description: Validates compliance with IVV-CSO-RAA - Receiving Assessor Advice
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -613,9 +613,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-08 - Receiving Assessor Advice compliance check
-  description_template: Configuration requires validation for FRR-PVA-08 compliance
-  remediation_template: Implement FRR-PVA-08 requirements per FedRAMP 20x documentation
+  title_template: IVV-CSO-RAA - Receiving Assessor Advice compliance check
+  description_template: Configuration requires validation for IVV-CSO-RAA compliance
+  remediation_template: Implement IVV-CSO-RAA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -624,33 +624,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-08
+- IVV-CSO-RAA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-08 policy documentation
+  name: IVV-CSO-RAA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-08 configuration evidence
+  name: IVV-CSO-RAA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-08 compliance validation
+    description: Automated IVV-CSO-RAA compliance validation
     implementation: |
-      # FRR-PVA-08 compliance automation
+      # IVV-CSO-RAA compliance automation
       # GitHub Actions
-      - name: FRR-PVA-08 Validation
+      - name: IVV-CSO-RAA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_08 \
@@ -658,30 +658,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-08 Check'
+        displayName: 'IVV-CSO-RAA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-08 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-08'"
+            # Validate IVV-CSO-RAA compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-CSO-RAA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-08
+    description: Evidence collection for IVV-CSO-RAA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-08"
+        RequirementId = "IVV-CSO-RAA"
         RequirementName = "Receiving Assessor Advice"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-08.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-CSO-RAA.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -689,8 +689,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_09
 name: Assessors May Advise Compliance
-description: Validates compliance with FRR-PVA-09 - Assessors May Advise
-family: PVA
+description: Validates compliance with IVV-IAS-SHA - Assessors May Advise
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -699,9 +699,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-09 - Assessors May Advise compliance check
-  description_template: Configuration requires validation for FRR-PVA-09 compliance
-  remediation_template: Implement FRR-PVA-09 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-SHA - Assessors May Advise compliance check
+  description_template: Configuration requires validation for IVV-IAS-SHA compliance
+  remediation_template: Implement IVV-IAS-SHA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -710,33 +710,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-09
+- IVV-IAS-SHA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-09 policy documentation
+  name: IVV-IAS-SHA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-09 configuration evidence
+  name: IVV-IAS-SHA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-09 compliance validation
+    description: Automated IVV-IAS-SHA compliance validation
     implementation: |
-      # FRR-PVA-09 compliance automation
+      # IVV-IAS-SHA compliance automation
       # GitHub Actions
-      - name: FRR-PVA-09 Validation
+      - name: IVV-IAS-SHA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_09 \
@@ -744,30 +744,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-09 Check'
+        displayName: 'IVV-IAS-SHA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-09 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-09'"
+            # Validate IVV-IAS-SHA compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-SHA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-09
+    description: Evidence collection for IVV-IAS-SHA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-09"
+        RequirementId = "IVV-IAS-SHA"
         RequirementName = "Assessors May Advise"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-09.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-SHA.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -775,8 +775,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_10
 name: Evaluate Validation Processes Compliance
-description: Validates compliance with FRR-PVA-10 - Evaluate Validation Processes
-family: PVA
+description: Validates compliance with IVV-IAS-VIM - Evaluate Validation Processes
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -785,9 +785,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-10 - Evaluate Validation Processes compliance check
-  description_template: Configuration requires validation for FRR-PVA-10 compliance
-  remediation_template: Implement FRR-PVA-10 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-VIM - Evaluate Validation Processes compliance check
+  description_template: Configuration requires validation for IVV-IAS-VIM compliance
+  remediation_template: Implement IVV-IAS-VIM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -796,33 +796,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-10
+- IVV-IAS-VIM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-10 policy documentation
+  name: IVV-IAS-VIM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-10 configuration evidence
+  name: IVV-IAS-VIM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-10 compliance validation
+    description: Automated IVV-IAS-VIM compliance validation
     implementation: |
-      # FRR-PVA-10 compliance automation
+      # IVV-IAS-VIM compliance automation
       # GitHub Actions
-      - name: FRR-PVA-10 Validation
+      - name: IVV-IAS-VIM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_10 \
@@ -830,30 +830,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-10 Check'
+        displayName: 'IVV-IAS-VIM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-10 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-10'"
+            # Validate IVV-IAS-VIM compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-VIM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-10
+    description: Evidence collection for IVV-IAS-VIM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-10"
+        RequirementId = "IVV-IAS-VIM"
         RequirementName = "Evaluate Validation Processes"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-10.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-VIM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -861,8 +861,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_11
 name: Assess Process Implementation Compliance
-description: Validates compliance with FRR-PVA-11 - Assess Process Implementation
-family: PVA
+description: Validates compliance with IVV-IAS-VIM - Assess Process Implementation
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -871,9 +871,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-11 - Assess Process Implementation compliance check
-  description_template: Configuration requires validation for FRR-PVA-11 compliance
-  remediation_template: Implement FRR-PVA-11 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-VIM - Assess Process Implementation compliance check
+  description_template: Configuration requires validation for IVV-IAS-VIM compliance
+  remediation_template: Implement IVV-IAS-VIM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -882,33 +882,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-11
+- IVV-IAS-VIM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-11 policy documentation
+  name: IVV-IAS-VIM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-11 configuration evidence
+  name: IVV-IAS-VIM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-11 compliance validation
+    description: Automated IVV-IAS-VIM compliance validation
     implementation: |
-      # FRR-PVA-11 compliance automation
+      # IVV-IAS-VIM compliance automation
       # GitHub Actions
-      - name: FRR-PVA-11 Validation
+      - name: IVV-IAS-VIM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_11 \
@@ -916,30 +916,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-11 Check'
+        displayName: 'IVV-IAS-VIM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-11 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-11'"
+            # Validate IVV-IAS-VIM compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-VIM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-11
+    description: Evidence collection for IVV-IAS-VIM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-11"
+        RequirementId = "IVV-IAS-VIM"
         RequirementName = "Assess Process Implementation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-11.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-VIM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -947,8 +947,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_12
 name: Assess Outcome Consistency Compliance
-description: Validates compliance with FRR-PVA-12 - Assess Outcome Consistency
-family: PVA
+description: Validates compliance with IVV-IAS-VEF - Assess Outcome Consistency
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -957,9 +957,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-12 - Assess Outcome Consistency compliance check
-  description_template: Configuration requires validation for FRR-PVA-12 compliance
-  remediation_template: Implement FRR-PVA-12 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-VEF - Assess Outcome Consistency compliance check
+  description_template: Configuration requires validation for IVV-IAS-VEF compliance
+  remediation_template: Implement IVV-IAS-VEF requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -968,33 +968,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-12
+- IVV-IAS-VEF
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-12 policy documentation
+  name: IVV-IAS-VEF policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-12 configuration evidence
+  name: IVV-IAS-VEF configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-12 compliance validation
+    description: Automated IVV-IAS-VEF compliance validation
     implementation: |
-      # FRR-PVA-12 compliance automation
+      # IVV-IAS-VEF compliance automation
       # GitHub Actions
-      - name: FRR-PVA-12 Validation
+      - name: IVV-IAS-VEF Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_12 \
@@ -1002,30 +1002,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-12 Check'
+        displayName: 'IVV-IAS-VEF Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-12 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-12'"
+            # Validate IVV-IAS-VEF compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-VEF'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-12
+    description: Evidence collection for IVV-IAS-VEF
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-12"
+        RequirementId = "IVV-IAS-VEF"
         RequirementName = "Assess Outcome Consistency"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-12.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-VEF.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1033,8 +1033,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_13
 name: Mixed Methods Evaluation Compliance
-description: Validates compliance with FRR-PVA-13 - Mixed Methods Evaluation
-family: PVA
+description: Validates compliance with IVV-IAS-VEF - Mixed Methods Evaluation
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1043,9 +1043,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-13 - Mixed Methods Evaluation compliance check
-  description_template: Configuration requires validation for FRR-PVA-13 compliance
-  remediation_template: Implement FRR-PVA-13 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-VEF - Mixed Methods Evaluation compliance check
+  description_template: Configuration requires validation for IVV-IAS-VEF compliance
+  remediation_template: Implement IVV-IAS-VEF requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1054,33 +1054,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-13
+- IVV-IAS-VEF
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-13 policy documentation
+  name: IVV-IAS-VEF policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-13 configuration evidence
+  name: IVV-IAS-VEF configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-13 compliance validation
+    description: Automated IVV-IAS-VEF compliance validation
     implementation: |
-      # FRR-PVA-13 compliance automation
+      # IVV-IAS-VEF compliance automation
       # GitHub Actions
-      - name: FRR-PVA-13 Validation
+      - name: IVV-IAS-VEF Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_13 \
@@ -1088,30 +1088,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-13 Check'
+        displayName: 'IVV-IAS-VEF Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-13 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-13'"
+            # Validate IVV-IAS-VEF compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-VEF'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-13
+    description: Evidence collection for IVV-IAS-VEF
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-13"
+        RequirementId = "IVV-IAS-VEF"
         RequirementName = "Mixed Methods Evaluation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-13.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-VEF.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1119,8 +1119,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_14
 name: Engage Provider Experts Compliance
-description: Validates compliance with FRR-PVA-14 - Engage Provider Experts
-family: PVA
+description: Validates compliance with IVV-IAS-EPX - Engage Provider Experts
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1129,9 +1129,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-14 - Engage Provider Experts compliance check
-  description_template: Configuration requires validation for FRR-PVA-14 compliance
-  remediation_template: Implement FRR-PVA-14 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-EPX - Engage Provider Experts compliance check
+  description_template: Configuration requires validation for IVV-IAS-EPX compliance
+  remediation_template: Implement IVV-IAS-EPX requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1140,33 +1140,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-14
+- IVV-IAS-EPX
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-14 policy documentation
+  name: IVV-IAS-EPX policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-14 configuration evidence
+  name: IVV-IAS-EPX configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-14 compliance validation
+    description: Automated IVV-IAS-EPX compliance validation
     implementation: |
-      # FRR-PVA-14 compliance automation
+      # IVV-IAS-EPX compliance automation
       # GitHub Actions
-      - name: FRR-PVA-14 Validation
+      - name: IVV-IAS-EPX Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_14 \
@@ -1174,30 +1174,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-14 Check'
+        displayName: 'IVV-IAS-EPX Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-14 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-14'"
+            # Validate IVV-IAS-EPX compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-EPX'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-14
+    description: Evidence collection for IVV-IAS-EPX
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-14"
+        RequirementId = "IVV-IAS-EPX"
         RequirementName = "Engage Provider Experts"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-14.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-EPX.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1205,8 +1205,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_15
 name: Avoid Static Evidence Compliance
-description: Validates compliance with FRR-PVA-15 - Avoid Static Evidence
-family: PVA
+description: Validates compliance with IVV-CSO-SEI - Avoid Static Evidence
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1215,9 +1215,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-15 - Avoid Static Evidence compliance check
-  description_template: Configuration requires validation for FRR-PVA-15 compliance
-  remediation_template: Implement FRR-PVA-15 requirements per FedRAMP 20x documentation
+  title_template: IVV-CSO-SEI - Avoid Static Evidence compliance check
+  description_template: Configuration requires validation for IVV-CSO-SEI compliance
+  remediation_template: Implement IVV-CSO-SEI requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1226,33 +1226,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-15
+- IVV-CSO-SEI
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-15 policy documentation
+  name: IVV-CSO-SEI policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-15 configuration evidence
+  name: IVV-CSO-SEI configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-15 compliance validation
+    description: Automated IVV-CSO-SEI compliance validation
     implementation: |
-      # FRR-PVA-15 compliance automation
+      # IVV-CSO-SEI compliance automation
       # GitHub Actions
-      - name: FRR-PVA-15 Validation
+      - name: IVV-CSO-SEI Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_15 \
@@ -1260,30 +1260,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-15 Check'
+        displayName: 'IVV-CSO-SEI Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-15 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-15'"
+            # Validate IVV-CSO-SEI compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-CSO-SEI'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-15
+    description: Evidence collection for IVV-CSO-SEI
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-15"
+        RequirementId = "IVV-CSO-SEI"
         RequirementName = "Avoid Static Evidence"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-15.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-CSO-SEI.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1291,8 +1291,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_16
 name: Verify Procedure Adherence Compliance
-description: Validates compliance with FRR-PVA-16 - Verify Procedure Adherence
-family: PVA
+description: Validates compliance with IVV-IAS-VIM - Verify Procedure Adherence
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1301,9 +1301,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-16 - Verify Procedure Adherence compliance check
-  description_template: Configuration requires validation for FRR-PVA-16 compliance
-  remediation_template: Implement FRR-PVA-16 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-VIM - Verify Procedure Adherence compliance check
+  description_template: Configuration requires validation for IVV-IAS-VIM compliance
+  remediation_template: Implement IVV-IAS-VIM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1312,33 +1312,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-16
+- IVV-IAS-VIM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-16 policy documentation
+  name: IVV-IAS-VIM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-16 configuration evidence
+  name: IVV-IAS-VIM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-16 compliance validation
+    description: Automated IVV-IAS-VIM compliance validation
     implementation: |
-      # FRR-PVA-16 compliance automation
+      # IVV-IAS-VIM compliance automation
       # GitHub Actions
-      - name: FRR-PVA-16 Validation
+      - name: IVV-IAS-VIM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_16 \
@@ -1346,30 +1346,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-16 Check'
+        displayName: 'IVV-IAS-VIM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-16 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-16'"
+            # Validate IVV-IAS-VIM compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-VIM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-16
+    description: Evidence collection for IVV-IAS-VIM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-16"
+        RequirementId = "IVV-IAS-VIM"
         RequirementName = "Verify Procedure Adherence"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-16.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-VIM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1377,8 +1377,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_17
 name: Deliver Assessment Summary Compliance
-description: Validates compliance with FRR-PVA-17 - Deliver Assessment Summary
-family: PVA
+description: Validates compliance with IVV-IAS-SUM - Deliver Assessment Summary
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1387,9 +1387,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-17 - Deliver Assessment Summary compliance check
-  description_template: Configuration requires validation for FRR-PVA-17 compliance
-  remediation_template: Implement FRR-PVA-17 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-SUM - Deliver Assessment Summary compliance check
+  description_template: Configuration requires validation for IVV-IAS-SUM compliance
+  remediation_template: Implement IVV-IAS-SUM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1398,33 +1398,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-17
+- IVV-IAS-SUM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-17 policy documentation
+  name: IVV-IAS-SUM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-17 configuration evidence
+  name: IVV-IAS-SUM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-17 compliance validation
+    description: Automated IVV-IAS-SUM compliance validation
     implementation: |
-      # FRR-PVA-17 compliance automation
+      # IVV-IAS-SUM compliance automation
       # GitHub Actions
-      - name: FRR-PVA-17 Validation
+      - name: IVV-IAS-SUM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_17 \
@@ -1432,30 +1432,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-17 Check'
+        displayName: 'IVV-IAS-SUM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-17 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-17'"
+            # Validate IVV-IAS-SUM compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-SUM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-17
+    description: Evidence collection for IVV-IAS-SUM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-17"
+        RequirementId = "IVV-IAS-SUM"
         RequirementName = "Deliver Assessment Summary"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-17.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-SUM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1463,8 +1463,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_18
 name: No Overall Recommendation Compliance
-description: Validates compliance with FRR-PVA-18 - No Overall Recommendation
-family: PVA
+description: Validates compliance with IVV-IAS-SUM - No Overall Recommendation
+family: IVV
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1473,9 +1473,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-18 - No Overall Recommendation compliance check
-  description_template: Configuration requires validation for FRR-PVA-18 compliance
-  remediation_template: Implement FRR-PVA-18 requirements per FedRAMP 20x documentation
+  title_template: IVV-IAS-SUM - No Overall Recommendation compliance check
+  description_template: Configuration requires validation for IVV-IAS-SUM compliance
+  remediation_template: Implement IVV-IAS-SUM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1484,33 +1484,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-18
+- IVV-IAS-SUM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-18 policy documentation
+  name: IVV-IAS-SUM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-18 configuration evidence
+  name: IVV-IAS-SUM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-18 compliance validation
+    description: Automated IVV-IAS-SUM compliance validation
     implementation: |
-      # FRR-PVA-18 compliance automation
+      # IVV-IAS-SUM compliance automation
       # GitHub Actions
-      - name: FRR-PVA-18 Validation
+      - name: IVV-IAS-SUM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_18 \
@@ -1518,30 +1518,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-18 Check'
+        displayName: 'IVV-IAS-SUM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-18 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-18'"
+            # Validate IVV-IAS-SUM compliance
+            az policy state list --filter "policyDefinitionName eq 'IVV-IAS-SUM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-18
+    description: Evidence collection for IVV-IAS-SUM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-18"
+        RequirementId = "IVV-IAS-SUM"
         RequirementName = "No Overall Recommendation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-18.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_IVV-IAS-SUM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1549,8 +1549,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: pva.frr.frr_pva_tf_lm_02
 name: 3-Day Machine Validation Compliance
-description: Validates compliance with FRR-PVA-TF-LM-02 - 3-Day Machine Validation
-family: PVA
+description: Validates compliance with VDR-TFR-MVX - 3-Day Machine Validation
+family: VDR
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1559,9 +1559,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-TF-LM-02 - 3-Day Machine Validation compliance check
-  description_template: Configuration requires validation for FRR-PVA-TF-LM-02 compliance
-  remediation_template: Implement FRR-PVA-TF-LM-02 requirements per FedRAMP 20x documentation
+  title_template: VDR-TFR-MVX - 3-Day Machine Validation compliance check
+  description_template: Configuration requires validation for VDR-TFR-MVX compliance
+  remediation_template: Implement VDR-TFR-MVX requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1570,33 +1570,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-TF-LM-02
+- VDR-TFR-MVX
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-TF-LM-02 policy documentation
+  name: VDR-TFR-MVX policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-TF-LM-02 configuration evidence
+  name: VDR-TFR-MVX configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-TF-LM-02 compliance validation
+    description: Automated VDR-TFR-MVX compliance validation
     implementation: |
-      # FRR-PVA-TF-LM-02 compliance automation
+      # VDR-TFR-MVX compliance automation
       # GitHub Actions
-      - name: FRR-PVA-TF-LM-02 Validation
+      - name: VDR-TFR-MVX Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_tf_lm_02 \
@@ -1604,30 +1604,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-TF-LM-02 Check'
+        displayName: 'VDR-TFR-MVX Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-TF-LM-02 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-TF-LM-02'"
+            # Validate VDR-TFR-MVX compliance
+            az policy state list --filter "policyDefinitionName eq 'VDR-TFR-MVX'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-TF-LM-02
+    description: Evidence collection for VDR-TFR-MVX
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-TF-LM-02"
+        RequirementId = "VDR-TFR-MVX"
         RequirementName = "3-Day Machine Validation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-TF-LM-02.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_VDR-TFR-MVX.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1635,8 +1635,8 @@ impact_levels: ['Moderate']
 ---
 pattern_id: pva.frr.frr_pva_tf_lo_01
 name: Quarterly Non-Machine Validation Compliance
-description: Validates compliance with FRR-PVA-TF-LO-01 - Quarterly Non-Machine Validation
-family: PVA
+description: Validates compliance with VDR-TFR-NMV - Quarterly Non-Machine Validation
+family: VDR
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1645,9 +1645,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-TF-LO-01 - Quarterly Non-Machine Validation compliance check
-  description_template: Configuration requires validation for FRR-PVA-TF-LO-01 compliance
-  remediation_template: Implement FRR-PVA-TF-LO-01 requirements per FedRAMP 20x documentation
+  title_template: VDR-TFR-NMV - Quarterly Non-Machine Validation compliance check
+  description_template: Configuration requires validation for VDR-TFR-NMV compliance
+  remediation_template: Implement VDR-TFR-NMV requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1656,33 +1656,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-TF-LO-01
+- VDR-TFR-NMV
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-TF-LO-01 policy documentation
+  name: VDR-TFR-NMV policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-TF-LO-01 configuration evidence
+  name: VDR-TFR-NMV configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-TF-LO-01 compliance validation
+    description: Automated VDR-TFR-NMV compliance validation
     implementation: |
-      # FRR-PVA-TF-LO-01 compliance automation
+      # VDR-TFR-NMV compliance automation
       # GitHub Actions
-      - name: FRR-PVA-TF-LO-01 Validation
+      - name: VDR-TFR-NMV Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_tf_lo_01 \
@@ -1690,30 +1690,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-TF-LO-01 Check'
+        displayName: 'VDR-TFR-NMV Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-TF-LO-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-TF-LO-01'"
+            # Validate VDR-TFR-NMV compliance
+            az policy state list --filter "policyDefinitionName eq 'VDR-TFR-NMV'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-TF-LO-01
+    description: Evidence collection for VDR-TFR-NMV
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-TF-LO-01"
+        RequirementId = "VDR-TFR-NMV"
         RequirementName = "Quarterly Non-Machine Validation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-TF-LO-01.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_VDR-TFR-NMV.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1721,8 +1721,8 @@ impact_levels: ['Low']
 ---
 pattern_id: pva.frr.frr_pva_tf_lo_02
 name: Weekly Machine Validation Compliance
-description: Validates compliance with FRR-PVA-TF-LO-02 - Weekly Machine Validation
-family: PVA
+description: Validates compliance with VDR-TFR-MVX - Weekly Machine Validation
+family: VDR
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1731,9 +1731,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-TF-LO-02 - Weekly Machine Validation compliance check
-  description_template: Configuration requires validation for FRR-PVA-TF-LO-02 compliance
-  remediation_template: Implement FRR-PVA-TF-LO-02 requirements per FedRAMP 20x documentation
+  title_template: VDR-TFR-MVX - Weekly Machine Validation compliance check
+  description_template: Configuration requires validation for VDR-TFR-MVX compliance
+  remediation_template: Implement VDR-TFR-MVX requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1742,33 +1742,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-TF-LO-02
+- VDR-TFR-MVX
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-TF-LO-02 policy documentation
+  name: VDR-TFR-MVX policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-TF-LO-02 configuration evidence
+  name: VDR-TFR-MVX configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-TF-LO-02 compliance validation
+    description: Automated VDR-TFR-MVX compliance validation
     implementation: |
-      # FRR-PVA-TF-LO-02 compliance automation
+      # VDR-TFR-MVX compliance automation
       # GitHub Actions
-      - name: FRR-PVA-TF-LO-02 Validation
+      - name: VDR-TFR-MVX Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_tf_lo_02 \
@@ -1776,30 +1776,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-TF-LO-02 Check'
+        displayName: 'VDR-TFR-MVX Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-TF-LO-02 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-TF-LO-02'"
+            # Validate VDR-TFR-MVX compliance
+            az policy state list --filter "policyDefinitionName eq 'VDR-TFR-MVX'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-TF-LO-02
+    description: Evidence collection for VDR-TFR-MVX
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-TF-LO-02"
+        RequirementId = "VDR-TFR-MVX"
         RequirementName = "Weekly Machine Validation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-TF-LO-02.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_VDR-TFR-MVX.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1807,8 +1807,8 @@ impact_levels: ['Low']
 ---
 pattern_id: pva.frr.frr_pva_tf_mo_01
 name: Quarterly Non-Machine Validation Compliance
-description: Validates compliance with FRR-PVA-TF-MO-01 - Quarterly Non-Machine Validation
-family: PVA
+description: Validates compliance with VDR-TFR-NMV - Quarterly Non-Machine Validation
+family: VDR
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1817,9 +1817,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-PVA-TF-MO-01 - Quarterly Non-Machine Validation compliance check
-  description_template: Configuration requires validation for FRR-PVA-TF-MO-01 compliance
-  remediation_template: Implement FRR-PVA-TF-MO-01 requirements per FedRAMP 20x documentation
+  title_template: VDR-TFR-NMV - Quarterly Non-Machine Validation compliance check
+  description_template: Configuration requires validation for VDR-TFR-NMV compliance
+  remediation_template: Implement VDR-TFR-NMV requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1828,33 +1828,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- pva
+- ivv
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-PVA-TF-MO-01
+- VDR-TFR-NMV
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-PVA-TF-MO-01 policy documentation
+  name: VDR-TFR-NMV policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-PVA-TF-MO-01 configuration evidence
+  name: VDR-TFR-NMV configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-PVA-TF-MO-01 compliance validation
+    description: Automated VDR-TFR-NMV compliance validation
     implementation: |
-      # FRR-PVA-TF-MO-01 compliance automation
+      # VDR-TFR-NMV compliance automation
       # GitHub Actions
-      - name: FRR-PVA-TF-MO-01 Validation
+      - name: VDR-TFR-NMV Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern pva.frr.frr_pva_tf_mo_01 \
@@ -1862,30 +1862,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-PVA-TF-MO-01 Check'
+        displayName: 'VDR-TFR-NMV Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-PVA-TF-MO-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-PVA-TF-MO-01'"
+            # Validate VDR-TFR-NMV compliance
+            az policy state list --filter "policyDefinitionName eq 'VDR-TFR-NMV'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-PVA-TF-MO-01
+    description: Evidence collection for VDR-TFR-NMV
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-PVA-TF-MO-01"
+        RequirementId = "VDR-TFR-NMV"
         RequirementName = "Quarterly Non-Machine Validation"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-PVA-TF-MO-01.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_VDR-TFR-NMV.json"
     azure_services:
     - Azure Automation
     - Azure Storage

@@ -1,100 +1,93 @@
 # FRR Family Assessment Guide
 
-I'll help you conduct a comprehensive FedRAMP Requirement (FRR) family assessment for your system.
+I'll help you conduct an FRR family assessment for your system under the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01).
 
 ## Overview
 
-FedRAMP 20x includes **199 requirements** across **10 FRR families**. Each family addresses specific compliance areas, and this guide helps you assess your implementation against family requirements.
+CR26 has **245 rules** across **17 FRR families**. Each family addresses a compliance area. Rule IDs have the form FAMILY-GROUP-NAME (for example VDR-CSO-DET); the group (CSO, TFR, EVA, ...) is the family's subset. Many rules vary by Certification Class (A, B, C, D); read `varies_by_class` with `get_frr_metadata`.
+
+Families (rule counts): AFC (16), AGU (20), CCM (19), CDS (21), CMU (3), CPO (5), FRC (28), IEC (8), IVV (20), MAS (5), MKT (12), REC (16), SCG (9), SCN (17), SDR (5), VDR (18), VER (23).
+
+Effective dates differ by family (see each family's effective block in the rules data): for example AFC 2026-01-05, SCG 2026-03-01, AGU, MKT and REC 2026-07-04, VDR and VER required 2026-12-07 (mandated by CISA BOD 26-04).
 
 ## Choose Your Assessment Scope
 
-**Which FRR family are you assessing?**
+### 1. VDR and VER - Vulnerability Detection, Evaluation, Response and Reporting
+**Purpose:** Detect, evaluate, mitigate, remediate and report vulnerabilities.
 
-### 1. VDR - Vulnerability Detection and Response (59 requirements)
-**Purpose:** Vulnerability management, patch procedures, remediation tracking
-
-**Key Sub-families:**
-- **VDR-01 to VDR-16**: Core vulnerability detection requirements
-- **VDR-AC**: Authenticated scanning requirements
-- **VDR-EX**: Exception and deviation management
-- **VDR-RP**: Agency-specific reporting
-- **VDR-TF**: Remediation timeframes and KEV handling
+**Groups:** VDR-CSO (provider responsibilities), VDR-TFR (timeframes), VER-EVA (evaluation), VER-RPT (reporting), VER-TFR (timeframes).
 
 **Assessment Questions:**
-1. Do you have automated vulnerability scanning in your CI/CD pipeline?
-2. Are you tracking remediation timeframes by severity (Critical: 15 days, High: 30 days)?
-3. Do you have a formal deviation approval process?
-4. Are you monitoring CISA KEV catalog and prioritizing KEV vulnerabilities?
-5. Do you provide agency-specific vulnerability reports?
+1. Is detection automated and run after changes (VDR-CSO-ADT, VDR-CSO-DAC)?
+2. Do you track mitigation and remediation against VDR-TFR-PVR timeframes for your Class, N-rating and reachability?
+3. Do you evaluate exploitability, internet-reachability and Potential Agency Impact (VER-EVA-ELX, VER-EVA-EIR, VER-EVA-EPA)?
+4. Do you follow CISA KEV due dates (VDR-TFR-KEV)?
+5. Do you report at least monthly and mark accepted vulnerabilities after 192 days (VER-TFR-MHR, VER-TFR-MAV)?
 
 **Start Assessment:**
 ```
 > analyze_frr_family with family="VDR" and code="[your CI/CD pipeline]" and language="github-actions"
 > list_frrs_by_family with family="VDR"
+> list_frrs_by_family with family="VER"
 ```
 
-### 2. ADS - Authorization Data Sharing (22 requirements)
-**Purpose:** Machine-readable evidence APIs, continuous data sharing
+### 2. CDS - Certification Data Sharing
+**Purpose:** Trust center, public information, programmatic access to Certification Data.
 
-**Key Sub-families:**
-- **ADS-01 to ADS-10**: Core data sharing requirements
-- **ADS-AC**: Authentication and authorization
-- **ADS-EX**: Exception handling
-- **ADS-TC**: Testing and change management
+**Groups:** CDS-CSO (provider), CDS-TRC (trust centers), CDS-UTC (using a trust center).
 
 **Assessment Questions:**
-1. Do you have a machine-readable API for authorization data (JSON/XML)?
-2. Is your API authenticated with OAuth2/Azure AD?
-3. Does your API provide real-time or near-real-time data?
-4. Are API changes tested and validated before deployment?
-5. Do you track API access and usage for audit purposes?
+1. Do you use a FedRAMP-compatible trust center (CDS-CSO-UTC)?
+2. Is public information available in human-readable and JSON formats (CDS-CSO-PUB)?
+3. Is programmatic access documented (CDS-TRC-PAC)?
+4. Is consistency between formats automated (CDS-CSO-CBF)?
+5. Is access logged and summarized (CDS-TRC-ACL)?
 
 **Start Assessment:**
 ```
-> analyze_frr_family with family="ADS" and code="[your API code]" and language="python"
-> get_frr_evidence_automation with frr_id="FRR-ADS-01"
+> analyze_frr_family with family="CDS" and code="[your API code]" and language="python"
+> get_frr_evidence_automation with frr_id="CDS-CSO-PUB"
 ```
 
-### 3. RSC - Recommended Secure Configuration (10 requirements)
-**Purpose:** Security baselines, configuration standards, hardening
+### 3. SCG - Secure Configuration Guide
+**Purpose:** Secure configuration recommendations and enhanced settings capabilities.
 
 **Assessment Questions:**
-1. Do you apply CIS Benchmarks or STIG baselines to your systems?
-2. Is configuration drift detected and remediated automatically?
-3. Are security baselines documented and version-controlled?
-4. Do you validate configurations against standards in CI/CD?
-5. Are deviations from baselines formally approved and tracked?
+1. Do you maintain recommended secure configuration for top-level administrative and privileged accounts and settings (SCG-CSO-RSC)?
+2. Do you include use instructions in the Certification Package (SCG-CSO-AUP)?
+3. Are secure defaults set (SCG-CSO-SDF)?
+4. Do you offer comparison, export or API access to settings (SCG-ENH-CMP, SCG-ENH-EXP, SCG-ENH-API)?
 
 **Start Assessment:**
 ```
-> analyze_frr_family with family="RSC" and code="[your Bicep/Terraform]" and language="bicep"
-> list_frrs_by_family with family="RSC"
+> analyze_frr_family with family="SCG" and code="[your Bicep/Terraform]" and language="bicep"
+> list_frrs_by_family with family="SCG"
 ```
 
-### 4. UCM - Using Cryptographic Modules (4 requirements)
-**Purpose:** FIPS 140-3 compliance, encryption standards, key management
+### 4. CMU - Cryptographic Module Use
+**Purpose:** Documentation and use of validated cryptographic modules.
 
 **Assessment Questions:**
-1. Are you using FIPS 140-3 validated cryptographic modules?
-2. Is Azure Key Vault Premium SKU used for key management?
-3. Are encryption keys rotated according to NIST guidelines?
-4. Is encryption at rest and in transit enforced for all sensitive data?
+1. Are the cryptographic modules in each service documented, including validation status (CMU-CSO-CMD)?
+2. Are validated modules used (CMU-CSO-UVM: MAY for Class A and B, SHOULD for Class C, MUST for Class D)?
+3. Are agency tenants configured by default to use validated modules (CMU-CSO-CAT)?
 
 **Start Assessment:**
 ```
-> analyze_frr_family with family="UCM" and code="[your infrastructure code]" and language="terraform"
-> get_frr_metadata with frr_id="FRR-UCM-01"
+> analyze_frr_family with family="CMU" and code="[your infrastructure code]" and language="terraform"
+> get_frr_metadata with frr_id="CMU-CSO-CMD"
 ```
 
-### 5. SCN - Significant Change Notifications (26 requirements)
-**Purpose:** Change management, notification procedures, impact assessment
+### 5. SCN - Significant Change Notification
+**Purpose:** Change evaluation, notification and records.
+
+**Groups:** SCN-CSO, SCN-ADP (adaptive), SCN-RTR (routine recurring), SCN-TRF (transformative).
 
 **Assessment Questions:**
-1. Do you notify FedRAMP within required timeframes for significant changes?
-2. Are changes classified as routine, adaptive, or transformative?
-3. Is change impact assessed before implementation?
-4. Are change approval gates implemented in deployment pipelines?
-5. Do you maintain a change log for all system modifications?
+1. Do you evaluate changes and classify them (SCN-CSO-EVA)?
+2. Do you keep auditable records (SCN-CSO-MAR)?
+3. Do you notify within the SCN-ADP and SCN-TRF timeframes?
+4. Do you keep 12 months of notifications in human-readable and JSON formats (SCN-CSO-HIS, SCN-CSO-HRM)?
 
 **Start Assessment:**
 ```
@@ -102,259 +95,168 @@ FedRAMP 20x includes **199 requirements** across **10 FRR families**. Each famil
 > list_frrs_by_family with family="SCN"
 ```
 
-### 6. CCM - Collaborative Continuous Monitoring (25 requirements)
-**Purpose:** Continuous monitoring, quarterly reviews, assessment coordination
+### 6. CCM - Collaborative Continuous Monitoring
+**Purpose:** Ongoing Certification Reports and Quarterly Reviews.
 
-**Key Sub-families:**
-- **CCM-01 to CCM-07**: Core monitoring requirements
-- **CCM-AG**: Agency-specific monitoring
-- **CCM-QR**: Quarterly review requirements (11 sub-requirements)
-- **CCM-SC**: Significant change assessment
+**Groups:** CCM-OCR (Ongoing Certification Reports), CCM-QTR (Quarterly Reviews), CCM-AGM (agency guidance).
 
 **Assessment Questions:**
-1. Do you have continuous monitoring for all authorization controls?
-2. Are quarterly reviews conducted per FRR-CCM-QR requirements?
-3. Do you coordinate with agency assessors for ongoing validation?
-4. Are monitoring metrics collected and analyzed automatically?
-5. Is significant change assessment integrated into your change process?
+1. Do you supply an Ongoing Certification Report every 3 months (CCM-OCR-AVL)?
+2. Do you publish the next report date (CCM-OCR-NRD) and offer an asynchronous feedback mechanism (CCM-OCR-FBM)?
+3. Do you host a Quarterly Review every 3 months where required for your Class (CCM-QTR-MTG)?
+4. Do you supply registration information and publish the next review date (CCM-QTR-REG, CCM-QTR-NRD)?
 
 **Start Assessment:**
 ```
 > analyze_frr_family with family="CCM" and code="[your monitoring code]" and language="python"
-> get_frr_evidence_automation with frr_id="FRR-CCM-QR-01"
+> get_frr_evidence_automation with frr_id="CCM-OCR-AVL"
 ```
 
-### 7. MAS - Minimum Assessment Scope (12 requirements)
-**Purpose:** Authorization boundaries, system inventory, assessment scope
+### 7. MAS - Minimum Assessment Scope
+**Purpose:** Which information resources are in the cloud service offering.
 
 **Assessment Questions:**
-1. Is your authorization boundary clearly defined and documented?
-2. Do you maintain a complete inventory of system components?
-3. Are all information resources within the boundary included in assessments?
-4. Do you track system interconnections and external dependencies?
-5. Is the authorization boundary reviewed annually for accuracy?
+1. Do you identify all information resources likely to handle federal customer data or impact its confidentiality, integrity or availability (MAS-CSO-IIR)?
+2. Are information flows and security categories documented (MAS-CSO-FLO)?
+3. Are third-party resources addressed (MAS-CSO-TPR)?
+4. Is metadata included (MAS-CSO-MDI)?
 
 **Start Assessment:**
 ```
-> analyze_frr_family with family="MAS" and code="[your boundary documentation]" and language="python"
 > list_frrs_by_family with family="MAS"
 ```
 
-### 8. ICP - Incident Communications Procedures (9 requirements)
-**Purpose:** Incident notification, communication protocols, escalation
+### 8. IEC - Incident Evaluation and Communication
+**Purpose:** Evaluate and report FedRAMP Reportable Incidents.
 
 **Assessment Questions:**
-1. Do you have documented incident communication procedures?
-2. Are incidents reported to FedRAMP within required timeframes?
-3. Is incident severity classification defined and followed?
-4. Do you have escalation procedures for critical incidents?
-5. Are incident communications tested periodically?
+1. Do you promptly evaluate incident reportability (IEC-CSO-EFR)?
+2. Do you estimate the Potential Agency Impact N-rating (IEC-CSO-EFI, default N5 per IEC-CSO-DPR)?
+3. Do you send Initial, Ongoing and Final Incident Reports within the timeframes for your Class (IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)?
+4. Is reporting automated (IEC-CSO-AIR)?
 
 **Start Assessment:**
 ```
-> analyze_frr_family with family="ICP" and code="[your incident response code]" and language="python"
-> list_frrs_by_family with family="ICP"
+> list_frrs_by_family with family="IEC"
 ```
 
-### 9. FSI - FedRAMP Security Inbox (16 requirements)
-**Purpose:** Vulnerability disclosure, security inbox management, response
+### 9. AFC - Addressing FedRAMP Communication
+**Purpose:** The FedRAMP Security Inbox and handling FedRAMP messages.
 
 **Assessment Questions:**
-1. Do you have a public vulnerability disclosure process?
-2. Is your security inbox monitored continuously?
-3. Are vulnerability reports acknowledged within 3 business days?
-4. Do you track vulnerability disclosure metrics?
-5. Is your vulnerability disclosure process documented publicly?
+1. Do you maintain the inbox and notify FedRAMP of address changes (AFC-CSO-INB, AFC-CSO-NOC)?
+2. Do you receive and react without disruption (AFC-CSO-RCV)?
+3. Are Emergency messages routed to a senior security official and required actions completed (AFC-CSO-EMR, AFC-CSO-CRA)?
 
 **Start Assessment:**
 ```
-> analyze_frr_family with family="FSI" and code="[your disclosure process]" and language="python"
-> list_frrs_by_family with family="FSI"
+> list_frrs_by_family with family="AFC"
 ```
 
-### 10. PVA - Persistent Validation and Assessment (22 requirements)
-**Purpose:** Continuous validation, assessment procedures, control testing
+### 10. IVV - Independent Verification and Validation
+**Purpose:** Evidence for independent assessors, annual independent assessment.
 
 **Assessment Questions:**
-1. Do you continuously validate security control effectiveness?
-2. Are assessments conducted according to FedRAMP schedules?
-3. Do you remediate assessment findings within required timeframes?
-4. Is control testing automated where possible?
-5. Do you maintain evidence of ongoing validation activities?
+1. Do you supply evidence of implementation and effectiveness (IVV-CSO-SEI, IVV-CSO-SEE)?
+2. Is the annual independent assessment complete (IVV-CSO-FIA; KSIs for 20x per IVV-CSX-AIA, Rev5 controls per IVV-CSF-AIA)?
+3. Are results in the Certification Package (IVV-CSO-ICP)?
 
 **Start Assessment:**
 ```
-> analyze_frr_family with family="PVA" and code="[your validation code]" and language="python"
-> list_frrs_by_family with family="PVA"
+> list_frrs_by_family with family="IVV"
 ```
+
+### 11. Other families
+- **FRC** FedRAMP Certification: package, profile, Class A rules, applying, changing Class
+- **CPO** Certification Package Overview
+- **SDR** Security Decision Record
+- **AGU** Agency Use (agency-facing)
+- **MKT** Marketplace Listing
+- **REC** FedRAMP Recognition of assessors
 
 ## Comprehensive Assessment Workflow
 
-### Phase 1: Discovery (30 minutes)
-1. **List all requirements in the family:**
-   ```
-   > list_frrs_by_family with family="[chosen family]"
-   ```
+### Phase 1: Discovery
+1. `list_frrs_by_family with family="[chosen family]"`
+2. Identify code-detectable versus process-based rules and note NIST 800-53 control mappings
+3. `get_frr_metadata with frr_id="VDR-CSO-DET"` for key rules
 
-2. **Review family overview:**
-   - Understand requirement count and categories
-   - Identify code-detectable vs. process-based requirements
-   - Note NIST 800-53 control mappings
+### Phase 2: Code Analysis
+1. Run family-specific analysis against application code, IaC and CI/CD
+2. Review findings by priority (tool ranking)
+3. Document gaps and compliant areas; identify areas needing manual review
 
-3. **Review metadata for key requirements:**
-   ```
-   > get_frr_metadata with frr_id="FRR-VDR-01"
-   > get_frr_metadata with frr_id="FRR-ADS-01"
-   ```
+### Phase 3: Evidence Planning
+1. `get_frr_evidence_automation with frr_id="VDR-CSO-DET"`
+2. Plan evidence collection infrastructure (Log Analytics, Storage, Monitor) and schedules. CR26 sets no numeric evidence or log retention period; the exceptions are specific rules (for example CDS-TRC-ACL access summaries for at least six months and SCN-CSO-HIS 12 months of notifications). Choose retention for everything else from your own policy.
+3. Design evidence artifacts (use the rule's artifacts field where present) and storage with access controls
 
-### Phase 2: Code Analysis (1-2 hours)
-1. **Run family-specific analysis:**
-   ```
-   > analyze_frr_family with family="VDR" and code="[application code]" and language="python"
-   > analyze_frr_family with family="VDR" and code="[IaC code]" and language="bicep"
-   > analyze_frr_family with family="VDR" and code="[CI/CD pipeline]" and language="github-actions"
-   ```
+### Phase 4: Implementation
+1. Prioritize MUST rules first
+2. Implement evidence automation and dashboards
+3. Document compliance in the Security Decision Record (SDR-CSO-FRR)
 
-2. **Review findings by severity:**
-   - Critical: Address immediately (blocking compliance)
-   - High: Schedule for current sprint
-   - Medium: Add to backlog
-   - Low: Consider for future improvements
-
-3. **Document gaps and compliant areas:**
-   - Create remediation plan for non-compliant findings
-   - Document compliant implementations as evidence
-   - Identify areas needing manual review (process-based)
-
-### Phase 3: Evidence Planning (1 hour)
-1. **Review evidence automation options:**
-   ```
-   > get_frr_evidence_automation with frr_id="FRR-VDR-01"
-   > get_frr_evidence_automation with frr_id="FRR-ADS-01"
-   ```
-
-2. **Plan evidence collection infrastructure:**
-   - Azure services needed (Log Analytics, Storage, Monitor)
-   - Collection schedules (daily, weekly, monthly)
-   - Retention requirements (30-90 days operational, 1-7 years compliance)
-   - Automation approach (Azure Functions, Logic Apps, Runbooks)
-
-3. **Design evidence artifacts:**
-   - Identify required evidence files (logs, reports, dashboards)
-   - Define artifact formats (CSV, JSON, PDF)
-   - Set up storage locations with access controls
-
-### Phase 4: Implementation (varies by family)
-1. **Prioritize remediation:**
-   - Fix critical/high findings first
-   - Group related fixes for efficiency
-   - Consider Azure-specific recommendations
-
-2. **Implement evidence automation:**
-   - Deploy evidence collection infrastructure
-   - Configure automated data collection
-   - Set up evidence storage and retention
-   - Create compliance dashboards
-
-3. **Document compliance:**
-   - Update SSP with FRR implementations
-   - Create evidence collection procedures
-   - Document deviations and compensating controls
-
-### Phase 5: Validation (30 minutes)
-1. **Re-run analysis after fixes:**
-   ```
-   > analyze_frr_family with family="VDR" and code="[updated code]" and language="python"
-   ```
-
-2. **Verify all critical/high findings resolved**
-
-3. **Document remaining gaps and mitigation plans**
-
-4. **Track implementation status:**
-   ```
-   > get_frr_implementation_status
-   ```
+### Phase 5: Validation
+1. Re-run analysis after fixes
+2. Verify blocking findings resolved
+3. Track status: `get_frr_implementation_status`
 
 ## Family-Specific Best Practices
 
-### VDR Family (Vulnerability Management)
-**Critical Success Factors:**
-- Automated vulnerability scanning in every CI/CD run
-- Trivy/Defender for Cloud integration for container scanning
-- Remediation timeframe tracking (Critical: 15 days, High: 30 days, KEV: 15 days)
-- Formal deviation approval workflow
-- Agency-specific vulnerability reporting capabilities
+### VDR and VER
+- Automated detection in CI/CD and for deployed resources
+- Container scanning (Trivy, Defender for Cloud)
+- Timeframe tracking against VDR-TFR-PVR and VDR-TFR-KEV
+- Monthly reporting (VER-TFR-MHR)
+- Azure services: Defender for Cloud, Log Analytics, Azure DevOps, Azure Policy
 
-**Azure Services:** Defender for Cloud, Log Analytics, Azure DevOps, Azure Policy
+### CDS
+- Trust center with documented programmatic access
+- JSON valid against FedRAMP schemas (FRC-CSO-JSN)
+- Access logging and agency access inventory (CDS-TRC-ACL, CDS-TRC-AAI)
+- Azure services: API Management, Azure Functions, Application Insights, Key Vault
 
-### ADS Family (Data Sharing)
-**Critical Success Factors:**
-- REST API with machine-readable JSON/XML
-- OAuth2 authentication via Azure AD/Entra ID
-- Real-time or hourly data updates
-- Comprehensive API testing and validation
-- API access logging and audit trail
+### SCG
+- Settings as code (Bicep/Terraform), Azure Policy for drift enforcement
+- Azure services: Azure Policy, Resource Graph, Automation
 
-**Azure Services:** API Management, Azure Functions, Application Insights, Key Vault
-
-### RSC Family (Secure Configuration)
-**Critical Success Factors:**
-- CIS Benchmarks applied to all resources
-- Azure Policy for drift detection and enforcement
-- Configuration as code (Bicep/Terraform)
-- Automated baseline validation in CI/CD
-- Deviation tracking and approval process
-
-**Azure Services:** Azure Policy, Resource Graph, Automation, Blueprints
-
-### UCM Family (Cryptography)
-**Critical Success Factors:**
-- FIPS 140-3 validated modules only
-- Azure Key Vault Premium SKU for keys
-- Encryption at rest and in transit enforced
-- Key rotation policies implemented
-- HSM-backed keys for sensitive data
-
-**Azure Services:** Key Vault Premium, Managed HSM, Azure Storage (encryption), TLS 1.2+
+### CMU
+- Validated modules where required for your Class
+- Azure Key Vault Premium or Managed HSM
+- Azure services: Key Vault Premium, Managed HSM, Storage encryption
 
 ## Multi-Family Assessments
 
-**Common Scenarios:**
-
-**Scenario 1: Vulnerability Management + Data Sharing**
+**Scenario 1: Vulnerability management + Certification Data**
 ```
 > analyze_frr_family with family="VDR" and code="[pipeline]" and language="github-actions"
-> analyze_frr_family with family="ADS" and code="[API]" and language="python"
+> analyze_frr_family with family="CDS" and code="[API]" and language="python"
 ```
-**Goal:** Ensure vulnerability data is shared via machine-readable API
+**Goal:** Vulnerability reports (VER-RPT-PER) are published as Certification Data.
 
-**Scenario 2: Secure Configuration + Cryptography**
+**Scenario 2: Secure configuration + cryptography**
 ```
-> analyze_frr_family with family="RSC" and code="[IaC]" and language="bicep"
-> analyze_frr_family with family="UCM" and code="[IaC]" and language="bicep"
+> analyze_frr_family with family="SCG" and code="[IaC]" and language="bicep"
+> analyze_frr_family with family="CMU" and code="[IaC]" and language="bicep"
 ```
-**Goal:** Validate baseline configurations include proper cryptographic controls
 
-**Scenario 3: Change Management + Continuous Monitoring**
+**Scenario 3: Change management + continuous monitoring**
 ```
 > analyze_frr_family with family="SCN" and code="[change process]" and language="python"
 > analyze_frr_family with family="CCM" and code="[monitoring]" and language="python"
 ```
-**Goal:** Integrate change notifications with continuous monitoring workflows
+**Goal:** Transformative changes and accepted vulnerabilities flow into the Ongoing Certification Report (CCM-OCR-AVL).
 
 ## Next Steps
 
-**After completing family assessment:**
-1. Review `frr_code_review` prompt for detailed code review guidance
+1. Review `frr_code_review` for detailed code review guidance
 2. Check `frr_implementation_roadmap` for strategic planning
 3. Use `get_frr_implementation_status()` to track progress
-4. Schedule periodic re-assessments (monthly for VDR, quarterly for others)
-5. Integrate FRR checks into CI/CD pipelines
+4. Re-assess on the cadence your rules require
 
 **Related Tools:**
-- `analyze_frr_family(family, code, language)` - Run family assessment
-- `list_frrs_by_family(family)` - List all requirements in family
-- `get_frr_metadata(frr_id)` - Understand specific requirements
-- `get_frr_evidence_automation(frr_id)` - Automate evidence collection
-- `get_frr_implementation_status()` - Track overall progress
+- `analyze_frr_family(family, code, language)`
+- `list_frrs_by_family(family)`
+- `get_frr_metadata(frr_id)`
+- `get_frr_evidence_automation(frr_id)`
+- `get_frr_implementation_status()`

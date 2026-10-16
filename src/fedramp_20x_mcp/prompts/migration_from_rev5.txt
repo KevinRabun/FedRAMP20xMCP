@@ -1,440 +1,222 @@
-I'll help you migrate from FedRAMP Rev 5 to FedRAMP 20x.
+I'll help you plan your move between FedRAMP Rev5 and the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01).
 
-# Migration Guide: FedRAMP Rev 5 → FedRAMP 20x
+# Migration Guide: FedRAMP Rev5 and FedRAMP 20x under CR26
 
-**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON/XML) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x** - it's a NIST standard you may already use in Rev 5. When migrating, focus on machine-readable formats - continue with OSCAL only if it serves your needs, or use custom JSON/XML.
+## How CR26 treats Rev5
+
+CR26 is one rule set with two Certification Types. A provider picks ONE type for a cloud service offering (FRC-CSO-POP): FedRAMP Rev5 Program Certification or FedRAMP 20x Program Certification. Rules are tagged by scope in the rules data: many apply to both types, some only to 20x (for example the KSI-oriented rules with the CSX group id, such as SDR-CSX-KSI, IVV-CSX-AIA, CPO-CSX-CPM, FRC-CSX-VVK, VDR-TFR-MVX) and some only to Rev5 (the CSF group id, such as SDR-CSF-CTF, IVV-CSF-AIA, CPO-CSF-CPM, VDR-TFR-MVF, FRC-CSF-*).
+
+**Important Notes:**
+- Rev5 Certification keeps NIST SP 800-53 Rev. 5 controls as the unit of assessment; 20x Certification uses the 46 Key Security Indicators (KSIs).
+- The Certification Package Overview replaces the historically required System Security Plan for Rev5 (CPO-CSO-OVR notes). CR26 has no POA&M, SAR or OSCAL SSP requirement.
+- Certification Data goes in a trust center in human-readable and JSON formats (CDS-CSO-UTC, CDS-CSO-PUB); OSCAL is not required.
+- FedRAMP Ready status must be converted to a FedRAMP Certification by the later of the expiration of the annual assessment or November 17, 2026; legacy Ready status is removed on December 31, 2027 (FRC-CSF-RDY).
+
+## Rev5-specific rules in CR26 (read each with get_frr_metadata)
+
+- **FRC-CSF-BSL** FedRAMP Rev5 Baselines: Class B, C and D providers include the listed NIST SP 800-53 Rev. 5 controls in their Security Decision Record
+- **FRC-CSF-ACP** Assign Control Parameters: assign all organization-defined parameters per FedRAMP Rev5 Controls Guidance and document them in the SDR (the CTL section of the rules data holds FedRAMP parameter values by control family: AC, AU, CA, CM, CP, IA, IR, MA, PS, RA, SA, SC, SI, SR)
+- **FRC-CSF-FFG** Follow FedRAMP Rev5 Controls Guidance for implementation and documentation of applicable controls
+- **FRC-CSF-RDY** FedRAMP Ready conversion (dates above)
+- **FRC-APS-ATO** Agency Authorization to Operate: Rev5 Agency Certification requires a completed agency ATO with a signed ATO letter sent to FedRAMP
+- **SDR-CSF-CTF** Rev5 Controls in the SDR: organization-defined parameter values, implementation status (Implemented, Partially Implemented, Planned, Alternative Implementation, Not Applicable), mechanisms, verification, validation, independent verification and validation, artifacts
+- **IVV-CSF-AIA** Annual independent assessment of the listed Rev5 controls (once per year)
+- **IVV-CSF-MCA** all applicable Rev5 controls assessed at least once every 3 years (a ceiling, not a floor); **IVV-CSF-PCA** SHOULD include all applicable controls in each assessment; **IVV-CSF-ACF** controls with negative findings go into the next assessment
+- **CPO-CSF-CPM** Certification Package maintenance for Rev5 (by Class: at least yearly for B and C, at least every six months for D)
+- **VDR-TFR-MVF** machine verification and validation for Rev5 (monthly)
+- **CDS-CSF-TCM** Trust Center Migration: notify all necessary parties and leave instructions in existing USDA Connect Community Portal secure folders
 
 ## Executive Summary
 
-**Key Changes:**
-- Document-based → API-based data sharing
-- Annual assessment → Continuous monitoring
-- Static boundary → Dynamic, cloud-native support
-- Manual evidence → Automated collection
-- 320 controls → 72 Key Security Indicators + 11 standards
+**Key Changes (what CR26 emphasizes):**
+- Document-based sharing becomes Certification Data in a trust center with programmatic access
+- Annual cycle becomes persistent verification, validation and Ongoing Certification Reports every 3 months (CCM-OCR-AVL)
+- Manual evidence becomes automated collection (see FRC-CSX-VVK for 20x)
+- Severity-based remediation becomes VDR-TFR-PVR timeframes by Class, N-rating and reachability
+- Rev5 controls (Rev5 type) or 46 KSIs (20x type)
 
-**Timeline:** 6-12 months for full transition
-**Effort:** Significant automation investment required
+Timeline and effort depend on your Class, Type and current maturity; plan your own schedule.
 
-## Phase 1: Assessment & Planning (Weeks 1-4)
+## Phase 1: Assessment and Planning
 
 ### Gap Analysis
 
-**What You Have (Rev 5):**
+**What you have (legacy Rev5):**
 - System Security Plan (Word/PDF)
-- Annual 3PAO assessment
-- Monthly ConMon scans
-- Quarterly POA&M updates
+- Annual independent assessment
+- Monthly ConMon scans and POA&M updates
 - Manual evidence packages
 
-**What You Need (FedRAMP 20x):**
-- Machine-readable SSP (JSON/XML - custom or OSCAL)
-- Authorization Data Sharing API
-- Continuous monitoring with KSI tracking
-- Quarterly reviews with automated data sharing
-- Real-time evidence via APIs
+**What CR26 expects (both types):**
+- Certification Package with Overview and Security Decision Record, in human-readable and JSON (CPO-CSO-OVR, SDR-CSO-FRR)
+- Trust center sharing (CDS-CSO-UTC)
+- Ongoing Certification Report every 3 months (CCM-OCR-AVL) and Quarterly Review where your Class requires it (CCM-QTR-MTG)
+- Vulnerability detection, evaluation and reporting (VDR, VER)
+- Significant Change Notifications (SCN), incident reporting (IEC), FedRAMP Security Inbox (AFC)
 
 ### Current State Inventory
-
-**Document Your Current Implementation:**
-- [ ] List all security controls from Rev 5 SSP
-- [ ] Inventory monitoring/security tools
-- [ ] Document current ConMon process
+- [ ] List Rev5 controls and their implementation statements
+- [ ] Inventory monitoring and security tools
+- [ ] Document the current ConMon process
 - [ ] List evidence collection methods
-- [ ] Review 3PAO assessment findings
+- [ ] Review previous independent assessment findings (IVV-CSF-ACF)
 
-### Map Rev 5 to FedRAMP 20x
+### Map Rev5 control families to KSI families
 
-**Control Mapping:**
+The KSI definitions list the NIST controls they relate to. Based on those mappings in the rules data, the primary relationships are:
 ```
-Rev 5 Control Family → FedRAMP 20x Standard
-
-AC (Access Control) → KSI-IAM (Identity & Access)
-AU (Audit) → KSI-MLA (Monitoring, Logging & Analysis)
-CA (Assessment) → FRR-MAS, FRR-PVA (Assessment, Validation)
-CM (Configuration) → KSI-CMT, KSI-SVC (Change, Services)
-CP (Contingency) → KSI-RPL (Recovery & Planning)
-IA (Identification) → KSI-IAM (Identity & Access)
-IR (Incident Response) → KSI-INR, FRR-ICP (Incidents, Communications)
-RA (Risk Assessment) → KSI-AFR, FRR-VDR (Vulnerabilities)
-SA (System Services) → KSI-TPR, KSI-PIY (Third-party, Investment)
-SC (System Communications) → KSI-CNA, KSI-SVC (Cloud-native, Services)
-SI (System Integrity) → FRR-VDR, KSI-SVC (Vulnerabilities, Services)
+Rev5 family -> primary KSI families
+AC  Access Control            -> IAM (also SVC, CNA, MLA)
+AT  Awareness and Training    -> CED
+AU  Audit and Accountability  -> MLA (also IAM)
+CA  Assessment/Authorization  -> CNA, SCR, PIY
+CM  Configuration Management  -> CMT, IAM, SVC, PIY
+CP  Contingency Planning      -> RPL
+IA  Identification/Auth.      -> IAM
+IR  Incident Response         -> INR
+PS  Personnel Security        -> IAM
+RA  Risk Assessment           -> SCR, IAM, MLA, PIY
+SA  System/Services Acq.      -> SCR
+SC  System/Comms Protection   -> CNA, SVC, IAM
+SI  System/Info Integrity     -> CNA, MLA, SVC, IAM
+SR  Supply Chain Risk Mgmt    -> SCR, SVC
 ```
+Rule-level equivalents: assessment and scope (MAS, IVV), vulnerabilities (VDR, VER), incidents (IEC), change (SCN), monitoring (CCM).
 
-**Use compare_with_rev4 tool to see detailed comparisons for specific areas.**
+**Use compare_with_rev4 tool for legacy comparisons.** Always check the controls field of a KSI or rule (get_ksi, get_frr_metadata) for the authoritative mapping.
 
-## Phase 2: Infrastructure Preparation (Weeks 5-16)
+## Phase 2: Infrastructure Preparation
 
-### Priority 1: SIEM & Monitoring (Weeks 5-10)
+### SIEM and monitoring
+- [ ] Verify your SIEM can support the KSI measures you need (KSI-MLA-OSM, KSI-MLA-RVL, KSI-MLA-LET)
+- [ ] Configure automated collection and API export
+- [ ] Set up trust center feeds
 
-**If you have SIEM already:**
-- [ ] Verify it can track 72 KSIs
-- [ ] Configure automated KSI data collection
-- [ ] Set up API access for data export
-- [ ] Test OSCAL format export (if supported)
+### Certification Data sharing
+- [ ] Pick a FedRAMP-compatible trust center (CDS-CSO-UTC)
+- [ ] Provide documented programmatic access (CDS-TRC-PAC)
+- [ ] Publish public information in JSON (CDS-CSO-PUB) and validate against FedRAMP schemas (FRC-CSO-JSN)
+- [ ] Use `api_design_guide` for design guidance
 
-**If you need new SIEM:**
-- [ ] Select FedRAMP-authorized SIEM (Splunk, Datadog, etc.)
-- [ ] Migrate log sources
-- [ ] Configure KSI tracking dashboards
-- [ ] Set up API for Authorization Data Sharing
+### KSI work (20x type)
+Likely already covered from Rev5 practice, needs documentation: authentication (KSI-IAM-APM), log review (KSI-MLA-RVL), incident procedures (KSI-INR-RIR), backups (KSI-RPL-ABO).
+Likely needs new automation: inventories (KSI-PIY-GIV), IaC evaluation (KSI-MLA-EVC), automated validation in deployment (KSI-CMT-VTD), defined functionality and privileges (KSI-CNA-DFP).
+Use `ksi_implementation_priorities` to plan order.
 
-**Gap from Rev 5:**
-- Rev 5: Monthly scan reports emailed
-- FedRAMP 20x: Real-time data via API
+## Phase 3: Documentation Conversion
 
-### Priority 2: Authorization Data Sharing API (Weeks 8-16)
+### From the SSP to the Certification Package
+- Certification Package Overview (CPO-CSO-OVR) replaces the SSP front matter for Rev5
+- Security Decision Record carries per-rule and per-control explanations, verification and validation (SDR-CSO-FRR, SDR-CSF-CTF or SDR-CSX-KSI)
+- Control narratives map to SDR-CSF-CTF entries (Rev5) or KSI summaries (20x)
+- Use `documentation_generator` for templates
 
-**Build New API:**
-```
-Required Endpoints:
-- GET /api/v1/system (OSCAL SSP format)
-- GET /api/v1/vulnerabilities
-- GET /api/v1/ksi-metrics
-- GET /api/v1/incidents
-- GET /api/v1/changes
-- GET /api/v1/poam
-```
+### New documentation compared with legacy Rev5
+1. Public information and service list (CDS-CSO-PUB, CDS-CSO-SVC)
+2. Security Decision Record (SDR)
+3. Secure Configuration Guide (SCG-CSO-RSC, SCG-CSO-AUP)
+4. Cryptographic module documentation (CMU-CSO-CMD)
+5. Ongoing Certification Report and Quarterly Review procedures (CCM-OCR-*, CCM-QTR-*)
+6. For 20x: KSI implementation summaries (SDR-CSX-KSI)
 
-**Authentication:**
-- OAuth 2.0 or mTLS
-- Provide test credentials to FedRAMP
+## Phase 4: Process Changes
 
-**Use api_design_guide prompt for detailed implementation guidance.**
+### Continuous monitoring (CCM)
 
-### Priority 3: KSI Implementation (Weeks 6-16)
+**Legacy Rev5 process:**
+- Monthly scans and ConMon deliverable
+- Quarterly POA&M update
+- Annual assessment
 
-**Quick Wins (Weeks 6-8):**
-Already compliant from Rev 5, just need to document:
-- KSI-IAM-01: MFA (you already have this for AC-2)
-- KSI-MLA-02: Audit logging (you already have this for AU-2)
-- KSI-INR-01: Incident response (you already have this for IR-8)
-- KSI-RPL-03: Backups (you already have this for CP-9)
+**CR26 process:**
+- Persistent verification and validation (VDR-TFR-MVX for 20x, VDR-TFR-MVF for Rev5, by Class)
+- Ongoing Certification Report every 3 months (CCM-OCR-AVL)
+- Quarterly Review (CCM-QTR-MTG, by Class)
+- Annual independent assessment (IVV-CSO-FIA; Rev5 controls per IVV-CSF-AIA)
 
-**New Requirements (Weeks 8-16):**
-Not required in Rev 5, need implementation:
-- KSI-IAM-01: Must be phishing-resistant (upgrade from TOTP to FIDO2)
-- KSI-PIY-01: Automated inventory (upgrade from manual)
-- KSI-MLA-05: Infrastructure as Code (new requirement)
-- KSI-CMT-03: Automated testing in CI/CD (new requirement)
-- KSI-CNA-04: Immutable infrastructure (new requirement)
+### Vulnerability management (VDR, VER)
 
-**Use ksi_implementation_priorities prompt to plan implementation order.**
-
-## Phase 3: Documentation Conversion (Weeks 12-20)
-
-### Convert SSP to Machine-Readable Format (OSCAL Preferred)
-
-**Rev 5 SSP (Word/PDF):**
-```
-Section 1: System Information
-Section 2: System Environment
-Section 3: System Characteristics
-...
-Section 13: Control Responses (320 controls)
-```
-
-**FedRAMP 20x SSP (OSCAL JSON):**
-```json
-{
-  "system-security-plan": {
-    "metadata": {...},
-    "system-characteristics": {...},
-    "system-implementation": {...},
-    "control-implementation": {...}
-  }
-}
-```
-
-**Migration Approach:**
-
-**Option 1: Automated Conversion**
-- Use OSCAL conversion tools (NIST provides some)
-- Requires manual cleanup and validation
-- Faster but less accurate
-
-**Option 2: Manual Conversion**
-- Extract data from Word/PDF
-- Map to OSCAL structure
-- More accurate but time-consuming
-
-**Option 3: Fresh Start**
-- Use current architecture to generate new OSCAL SSP
-- Most accurate for cloud-native systems
-- Recommended if architecture changed significantly
-
-**Use documentation_generator prompt for OSCAL templates.**
-
-### New Documentation Requirements
-
-**Documents you didn't have in Rev 5:**
-
-1. **FRR-ADS: Authorization Data Sharing API Documentation**
-   - API endpoints
-   - Authentication methods
-   - Data formats (OSCAL)
-   - SLAs
-
-2. **FRR-KSI: All 72 KSI Implementation Documents**
-   - How each KSI is implemented
-   - Evidence collection methods
-   - Metrics and targets
-
-3. **FRR-PVA: Persistent Validation Procedures**
-   - Continuous validation approach
-   - Automated validation tools
-   - Validation frequency
-
-4. **FRR-CCM-QR: Quarterly Review Procedures**
-   - Structured review process
-   - Agency collaboration procedures
-
-## Phase 4: Process Changes (Weeks 16-24)
-
-### Continuous Monitoring (FRR-CCM)
-
-**Rev 5 Process:**
-```
-Monthly: Run vulnerability scans
-Monthly: Submit ConMon deliverable
-Quarterly: Update POA&M
-Annually: 3PAO assessment
-```
-
-**FedRAMP 20x Process:**
-```
-Continuously: Automated scanning and monitoring
-Real-time: KSI metrics collection
-Daily: Authorization Data Sharing API updated
-Quarterly: Structured quarterly review (FRR-CCM-QR)
-As-needed: Persistent validation (FRR-PVA)
-```
-
-**Key Changes:**
-- Manual → Automated evidence collection
-- Monthly deliverables → Real-time API access
-- Annual assessment → Continuous validation
-
-### Vulnerability Management (FRR-VDR)
-
-**Rev 5 Approach:**
-- 30 days for High vulnerabilities
-- POA&M for longer remediation
-- Monthly ConMon scans
-
-**FedRAMP 20x Approach:**
-- Timeframes vary by severity AND impact level
-- High impact: 7-15 days for Critical/High
-- Formal exception process (FRR-VDR-EX)
-- Agency-specific reporting (FRR-VDR-RP)
+- Timeframes are not 30-day or severity based. VDR-TFR-PVR gives days from evaluation by Class, N-rating (Potential Agency Impact) and internet-reachability / exploitability
+- Known Exploited Vulnerabilities follow CISA KEV due dates (VDR-TFR-KEV)
+- Vulnerabilities not mitigated or remediated within 192 days of evaluation become accepted vulnerabilities (VER-TFR-MAV, VER-RPT-AVI); there is no POA&M
+- Report at least monthly (VER-TFR-MHR)
 
 **Action Items:**
-- [ ] Review current vulnerability remediation times
-- [ ] Implement automated scanning (if not already)
-- [ ] Update procedures for new timeframes
-- [ ] Set up agency reporting workflow
+- [ ] Review current remediation practices against VDR-TFR-PVR for your Class
+- [ ] Automate detection (VDR-CSO-ADT) and evaluation (VER-EVA-*)
+- [ ] Update procedures and reporting workflow
 
-### Significant Change Notifications (FRR-SCN)
+### Significant Change Notifications (SCN)
+- Types: routine recurring (no formal notification), adaptive, transformative (SCN-CSO-EVA)
+- Timing: SCN-ADP-NTF, SCN-TRF-NIP, SCN-TRF-NFP, SCN-TRF-NAF, SCN-TRF-NAV, SCN-TRF-UPD
+- Maintain records and 12 months of notifications (SCN-CSO-MAR, SCN-CSO-HIS)
 
-**Rev 5 Approach:**
-- Notify FedRAMP of "significant changes"
-- Vague definition of "significant"
-- Email-based notifications
+### Incidents (IEC) and FedRAMP communication (AFC)
+- Evaluate reportability (IEC-CSO-EFR), default N5 (IEC-CSO-DPR), report on the Class and N-rating timeframes (IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)
+- Maintain the FedRAMP Security Inbox (AFC-CSO-INB)
 
-**FedRAMP 20x Approach:**
-- Clear categories: Routine, Administrative, Transformative, Impact
-- Structured notification process
-- Must use FedRAMP Security Inbox (FRR-FSI)
-- Specific triggers defined
+## Phase 5: Testing and Validation
 
-**Action Items:**
-- [ ] Document change categorization process
-- [ ] Update change management procedures
-- [ ] Train team on FRR-SCN requirements
+**Test Certification Data sharing:**
+- [ ] Public data valid against schemas and consistent across formats (FRC-CSO-JSN, CDS-CSO-CBF)
+- [ ] Programmatic access and authentication work (CDS-TRC-PAC)
+- [ ] Access logging in place (CDS-TRC-ACL)
 
-## Phase 5: Testing & Validation (Weeks 20-26)
-
-### Internal Testing
-
-**Test Authorization Data Sharing API:**
-- [ ] All endpoints return correct data
-- [ ] Machine-readable format validates (OSCAL preferred)
-- [ ] Authentication works properly
-- [ ] Rate limiting configured
-- [ ] Error handling works
-
-**Test KSI Collection:**
-- [ ] All 72 KSIs being tracked
+**Test KSI or control collection:**
+- [ ] All applicable KSIs (46 for 20x) or Rev5 controls tracked
 - [ ] Automated collection working
-- [ ] Data accurate and timely
-- [ ] Dashboards showing correct metrics
+- [ ] Dashboards accurate
 
-**Test Continuous Monitoring:**
-- [ ] Vulnerability scans running continuously
-- [ ] Incidents logged automatically
-- [ ] Changes tracked automatically
-- [ ] Evidence collected automatically
+**Test continuous monitoring:**
+- [ ] Detection running at the cadence of VDR-TFR-PDD, VDR-TFR-PCD, VDR-TFR-PSD for your Class
+- [ ] Incidents and changes recorded automatically
 
-### FedRAMP Coordination
+**FedRAMP coordination:**
+- [ ] Review your plan with FedRAMP
+- [ ] Demonstrate data collection and trust center access
 
-**Schedule Review with FedRAMP:**
-- [ ] Provide test API credentials
-- [ ] Demonstrate data collection
-- [ ] Show OSCAL documentation
-- [ ] Review quarterly process
+## Phase 6: Transition
 
-**Address Feedback:**
-- [ ] Fix any API issues
-- [ ] Update documentation
-- [ ] Adjust procedures
+- [ ] Certification Package complete (FRC-CSO-PKG)
+- [ ] Marketplace listing requirements met (MKT-CSO-MLR, MKT-CSO-PML)
+- [ ] Trust center in production; notify necessary parties of migration (CDS-CSF-TCM)
+- [ ] First Ongoing Certification Report prepared
+- [ ] Team trained; runbooks updated
 
-## Phase 6: Transition (Weeks 24-28)
+## Ongoing
 
-### Final Preparation
-
-**Documentation:**
-- [ ] All 11 FedRAMP 20x standard documents complete
-- [ ] All 72 KSI implementation documents complete
-- [ ] OSCAL SSP finalized
-- [ ] API documentation complete
-
-**Technical:**
-- [ ] Authorization Data Sharing API in production
-- [ ] All KSI metrics being collected
-- [ ] Continuous monitoring operational
-- [ ] Quarterly review process tested
-
-**Team:**
-- [ ] Team trained on new processes
-- [ ] Roles and responsibilities updated
-- [ ] Runbooks created for new procedures
-
-### Go-Live
-
-**Cutover Activities:**
-- [ ] Final data validation
-- [ ] Enable Authorization Data Sharing API for FedRAMP
-- [ ] Conduct first quarterly review under new process
-- [ ] Communicate change to agencies
-
-**Post-Cutover:**
-- [ ] Monitor API usage and performance
-- [ ] Collect feedback from FedRAMP/agencies
-- [ ] Adjust processes based on feedback
-- [ ] Document lessons learned
-
-## Phase 7: Continuous Improvement (Ongoing)
-
-### First 90 Days
-
-**Weeks 1-4:**
-- Daily check-ins on API performance
-- Validate KSI metrics accuracy
-- Address any immediate issues
-
-**Weeks 5-8:**
-- First quarterly review under new process
-- Gather feedback from team
-- Optimize automation
-
-**Weeks 9-12:**
-- Refine procedures based on experience
-- Update documentation with lessons learned
-- Plan for additional automation
-
-### Ongoing Activities
-
-**Monthly:**
-- Review KSI metrics for trends
-- Validate evidence collection
-- Update procedures as needed
-
-**Quarterly:**
-- Conduct formal quarterly review (FRR-CCM-QR)
-- Update Authorization Data Sharing API with latest data
-- Coordinate with agencies
-
-**Annually:**
-- Review overall 20x compliance
-- Plan improvements for next year
-- Update risk assessment
+- Monitor trust center usage and feedback (CCM-OCR-FBM)
+- Review KSI or control metrics for trends
+- Keep the Certification Package current (CPO-CSX-CPM or CPO-CSF-CPM)
+- Plan the next independent assessment
 
 ## Common Migration Challenges
 
-### Challenge 1: Legacy Tools Don't Support APIs
+**Legacy tools lack APIs:** build middleware, replace tools, or use manual export with automation as a short-term workaround.
 
-**Problem:** Current tools can't export data via API
+**Manual evidence collection:** automate with scripts and tools that track KSIs; see FRC-CSX-VVK for expected automation by Class.
 
-**Solutions:**
-- Build middleware to expose tool data via API
-- Replace tools with FedRAMP 20x-compatible alternatives
-- Use manual export + automation (short-term workaround)
+**Machine-readable conversion:** convert Word/PDF content to the FedRAMP JSON schemas referenced in the rules (schema.url fields), not to OSCAL.
 
-### Challenge 2: Manual Evidence Collection
-
-**Problem:** Most evidence collected manually in Rev 5
-
-**Solution:**
-- Implement automation for top 20 KSIs first
-- Use scripts to aggregate data
-- Invest in tools with built-in KSI tracking
-
-### Challenge 3: OSCAL Conversion Complexity
-
-**Problem:** Converting Word SSP to OSCAL is difficult
-
-**Solutions:**
-- Start with OSCAL templates, populate from scratch
-- Use OSCAL tools (NIST provides some)
-- Consider consulting services for conversion
-
-### Challenge 4: Team Knowledge Gap
-
-**Problem:** Team doesn't know FedRAMP 20x or OSCAL
-
-**Solutions:**
-- Training on FedRAMP 20x requirements (use this MCP server!)
-- OSCAL training (NIST resources)
-- Hire consultant for initial setup
-- Phase transition to allow learning time
-
-## Budget Considerations
-
-**New Costs:**
-- Authorization Data Sharing API development: $50K-150K
-- SIEM upgrades/new tools: $50K-200K/year
-- OSCAL conversion: $20K-50K
-- Training: $10K-30K
-- Consulting (optional): $50K-200K
-
-**Potential Savings:**
-- Less manual evidence collection (saves time)
-- Automated compliance checking
-- Faster quarterly reviews
-- Reduced 3PAO hours (potentially)
-
-**Total Migration Cost:** $180K-630K
-**Ongoing Additional Cost:** $50K-200K/year (tools)
+**Team knowledge gap:** train on CR26 (use this MCP server), phase the transition.
 
 ## Success Criteria
 
 **Technical:**
-✓ Authorization Data Sharing API operational
-✓ All 72 KSIs being tracked automatically
-✓ OSCAL SSP validates successfully
-✓ Continuous monitoring operational
+- Trust center with programmatic access operating
+- KSIs (20x) or controls (Rev5) tracked automatically
+- JSON validates against FedRAMP schemas
+- Continuous monitoring operational
 
 **Process:**
-✓ Quarterly reviews conducted on time
-✓ Vulnerabilities remediated within timeframes
-✓ Changes properly categorized and notified
-✓ Incidents handled per FRR-ICP
+- Ongoing Certification Reports and Quarterly Reviews on schedule
+- Vulnerabilities handled within VDR-TFR-PVR timeframes
+- Changes classified and notified per SCN
+- Incidents handled per IEC
 
 **Compliance:**
-✓ FedRAMP accepts Authorization Data Sharing API
-✓ Agencies can query system data
-✓ Documentation meets FedRAMP 20x requirements
-✓ 3PAO validates transition
+- Certification Package accepted by FedRAMP
+- Agencies can access Certification Data
+- Independent assessment results included (IVV-CSO-ICP)
 
 Use compare_with_rev4 for specific area comparisons, and search_requirements to find requirements related to your migration challenges.

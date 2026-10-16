@@ -1,0 +1,75 @@
+# Example: scan an application repository with fedramp-20x-scan and store the
+# result as compliance evidence. Put this in the APPLICATION repository; it
+# pulls the scanner and the step templates from the fedramp-20x-mcp repo.
+#
+# Result layout in storage (evidence-upload-steps.yml):
+#   intellievidence/vdr-reports/fedramp20x-scan/<repo>/<yyyy-MM-dd>/<buildId>-<attempt>/
+#     findings.json  report.md  run.json (rules version + sha256)  pipeline-run.json
+#     sha256-manifest.txt
+#
+# Prerequisites (IntelliGRC ADO project only, see evidence-upload-steps.yml):
+#   - this pipeline authorized for the `evidence-writer` service connection
+#     and the `intelli-pool-1` pool (first run asks for permission)
+#   - the fedramp-20x-mcp repository readable by this pipeline's build identity
+
+trigger:
+  branches:
+    include: [main]
+
+pr:
+  branches:
+    include: [main]
+
+schedules:
+- cron: '30 5 * * *'
+  displayName: 'Daily FedRAMP 20x evidence'
+  branches:
+    include: [main]
+  always: true
+
+resources:
+  repositories:
+  - repository: fedramp
+    type: git
+    name: IntelliGRC/fedramp-20x-mcp   # <project>/<repo> where this tool lives
+    ref: refs/heads/main               # pin to a tag for reproducible evidence
+
+stages:
+- stage: Scan
+  jobs:
+  - job: scan
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+      path: s/app
+    - checkout: fedramp
+      path: s/fedramp
+    - template: .azuredevops/templates/fedramp-scan-steps.yml@fedramp
+      parameters:
+        toolPath: '$(Pipeline.Workspace)/s/fedramp'
+        scanPath: '$(Pipeline.Workspace)/s/app'
+        failOn: high
+        profile: web-app          # api-service, cli-tool, ... reduces false positives
+        families: ''              # e.g. 'IAM,SVC,MLA,CNA' to narrow the scan
+        excludes:
+        - 'tests/*'
+
+- stage: StoreEvidence
+  dependsOn: Scan
+  # Store failing scans too; skip PR builds (review feedback, not evidence).
+  condition: and(not(canceled()), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+  - job: upload
+    pool: intelli-pool-1          # private endpoint reach to intellievidence
+    steps:
+    - checkout: none              # templates are resolved at queue time
+    - download: current
+      artifact: fedramp-scan
+    - template: .azuredevops/templates/evidence-upload-steps.yml@fedramp
+      parameters:
+        sourceDir: '$(Pipeline.Workspace)/fedramp-scan'
+        reportName: 'fedramp20x-scan/$(Build.Repository.Name)'
+        # serviceConnection: evidence-writer   (default)
+        # storageAccount:    intellievidence   (default)
+        # container:         vdr-reports       (default)

@@ -1,8 +1,8 @@
 ---
 pattern_id: fsi.frr.frr_fsi_01
 name: Verified Emails Compliance
-description: Validates compliance with FRR-FSI-01 - Verified Emails
-family: FSI
+description: Validates compliance with AFC-FRP-VRE - Verified Emails
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -11,9 +11,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-01 - Verified Emails compliance check
-  description_template: Configuration requires validation for FRR-FSI-01 compliance
-  remediation_template: Implement FRR-FSI-01 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-VRE - Verified Emails compliance check
+  description_template: Configuration requires validation for AFC-FRP-VRE compliance
+  remediation_template: Implement AFC-FRP-VRE requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -22,33 +22,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-01
+- AFC-FRP-VRE
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-01 policy documentation
+  name: AFC-FRP-VRE policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-01 configuration evidence
+  name: AFC-FRP-VRE configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-01 compliance validation
+    description: Automated AFC-FRP-VRE compliance validation
     implementation: |
-      # FRR-FSI-01 compliance automation
+      # AFC-FRP-VRE compliance automation
       # GitHub Actions
-      - name: FRR-FSI-01 Validation
+      - name: AFC-FRP-VRE Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_01 \
@@ -56,30 +56,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-01 Check'
+        displayName: 'AFC-FRP-VRE Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-01'"
+            # Validate AFC-FRP-VRE compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-VRE'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-01
+    description: Evidence collection for AFC-FRP-VRE
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-01"
+        RequirementId = "AFC-FRP-VRE"
         RequirementName = "Verified Emails"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-01.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-VRE.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -87,8 +87,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_02
 name: Criticality Designators Compliance
-description: Validates compliance with FRR-FSI-02 - Criticality Designators
-family: FSI
+description: Validates compliance with AFC-FRP-CDS - Criticality Designators
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -97,9 +97,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-02 - Criticality Designators compliance check
-  description_template: Configuration requires validation for FRR-FSI-02 compliance
-  remediation_template: Implement FRR-FSI-02 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-CDS - Criticality Designators compliance check
+  description_template: Configuration requires validation for AFC-FRP-CDS compliance
+  remediation_template: Implement AFC-FRP-CDS requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -108,33 +108,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-02
+- AFC-FRP-CDS
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-02 policy documentation
+  name: AFC-FRP-CDS policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-02 configuration evidence
+  name: AFC-FRP-CDS configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-02 compliance validation
+    description: Automated AFC-FRP-CDS compliance validation
     implementation: |
-      # FRR-FSI-02 compliance automation
+      # AFC-FRP-CDS compliance automation
       # GitHub Actions
-      - name: FRR-FSI-02 Validation
+      - name: AFC-FRP-CDS Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_02 \
@@ -142,30 +142,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-02 Check'
+        displayName: 'AFC-FRP-CDS Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-02 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-02'"
+            # Validate AFC-FRP-CDS compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-CDS'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-02
+    description: Evidence collection for AFC-FRP-CDS
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-02"
+        RequirementId = "AFC-FRP-CDS"
         RequirementName = "Criticality Designators"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-02.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-CDS.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -173,8 +173,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_03
 name: Sender Addresses Compliance
-description: Validates compliance with FRR-FSI-03 - Sender Addresses
-family: FSI
+description: Validates compliance with AFC-FRP-UFS - Sender Addresses
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -183,9 +183,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-03 - Sender Addresses compliance check
-  description_template: Configuration requires validation for FRR-FSI-03 compliance
-  remediation_template: Implement FRR-FSI-03 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-UFS - Sender Addresses compliance check
+  description_template: Configuration requires validation for AFC-FRP-UFS compliance
+  remediation_template: Implement AFC-FRP-UFS requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -194,33 +194,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-03
+- AFC-FRP-UFS
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-03 policy documentation
+  name: AFC-FRP-UFS policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-03 configuration evidence
+  name: AFC-FRP-UFS configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-03 compliance validation
+    description: Automated AFC-FRP-UFS compliance validation
     implementation: |
-      # FRR-FSI-03 compliance automation
+      # AFC-FRP-UFS compliance automation
       # GitHub Actions
-      - name: FRR-FSI-03 Validation
+      - name: AFC-FRP-UFS Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_03 \
@@ -228,30 +228,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-03 Check'
+        displayName: 'AFC-FRP-UFS Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-03 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-03'"
+            # Validate AFC-FRP-UFS compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-UFS'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-03
+    description: Evidence collection for AFC-FRP-UFS
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-03"
+        RequirementId = "AFC-FRP-UFS"
         RequirementName = "Sender Addresses"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-03.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-UFS.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -259,8 +259,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_04
 name: Public Notice of Emergency Tests Compliance
-description: Validates compliance with FRR-FSI-04 - Public Notice of Emergency Tests
-family: FSI
+description: Validates compliance with AFC-FRP-PNT - Public Notice of Emergency Tests
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -269,9 +269,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-04 - Public Notice of Emergency Tests compliance check
-  description_template: Configuration requires validation for FRR-FSI-04 compliance
-  remediation_template: Implement FRR-FSI-04 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-PNT - Public Notice of Emergency Tests compliance check
+  description_template: Configuration requires validation for AFC-FRP-PNT compliance
+  remediation_template: Implement AFC-FRP-PNT requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -280,33 +280,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-04
+- AFC-FRP-PNT
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-04 policy documentation
+  name: AFC-FRP-PNT policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-04 configuration evidence
+  name: AFC-FRP-PNT configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-04 compliance validation
+    description: Automated AFC-FRP-PNT compliance validation
     implementation: |
-      # FRR-FSI-04 compliance automation
+      # AFC-FRP-PNT compliance automation
       # GitHub Actions
-      - name: FRR-FSI-04 Validation
+      - name: AFC-FRP-PNT Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_04 \
@@ -314,30 +314,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-04 Check'
+        displayName: 'AFC-FRP-PNT Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-04 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-04'"
+            # Validate AFC-FRP-PNT compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-PNT'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-04
+    description: Evidence collection for AFC-FRP-PNT
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-04"
+        RequirementId = "AFC-FRP-PNT"
         RequirementName = "Public Notice of Emergency Tests"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-04.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-PNT.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -345,8 +345,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_05
 name: Required Actions Compliance
-description: Validates compliance with FRR-FSI-05 - Required Actions
-family: FSI
+description: Validates compliance with AFC-FRP-RQA - Required Actions
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -355,9 +355,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-05 - Required Actions compliance check
-  description_template: Configuration requires validation for FRR-FSI-05 compliance
-  remediation_template: Implement FRR-FSI-05 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-RQA - Required Actions compliance check
+  description_template: Configuration requires validation for AFC-FRP-RQA compliance
+  remediation_template: Implement AFC-FRP-RQA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -366,33 +366,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-05
+- AFC-FRP-RQA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-05 policy documentation
+  name: AFC-FRP-RQA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-05 configuration evidence
+  name: AFC-FRP-RQA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-05 compliance validation
+    description: Automated AFC-FRP-RQA compliance validation
     implementation: |
-      # FRR-FSI-05 compliance automation
+      # AFC-FRP-RQA compliance automation
       # GitHub Actions
-      - name: FRR-FSI-05 Validation
+      - name: AFC-FRP-RQA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_05 \
@@ -400,30 +400,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-05 Check'
+        displayName: 'AFC-FRP-RQA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-05 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-05'"
+            # Validate AFC-FRP-RQA compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-RQA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-05
+    description: Evidence collection for AFC-FRP-RQA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-05"
+        RequirementId = "AFC-FRP-RQA"
         RequirementName = "Required Actions"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-05.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-RQA.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -431,8 +431,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_06
 name: Response Timeframes Compliance
-description: Validates compliance with FRR-FSI-06 - Response Timeframes
-family: FSI
+description: Validates compliance with AFC-FRP-ERT - Response Timeframes
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -441,9 +441,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-06 - Response Timeframes compliance check
-  description_template: Configuration requires validation for FRR-FSI-06 compliance
-  remediation_template: Implement FRR-FSI-06 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-ERT - Response Timeframes compliance check
+  description_template: Configuration requires validation for AFC-FRP-ERT compliance
+  remediation_template: Implement AFC-FRP-ERT requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -452,33 +452,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-06
+- AFC-FRP-ERT
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-06 policy documentation
+  name: AFC-FRP-ERT policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-06 configuration evidence
+  name: AFC-FRP-ERT configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-06 compliance validation
+    description: Automated AFC-FRP-ERT compliance validation
     implementation: |
-      # FRR-FSI-06 compliance automation
+      # AFC-FRP-ERT compliance automation
       # GitHub Actions
-      - name: FRR-FSI-06 Validation
+      - name: AFC-FRP-ERT Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_06 \
@@ -486,30 +486,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-06 Check'
+        displayName: 'AFC-FRP-ERT Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-06 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-06'"
+            # Validate AFC-FRP-ERT compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-ERT'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-06
+    description: Evidence collection for AFC-FRP-ERT
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-06"
+        RequirementId = "AFC-FRP-ERT"
         RequirementName = "Response Timeframes"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-06.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-ERT.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -517,8 +517,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_07
 name: Corrective Actions Compliance
-description: Validates compliance with FRR-FSI-07 - Corrective Actions
-family: FSI
+description: Validates compliance with AFC-FRP-COR - Corrective Actions
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -527,9 +527,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-07 - Corrective Actions compliance check
-  description_template: Configuration requires validation for FRR-FSI-07 compliance
-  remediation_template: Implement FRR-FSI-07 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-COR - Corrective Actions compliance check
+  description_template: Configuration requires validation for AFC-FRP-COR compliance
+  remediation_template: Implement AFC-FRP-COR requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -538,33 +538,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-07
+- AFC-FRP-COR
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-07 policy documentation
+  name: AFC-FRP-COR policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-07 configuration evidence
+  name: AFC-FRP-COR configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-07 compliance validation
+    description: Automated AFC-FRP-COR compliance validation
     implementation: |
-      # FRR-FSI-07 compliance automation
+      # AFC-FRP-COR compliance automation
       # GitHub Actions
-      - name: FRR-FSI-07 Validation
+      - name: AFC-FRP-COR Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_07 \
@@ -572,30 +572,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-07 Check'
+        displayName: 'AFC-FRP-COR Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-07 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-07'"
+            # Validate AFC-FRP-COR compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-COR'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-07
+    description: Evidence collection for AFC-FRP-COR
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-07"
+        RequirementId = "AFC-FRP-COR"
         RequirementName = "Corrective Actions"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-07.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-COR.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -603,8 +603,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_08
 name: Response Metrics Compliance
-description: Validates compliance with FRR-FSI-08 - Response Metrics
-family: FSI
+description: Validates compliance with AFC-FRP-RPM - Response Metrics
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -613,9 +613,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-08 - Response Metrics compliance check
-  description_template: Configuration requires validation for FRR-FSI-08 compliance
-  remediation_template: Implement FRR-FSI-08 requirements per FedRAMP 20x documentation
+  title_template: AFC-FRP-RPM - Response Metrics compliance check
+  description_template: Configuration requires validation for AFC-FRP-RPM compliance
+  remediation_template: Implement AFC-FRP-RPM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -624,33 +624,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-08
+- AFC-FRP-RPM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-08 policy documentation
+  name: AFC-FRP-RPM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-08 configuration evidence
+  name: AFC-FRP-RPM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-08 compliance validation
+    description: Automated AFC-FRP-RPM compliance validation
     implementation: |
-      # FRR-FSI-08 compliance automation
+      # AFC-FRP-RPM compliance automation
       # GitHub Actions
-      - name: FRR-FSI-08 Validation
+      - name: AFC-FRP-RPM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_08 \
@@ -658,30 +658,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-08 Check'
+        displayName: 'AFC-FRP-RPM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-08 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-08'"
+            # Validate AFC-FRP-RPM compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-FRP-RPM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-08
+    description: Evidence collection for AFC-FRP-RPM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-08"
+        RequirementId = "AFC-FRP-RPM"
         RequirementName = "Response Metrics"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-08.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-FRP-RPM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -689,8 +689,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_09
 name: FedRAMP Security Inbox Compliance
-description: Validates compliance with FRR-FSI-09 - FedRAMP Security Inbox
-family: FSI
+description: Validates compliance with AFC-CSO-INB - FedRAMP Security Inbox
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -699,9 +699,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-09 - FedRAMP Security Inbox compliance check
-  description_template: Configuration requires validation for FRR-FSI-09 compliance
-  remediation_template: Implement FRR-FSI-09 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-INB - FedRAMP Security Inbox compliance check
+  description_template: Configuration requires validation for AFC-CSO-INB compliance
+  remediation_template: Implement AFC-CSO-INB requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -710,33 +710,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-09
+- AFC-CSO-INB
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-09 policy documentation
+  name: AFC-CSO-INB policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-09 configuration evidence
+  name: AFC-CSO-INB configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-09 compliance validation
+    description: Automated AFC-CSO-INB compliance validation
     implementation: |
-      # FRR-FSI-09 compliance automation
+      # AFC-CSO-INB compliance automation
       # GitHub Actions
-      - name: FRR-FSI-09 Validation
+      - name: AFC-CSO-INB Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_09 \
@@ -744,30 +744,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-09 Check'
+        displayName: 'AFC-CSO-INB Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-09 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-09'"
+            # Validate AFC-CSO-INB compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-INB'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-09
+    description: Evidence collection for AFC-CSO-INB
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-09"
+        RequirementId = "AFC-CSO-INB"
         RequirementName = "FedRAMP Security Inbox"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-09.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-INB.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -775,8 +775,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_10
 name: Receiving Messages Compliance
-description: Validates compliance with FRR-FSI-10 - Receiving Messages
-family: FSI
+description: Validates compliance with AFC-CSO-TFG - Receiving Messages
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -785,9 +785,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-10 - Receiving Messages compliance check
-  description_template: Configuration requires validation for FRR-FSI-10 compliance
-  remediation_template: Implement FRR-FSI-10 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-TFG - Receiving Messages compliance check
+  description_template: Configuration requires validation for AFC-CSO-TFG compliance
+  remediation_template: Implement AFC-CSO-TFG requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -796,33 +796,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-10
+- AFC-CSO-TFG
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-10 policy documentation
+  name: AFC-CSO-TFG policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-10 configuration evidence
+  name: AFC-CSO-TFG configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-10 compliance validation
+    description: Automated AFC-CSO-TFG compliance validation
     implementation: |
-      # FRR-FSI-10 compliance automation
+      # AFC-CSO-TFG compliance automation
       # GitHub Actions
-      - name: FRR-FSI-10 Validation
+      - name: AFC-CSO-TFG Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_10 \
@@ -830,30 +830,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-10 Check'
+        displayName: 'AFC-CSO-TFG Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-10 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-10'"
+            # Validate AFC-CSO-TFG compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-TFG'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-10
+    description: Evidence collection for AFC-CSO-TFG
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-10"
+        RequirementId = "AFC-CSO-TFG"
         RequirementName = "Receiving Messages"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-10.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-TFG.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -861,8 +861,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_11
 name: Response Compliance
-description: Validates compliance with FRR-FSI-11 - Response
-family: FSI
+description: Validates compliance with AFC-CSO-RCV - Response
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -871,9 +871,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-11 - Response compliance check
-  description_template: Configuration requires validation for FRR-FSI-11 compliance
-  remediation_template: Implement FRR-FSI-11 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-RCV - Response compliance check
+  description_template: Configuration requires validation for AFC-CSO-RCV compliance
+  remediation_template: Implement AFC-CSO-RCV requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -882,33 +882,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-11
+- AFC-CSO-RCV
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-11 policy documentation
+  name: AFC-CSO-RCV policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-11 configuration evidence
+  name: AFC-CSO-RCV configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-11 compliance validation
+    description: Automated AFC-CSO-RCV compliance validation
     implementation: |
-      # FRR-FSI-11 compliance automation
+      # AFC-CSO-RCV compliance automation
       # GitHub Actions
-      - name: FRR-FSI-11 Validation
+      - name: AFC-CSO-RCV Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_11 \
@@ -916,30 +916,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-11 Check'
+        displayName: 'AFC-CSO-RCV Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-11 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-11'"
+            # Validate AFC-CSO-RCV compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-RCV'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-11
+    description: Evidence collection for AFC-CSO-RCV
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-11"
+        RequirementId = "AFC-CSO-RCV"
         RequirementName = "Response"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-11.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-RCV.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -947,8 +947,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_12
 name: Notification of Changes Compliance
-description: Validates compliance with FRR-FSI-12 - Notification of Changes
-family: FSI
+description: Validates compliance with AFC-CSO-NOC - Notification of Changes
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -957,9 +957,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-12 - Notification of Changes compliance check
-  description_template: Configuration requires validation for FRR-FSI-12 compliance
-  remediation_template: Implement FRR-FSI-12 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-NOC - Notification of Changes compliance check
+  description_template: Configuration requires validation for AFC-CSO-NOC compliance
+  remediation_template: Implement AFC-CSO-NOC requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -968,33 +968,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-12
+- AFC-CSO-NOC
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-12 policy documentation
+  name: AFC-CSO-NOC policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-12 configuration evidence
+  name: AFC-CSO-NOC configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-12 compliance validation
+    description: Automated AFC-CSO-NOC compliance validation
     implementation: |
-      # FRR-FSI-12 compliance automation
+      # AFC-CSO-NOC compliance automation
       # GitHub Actions
-      - name: FRR-FSI-12 Validation
+      - name: AFC-CSO-NOC Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_12 \
@@ -1002,30 +1002,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-12 Check'
+        displayName: 'AFC-CSO-NOC Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-12 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-12'"
+            # Validate AFC-CSO-NOC compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-NOC'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-12
+    description: Evidence collection for AFC-CSO-NOC
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-12"
+        RequirementId = "AFC-CSO-NOC"
         RequirementName = "Notification of Changes"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-12.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-NOC.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1033,8 +1033,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_13
 name: Acknowledgment of Receipt Compliance
-description: Validates compliance with FRR-FSI-13 - Acknowledgment of Receipt
-family: FSI
+description: Validates compliance with AFC-CSO-ACK - Acknowledgment of Receipt
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1043,9 +1043,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-13 - Acknowledgment of Receipt compliance check
-  description_template: Configuration requires validation for FRR-FSI-13 compliance
-  remediation_template: Implement FRR-FSI-13 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-ACK - Acknowledgment of Receipt compliance check
+  description_template: Configuration requires validation for AFC-CSO-ACK compliance
+  remediation_template: Implement AFC-CSO-ACK requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1054,33 +1054,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-13
+- AFC-CSO-ACK
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-13 policy documentation
+  name: AFC-CSO-ACK policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-13 configuration evidence
+  name: AFC-CSO-ACK configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-13 compliance validation
+    description: Automated AFC-CSO-ACK compliance validation
     implementation: |
-      # FRR-FSI-13 compliance automation
+      # AFC-CSO-ACK compliance automation
       # GitHub Actions
-      - name: FRR-FSI-13 Validation
+      - name: AFC-CSO-ACK Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_13 \
@@ -1088,30 +1088,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-13 Check'
+        displayName: 'AFC-CSO-ACK Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-13 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-13'"
+            # Validate AFC-CSO-ACK compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-ACK'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-13
+    description: Evidence collection for AFC-CSO-ACK
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-13"
+        RequirementId = "AFC-CSO-ACK"
         RequirementName = "Acknowledgment of Receipt"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-13.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-ACK.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1119,8 +1119,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_14
 name: Required Response for Emergency Messages Compliance
-description: Validates compliance with FRR-FSI-14 - Required Response for Emergency Messages
-family: FSI
+description: Validates compliance with AFC-CSO-CRA - Required Response for Emergency Messages
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1129,9 +1129,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-14 - Required Response for Emergency Messages compliance check
-  description_template: Configuration requires validation for FRR-FSI-14 compliance
-  remediation_template: Implement FRR-FSI-14 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-CRA - Required Response for Emergency Messages compliance check
+  description_template: Configuration requires validation for AFC-CSO-CRA compliance
+  remediation_template: Implement AFC-CSO-CRA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1140,33 +1140,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-14
+- AFC-CSO-CRA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-14 policy documentation
+  name: AFC-CSO-CRA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-14 configuration evidence
+  name: AFC-CSO-CRA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-14 compliance validation
+    description: Automated AFC-CSO-CRA compliance validation
     implementation: |
-      # FRR-FSI-14 compliance automation
+      # AFC-CSO-CRA compliance automation
       # GitHub Actions
-      - name: FRR-FSI-14 Validation
+      - name: AFC-CSO-CRA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_14 \
@@ -1174,30 +1174,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-14 Check'
+        displayName: 'AFC-CSO-CRA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-14 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-14'"
+            # Validate AFC-CSO-CRA compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-CRA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-14
+    description: Evidence collection for AFC-CSO-CRA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-14"
+        RequirementId = "AFC-CSO-CRA"
         RequirementName = "Required Response for Emergency Messages"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-14.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-CRA.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1205,8 +1205,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_15
 name: Routing Compliance
-description: Validates compliance with FRR-FSI-15 - Routing
-family: FSI
+description: Validates compliance with AFC-CSO-EMR - Routing
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1215,9 +1215,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-15 - Routing compliance check
-  description_template: Configuration requires validation for FRR-FSI-15 compliance
-  remediation_template: Implement FRR-FSI-15 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-EMR - Routing compliance check
+  description_template: Configuration requires validation for AFC-CSO-EMR compliance
+  remediation_template: Implement AFC-CSO-EMR requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1226,33 +1226,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-15
+- AFC-CSO-EMR
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-15 policy documentation
+  name: AFC-CSO-EMR policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-15 configuration evidence
+  name: AFC-CSO-EMR configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-15 compliance validation
+    description: Automated AFC-CSO-EMR compliance validation
     implementation: |
-      # FRR-FSI-15 compliance automation
+      # AFC-CSO-EMR compliance automation
       # GitHub Actions
-      - name: FRR-FSI-15 Validation
+      - name: AFC-CSO-EMR Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_15 \
@@ -1260,30 +1260,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-15 Check'
+        displayName: 'AFC-CSO-EMR Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-15 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-15'"
+            # Validate AFC-CSO-EMR compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-EMR'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-15
+    description: Evidence collection for AFC-CSO-EMR
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-15"
+        RequirementId = "AFC-CSO-EMR"
         RequirementName = "Routing"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-15.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-EMR.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -1291,8 +1291,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: fsi.frr.frr_fsi_16
 name: Recommended Response for Important Messages Compliance
-description: Validates compliance with FRR-FSI-16 - Recommended Response for Important Messages
-family: FSI
+description: Validates compliance with AFC-CSO-IMA - Recommended Response for Important Messages
+family: AFC
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -1301,9 +1301,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-FSI-16 - Recommended Response for Important Messages compliance check
-  description_template: Configuration requires validation for FRR-FSI-16 compliance
-  remediation_template: Implement FRR-FSI-16 requirements per FedRAMP 20x documentation
+  title_template: AFC-CSO-IMA - Recommended Response for Important Messages compliance check
+  description_template: Configuration requires validation for AFC-CSO-IMA compliance
+  remediation_template: Implement AFC-CSO-IMA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -1312,33 +1312,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- fsi
+- afc
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-FSI-16
+- AFC-CSO-IMA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-FSI-16 policy documentation
+  name: AFC-CSO-IMA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-FSI-16 configuration evidence
+  name: AFC-CSO-IMA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-FSI-16 compliance validation
+    description: Automated AFC-CSO-IMA compliance validation
     implementation: |
-      # FRR-FSI-16 compliance automation
+      # AFC-CSO-IMA compliance automation
       # GitHub Actions
-      - name: FRR-FSI-16 Validation
+      - name: AFC-CSO-IMA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern fsi.frr.frr_fsi_16 \
@@ -1346,30 +1346,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-FSI-16 Check'
+        displayName: 'AFC-CSO-IMA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-FSI-16 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-16'"
+            # Validate AFC-CSO-IMA compliance
+            az policy state list --filter "policyDefinitionName eq 'AFC-CSO-IMA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-FSI-16
+    description: Evidence collection for AFC-CSO-IMA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-FSI-16"
+        RequirementId = "AFC-CSO-IMA"
         RequirementName = "Recommended Response for Important Messages"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-16.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_AFC-CSO-IMA.json"
     azure_services:
     - Azure Automation
     - Azure Storage

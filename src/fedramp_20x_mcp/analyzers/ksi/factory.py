@@ -70,7 +70,7 @@ class KSIAnalyzerFactory:
         Get analyzer for specific KSI (returns adapter, not traditional analyzer).
         
         Args:
-            ksi_id: KSI identifier (e.g., "KSI-IAM-01")
+            ksi_id: KSI identifier (e.g., "KSI-IAM-APM")
             
         Returns:
             Pattern-based analyzer adapter

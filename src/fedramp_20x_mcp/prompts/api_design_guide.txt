@@ -1,29 +1,28 @@
-I'll help you design your FedRAMP 20x Authorization Data Sharing API.
+I'll help you design your FedRAMP Certification Data Sharing API (CDS family, FedRAMP Consolidated Rules for 2026).
 
-# Authorization Data Sharing API Design Guide (FRR-ADS)
+# Certification Data Sharing API Design Guide (CDS)
 
 ## Overview
 
-**PRODUCTION-FIRST ASSUMPTION:** All API designs, security controls, and configurations assume **PRODUCTION deployment** with full FedRAMP 20x compliance requirements unless explicitly stated otherwise. Non-production APIs should still implement security controls appropriate for their data classification.
+**PRODUCTION-FIRST ASSUMPTION:** All API designs, security controls, and configurations assume **PRODUCTION deployment** with full FedRAMP Consolidated Rules for 2026 (CR26) compliance requirements unless explicitly stated otherwise. Non-production APIs should still implement security controls appropriate for their data classification.
 
-FedRAMP 20x requires CSPs to share authorization data via API rather than document uploads. This API must provide machine-readable access to your security posture.
+CR26 requires providers to store and share FedRAMP Certification Data through a FedRAMP-compatible trust center (CDS-CSO-UTC). Trust centers MUST provide documented programmatic access to all FedRAMP Certification Data, including human-readable materials (CDS-TRC-PAC), and SHOULD offer both human-readable and machine-readable views (CDS-TRC-HMR). Public information MUST be shared in human-readable and JSON formats (CDS-CSO-PUB). The endpoint layout below is a design suggestion, not a CR26 requirement; CR26 specifies JSON schemas for some data (see FRC-CSO-JSN) rather than URL paths.
 
 **Important: Format Requirements**
-- **Required:** Machine-readable formats (JSON, XML, or other structured data)
-- **Optional:** OSCAL is a NIST standard that can be used as one implementation approach
-- FRR-ADS requirements specify "machine-readable" only - OSCAL is NOT mentioned in FedRAMP 20x
-- Choose custom JSON/XML or OSCAL based on your implementation needs
+- **Required:** JSON that validates against the FedRAMP JSON schema when a rule defines one (FRC-CSO-JSN); consistency between human-readable and machine-readable formats maintained by automation (CDS-CSO-CBF)
+- Public JSON MUST be web-framework compatible: CORS allowing web applications on other domains, Content-Type application/json, and X-Content-Type-Options: nosniff (FRC-CSO-JSN)
+- OSCAL is not required by CR26 for Certification Data
 
-## Required Endpoints
+## Suggested Endpoints
 
 ### 1. System Information
 ```
 GET /api/v1/system
-GET /api/v1/authorization-boundary
-GET /api/v1/system-characteristics
+GET /api/v1/boundary            (Minimum Assessment Scope, MAS-CSO-IIR)
+GET /api/v1/services            (CDS-CSO-SVC public service list)
 ```
 
-**Response Format Example (Using OSCAL - One Option):**
+**Response Format Example (OSCAL-style, optional; CR26 does not require an OSCAL System Security Plan; use the FedRAMP JSON schema referenced by CDS-CSO-SVC / FRC-CSO-PKG where it applies):**
 ```json
 {
   "system-security-plan": {
@@ -54,13 +53,16 @@ GET /api/v1/system-characteristics
 }
 ```
 
-### 2. Vulnerability Data
+### 2. Vulnerability Data (VER-RPT-PER, VER-RPT-VDT, VER-RPT-AVI)
 ```
 GET /api/v1/vulnerabilities
 GET /api/v1/vulnerabilities?status=open
-GET /api/v1/vulnerabilities?severity=high
+GET /api/v1/vulnerabilities?n_rating=4
 GET /api/v1/vulnerabilities/{vuln-id}
+GET /api/v1/vulnerabilities/accepted
 ```
+
+Report fields follow VER-RPT-VDT: tracking identifier, time and source of detection, time of evaluation, internet-reachable (yes/no), likely exploitable (yes/no), Potential Agency Impact N-rating history, planned reductions in N-rating, overdue status, final disposition. Accepted vulnerabilities (not mitigated or remediated within 192 days of evaluation, VER-TFR-MAV) use the fields in VER-RPT-AVI. The FedRAMP Vulnerability Detail Report JSON schema is referenced by VER-RPT-VDT.
 
 **Response Format:**
 ```json
@@ -69,11 +71,14 @@ GET /api/v1/vulnerabilities/{vuln-id}
     {
       "id": "vuln-2025-001",
       "cve_id": "CVE-2025-12345",
-      "severity": "HIGH",
-      "cvss_score": 8.5,
-      "discovered_date": "2025-11-20",
+      "detected_at": "2025-11-20T08:00:00Z",
+      "detection_source": "scanner-x",
+      "evaluated_at": "2025-11-21T09:00:00Z",
+      "internet_reachable": true,
+      "likely_exploitable": true,
+      "potential_agency_impact_n_rating": 4,
       "status": "remediation_in_progress",
-      "remediation_deadline": "2025-11-27",
+      "overdue": false,
       "affected_components": ["web-server-prod-01"],
       "description": "...",
       "remediation_plan": "..."
@@ -87,7 +92,7 @@ GET /api/v1/vulnerabilities/{vuln-id}
 }
 ```
 
-### 3. Key Security Indicators
+### 3. Key Security Indicators (SDR-CSX-KSI) (SDR-CSX-KSI)
 ```
 GET /api/v1/ksi
 GET /api/v1/ksi/{category}
@@ -100,8 +105,8 @@ GET /api/v1/ksi/metrics?start_date=2025-10-01&end_date=2025-12-31
 {
   "ksi_metrics": [
     {
-      "id": "KSI-IAM-01",
-      "name": "Phishing-Resistant MFA",
+      "id": "KSI-IAM-APM",
+      "name": "Adopting Passwordless Methods",
       "status": "compliant",
       "metric_value": "100%",
       "measurement_date": "2025-11-26",
@@ -119,7 +124,7 @@ GET /api/v1/ksi/metrics?start_date=2025-10-01&end_date=2025-12-31
 }
 ```
 
-### 4. Incidents
+### 4. Incidents (IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)
 ```
 GET /api/v1/incidents
 GET /api/v1/incidents?start_date=2025-10-01
@@ -133,7 +138,8 @@ GET /api/v1/incidents/{incident-id}
     {
       "id": "INC-2025-003",
       "type": "security_event",
-      "severity": "medium",
+      "potential_agency_impact_n_rating": 5,
+      "fedramp_reportable": false,
       "detected_date": "2025-11-15T14:30:00Z",
       "resolved_date": "2025-11-15T18:45:00Z",
       "affected_agencies": [],
@@ -145,7 +151,7 @@ GET /api/v1/incidents/{incident-id}
 }
 ```
 
-### 5. Changes
+### 5. Significant Changes (SCN-CSO-HIS, SCN-CSO-HRM)
 ```
 GET /api/v1/changes
 GET /api/v1/changes?type=significant
@@ -170,39 +176,14 @@ GET /api/v1/changes/{change-id}
 }
 ```
 
-### 6. POA&M
+### 6. Ongoing Certification Reports (CCM-OCR-AVL, CDS-CSO-HAD)
 ```
-GET /api/v1/poam
-GET /api/v1/poam?status=open
-GET /api/v1/poam/{poam-id}
+GET /api/v1/reports
+GET /api/v1/reports/{report-id}
+GET /api/v1/snapshots
 ```
 
-**Response Format (OSCAL POA&M):**
-```json
-{
-  "plan-of-action-and-milestones": {
-    "uuid": "...",
-    "metadata": {...},
-    "poam-items": [
-      {
-        "uuid": "...",
-        "title": "Implement automated log forwarding",
-        "description": "...",
-        "risk-statement": "...",
-        "remediation-tracking": {
-          "tracking-entry": [
-            {
-              "date-time-stamp": "2025-11-26T10:00:00Z",
-              "title": "Initial identification",
-              "description": "..."
-            }
-          ]
-        }
-      }
-    ]
-  }
-}
-```
+CR26 has no POA&M endpoint requirement. Ongoing Certification Reports are supplied every 3 months and snapshots of Certification Data aligned to each report MUST remain available for the duration of the FedRAMP Certification (CDS-CSO-HAD).
 
 ## Authentication & Authorization
 
@@ -210,8 +191,8 @@ GET /api/v1/poam/{poam-id}
 
 **Flow:**
 ```
-1. Agency registers as OAuth client with FedRAMP
-2. FedRAMP provides client_id and client_secret
+1. Agency registers as OAuth client with the provider's trust center
+2. The trust center provides client_id and client_secret
 3. Agency requests token:
    POST /oauth/token
    {
@@ -287,7 +268,7 @@ Different consumers should have different access levels:
     "read:ksi",
     "read:incidents",
     "read:changes",
-    "read:poam"
+    "read:reports"
   ]
 },
 {
@@ -319,7 +300,7 @@ Different consumers should have different access levels:
 
 ## Rate Limiting
 
-**Recommended limits:**
+**Illustrative limits (design suggestion, not a CR26 rule):**
 ```
 - Per client: 1000 requests/hour
 - Per endpoint: 100 requests/minute
@@ -350,7 +331,7 @@ X-RateLimit-Reset: 1701014400
 
 ## Monitoring & Logging
 
-**Log all API access:**
+**Log all API access (CDS-TRC-ACL: trust centers MUST log access to FedRAMP Certification Data and store access summaries for at least six months):**
 ```json
 {
   "timestamp": "2025-11-26T10:00:00Z",
@@ -399,9 +380,9 @@ curl https://api-test.myservice.com/api/v1/vulnerabilities?status=open \
 ```yaml
 openapi: 3.0.0
 info:
-  title: Authorization Data Sharing API
+  title: Certification Data Sharing API
   version: 1.0.0
-  description: FedRAMP 20x compliant API for sharing authorization data
+  description: API for sharing FedRAMP Certification Data (CDS)
 
 servers:
   - url: https://api.myservice.com
@@ -415,20 +396,20 @@ paths:
         - oauth2: [read:system]
       responses:
         '200':
-          description: System information in OSCAL format
+          description: System information (JSON)
 ```
 
 ## Implementation Checklist
 
 - [ ] Choose authentication method (OAuth 2.0 or mTLS)
-- [ ] Implement all required endpoints
-- [ ] Use machine-readable formats (JSON/XML) - custom or OSCAL based on your needs
+- [ ] Implement the endpoints you need to cover CDS-CSO-PUB, CDS-TRC-PAC and your Certification Data
+- [ ] Use JSON valid against FedRAMP schemas where defined (FRC-CSO-JSN); automate consistency with human-readable data (CDS-CSO-CBF)
 - [ ] Add proper error handling
 - [ ] Implement rate limiting
-- [ ] Add comprehensive logging
+- [ ] Add comprehensive logging (CDS-TRC-ACL) and an agency access inventory (CDS-TRC-AAI) (CDS-TRC-ACL) and an agency access inventory (CDS-TRC-AAI)
 - [ ] Write API documentation (OpenAPI)
 - [ ] Create test credentials
-- [ ] Test with FedRAMP/agency
+- [ ] Test with FedRAMP/agency; notify FedRAMP within 5 business days of denying an agency access request (CDS-UTC-AAD); notify FedRAMP within 5 business days of denying an agency access request (CDS-UTC-AAD)
 - [ ] Monitor API usage and performance
 
-Use get_implementation_examples('FRR-ADS-01') for more detailed implementation guidance.
+Use get_implementation_examples('CDS-CSO-PUB') for more detailed implementation guidance. Related rules: CDS-CSO-UTC, CDS-TRC-USH, CDS-TRC-PAC, CDS-CSO-CBF, FRC-CSO-JSN. Related rules: CDS-CSO-UTC, CDS-TRC-USH, CDS-TRC-PAC, CDS-CSO-CBF, FRC-CSO-JSN.

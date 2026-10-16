@@ -4,8 +4,10 @@
 // main.bicep - Generic KSI Evidence Collection Infrastructure
 param location string = resourceGroup().location
 param ksiId string
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period.')
+param logRetentionDays int
 
-// Key Vault for customer-managed keys (FedRAMP 20x SC-12 requirement)
+// Key Vault for customer-managed keys (supports KSI-SVC-ASM; NIST SC-12 key management)
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: 'kv-${uniqueString(resourceGroup().id, ksiId)}'
   location: location
@@ -102,7 +104,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 730
+    retentionInDays: logRetentionDays  // organization-defined
   }
 }
 

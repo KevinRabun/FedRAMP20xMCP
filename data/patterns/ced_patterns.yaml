@@ -1,11 +1,11 @@
 pattern_id: ced.training.missing_documentation
 name: Missing Security Training Documentation
 description: Detects absence of security training documentation, tracking, or verification
-  systems. KSI-CED-01 requires documented training programs for all employees.
+  systems. KSI-CED-RAT requires documented training programs for all employees.
 pattern_type: function_call
 severity: HIGH
 family: CED
-ksi_id: KSI-CED-01
+ksi_id: KSI-CED-RAT
 nist_controls: &id001
 - at-2
 - at-3
@@ -71,10 +71,10 @@ finding:
   description: No automated tracking or verification of security training programs
     detected
   recommendation: Implement documented security training programs with verification
-    per KSI-CED-01
+    per KSI-CED-RAT
   references:
-  - KSI-CED-01
   - NIST AT-2, AT-3, AT-4
+  - KSI-CED-RAT
 remediation: "Implement documented security training programs with verification:\n\
   \n**Python (Training Tracking System):**\n```python\nfrom datetime import datetime,\
   \ timedelta\nfrom typing import List, Dict\nimport logging\n\nclass SecurityTrainingTracker:\n\
@@ -104,7 +104,7 @@ remediation: "Implement documented security training programs with verification:
   \  expired_modules = [\n                r['module'] for r in records \n        \
   \        if r['expiration_date'] <= datetime.now()\n            ]\n            if\
   \ expired_modules:\n                expired[emp_id] = expired_modules\n        return\
-  \ expired\n\n# Required training modules per KSI-CED-01\nREQUIRED_TRAINING_MODULES\
+  \ expired\n\n# Required training modules per KSI-CED-RAT\nREQUIRED_TRAINING_MODULES\
   \ = [\n    \"Security Awareness Fundamentals\",\n    \"Phishing Recognition and\
   \ Prevention\",\n    \"Password Security and MFA\",\n    \"Data Classification and\
   \ Handling\",\n    \"Incident Reporting Procedures\",\n    \"Acceptable Use Policy\"\
@@ -153,9 +153,11 @@ remediation: "Implement documented security training programs with verification:
   \    }\n    dataFlows: [\n      {\n        streams: [\n          'Microsoft-SecurityTraining'\n\
   \        ]\n        destinations: [\n          'trainingWorkspace'\n        ]\n\
   \      }\n    ]\n  }\n}\n```\n\n**Compliance Requirements:**\n- Document all required\
-  \ training modules (KSI-CED-01)\n- Track completion dates and scores (AT-2)\n- Verify\
+  \ training modules (KSI-CED-RAT)\n- Track completion dates and scores (AT-2)\n- Verify\
   \ training effectiveness (AT-3)\n- Maintain training records for audit (AT-4)\n\
   - Annual training renewal (FedRAMP baseline)\n- Executive/management training (AT-3.5)\n"
+related_ksis:
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: logs
   name: CED operational logs
@@ -304,7 +306,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CED-01
+    requirement_id: KSI-CED-RAT
     requirement_name: General Education
     impact_levels:
     - Low
@@ -330,12 +332,12 @@ testing:
 pattern_id: ced.training.role_based_missing
 name: Insufficient Role-Based Security Training
 description: Detects missing role-specific security training for privileged users,
-  administrators, or developers. KSI-CED-02 requires tailored training based on job
+  administrators, or developers. KSI-CED-RAT requires tailored training based on job
   responsibilities.
 pattern_type: configuration
 severity: HIGH
 family: CED
-ksi_id: KSI-CED-02
+ksi_id: KSI-CED-RAT
 nist_controls: &id001
 - at-3
 - ps-2
@@ -396,10 +398,10 @@ finding:
   title: Missing role-based security training
   description: Role assignments detected without corresponding training verification
   recommendation: Implement tailored security training based on job responsibilities
-    per KSI-CED-02
+    per KSI-CED-RAT
   references:
-  - KSI-CED-02
   - NIST AT-3, PS-2
+  - KSI-CED-RAT
 remediation: "Implement role-based security training programs:\n\n**Required Training\
   \ by Role:**\n\n**1. System Administrators:**\n- Advanced access control management\n\
   - Privileged account security\n- Audit log review and analysis\n- Incident response\
@@ -438,6 +440,8 @@ remediation: "Implement role-based security training programs:\n\n**Required Tra
   \ -> tuple[bool, Set[str]]:\n    \"\"\"Verify all required training is completed\
   \ for role\"\"\"\n    required = get_required_training(role)\n    missing = required\
   \ - completed_modules\n    return (len(missing) == 0, missing)\n```\n"
+related_ksis:
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: logs
   name: CED operational logs
@@ -586,7 +590,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CED-02
+    requirement_id: KSI-CED-RAT
     requirement_name: Role-Specific Education
     impact_levels:
     - Low
@@ -612,12 +616,12 @@ testing:
 pattern_id: ced.training.developer_gaps
 name: Inadequate Developer Security Training
 description: Detects security gaps in development practices indicating insufficient
-  secure coding training. KSI-CED-03 requires comprehensive development and engineering
+  secure coding training. KSI-CED-RAT requires comprehensive development and engineering
   security education.
 pattern_type: function_call
 severity: MEDIUM
 family: CED
-ksi_id: KSI-CED-03
+ksi_id: KSI-CED-RAT
 nist_controls: &id001
 - sa-15
 - sa-11
@@ -634,10 +638,10 @@ languages:
 finding:
   title: Insecure code patterns detected
   description: Use of dangerous functions indicates insufficient secure coding training
-  recommendation: Provide comprehensive secure development training per KSI-CED-03
+  recommendation: Provide comprehensive secure development training per KSI-CED-RAT
   references:
-  - KSI-CED-03
   - NIST SA-15, SA-11
+  - KSI-CED-RAT
 remediation: "Implement comprehensive secure development training:\n\n**Core Secure\
   \ Coding Training Modules:**\n1. Input Validation and Sanitization\n2. Output Encoding\
   \ and XSS Prevention\n3. SQL Injection and ORM Security\n4. Authentication and Session\
@@ -653,6 +657,8 @@ remediation: "Implement comprehensive secure development training:\n\n**Core Sec
   \                  for node in ast.walk(tree)):\n            raise ValueError(\"\
   Unsafe expression\")\n        return eval(compile(tree, '<string>', 'eval'))\n \
   \   except:\n        raise ValueError(\"Invalid expression\")\n```\n"
+related_ksis:
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: logs
   name: CED operational logs
@@ -801,7 +807,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CED-03
+    requirement_id: KSI-CED-RAT
     requirement_name: Development and Engineering Education
     impact_levels:
     - Low
@@ -827,11 +833,11 @@ testing:
 pattern_id: ced.training.incident_response_missing
 name: Missing Incident Response Training
 description: Detects absence of incident response and disaster recovery training documentation.
-  KSI-CED-04 requires IR/DR education for all personnel.
+  KSI-CED-RAT requires IR/DR education for all personnel.
 pattern_type: configuration
 severity: HIGH
 family: CED
-ksi_id: KSI-CED-04
+ksi_id: KSI-CED-RAT
 nist_controls: &id001
 - ir-2
 - cp-3
@@ -893,10 +899,10 @@ languages:
 finding:
   title: Missing incident response training documentation
   description: No evidence of IR/DR training or drill procedures
-  recommendation: Implement incident response and disaster recovery training per KSI-CED-04
+  recommendation: Implement incident response and disaster recovery training per KSI-CED-RAT
   references:
-  - KSI-CED-04
   - NIST IR-2, CP-3, AT-3
+  - KSI-CED-RAT
 remediation: "Implement incident response and disaster recovery training:\n\n**Required\
   \ IR/DR Training Components:**\n\n**1. Incident Response Training:**\n- Incident\
   \ identification and classification\n- Reporting procedures and escalation\n- Containment\
@@ -945,6 +951,8 @@ remediation: "Implement incident response and disaster recovery training:\n\n**R
   it_ops\", \"management\"],\n    scheduled_date=datetime.now() + timedelta(days=90)\n\
   )\n```\n\n**References:**\n- NIST IR-2: https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final\n\
   - FedRAMP IR Requirements: https://www.fedramp.gov/incident-communications-procedures/\n"
+related_ksis:
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: logs
   name: CED operational logs
@@ -1093,7 +1101,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CED-04
+    requirement_id: KSI-CED-RAT
     requirement_name: Incident Response and Disaster Recovery Education
     impact_levels:
     - Low
@@ -1118,7 +1126,7 @@ testing:
 ---
 pattern_id: ced.compliance.ksi_ced_01
 name: General Education Detection
-description: Detects compliance indicators for KSI-CED-01 - General Education
+description: Detects compliance indicators for KSI-CED-RAT - General Education
 family: CED
 severity: MEDIUM
 pattern_type: configuration
@@ -1129,8 +1137,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: General Education compliance check
-  description_template: Configuration may not fully implement KSI-CED-01 - General Education
-  remediation_template: Review and implement KSI-CED-01 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CED-RAT - General Education
+  remediation_template: Review and implement KSI-CED-RAT requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1145,27 +1153,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CED-01
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CED-01 compliance configuration
+  name: KSI-CED-RAT compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CED-01 compliance report
+  name: KSI-CED-RAT compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CED-01 compliance enforcement
+    description: Azure Policy for KSI-CED-RAT compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CED-01 compliance
+      # Azure Policy for KSI-CED-RAT compliance
       # GitHub Actions
-      - name: KSI-CED-01 Compliance Check
+      - name: KSI-CED-RAT Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ced.compliance.ksi_ced_01 \
@@ -1173,23 +1181,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CED-01 Validation'
+        displayName: 'KSI-CED-RAT Validation'
         inputs:
           script: |
-            # Validate KSI-CED-01 compliance
+            # Validate KSI-CED-RAT compliance
             python validate.py --pattern ced.compliance.ksi_ced_01
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CED-01
+    description: Continuous monitoring for KSI-CED-RAT
     implementation: |
-      # Azure Monitor for KSI-CED-01 continuous monitoring
+      # Azure Monitor for KSI-CED-RAT continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CED-01"
+      | where OperationNameValue contains "KSI-CED-RAT"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1198,7 +1206,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: ced.compliance.ksi_ced_02
 name: Role-Specific Education Detection
-description: Detects compliance indicators for KSI-CED-02 - Role-Specific Education
+description: Detects compliance indicators for KSI-CED-RAT - Role-Specific Education
 family: CED
 severity: MEDIUM
 pattern_type: configuration
@@ -1209,8 +1217,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Role-Specific Education compliance check
-  description_template: Configuration may not fully implement KSI-CED-02 - Role-Specific Education
-  remediation_template: Review and implement KSI-CED-02 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CED-RAT - Role-Specific Education
+  remediation_template: Review and implement KSI-CED-RAT requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1225,27 +1233,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CED-02
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CED-02 compliance configuration
+  name: KSI-CED-RAT compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CED-02 compliance report
+  name: KSI-CED-RAT compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CED-02 compliance enforcement
+    description: Azure Policy for KSI-CED-RAT compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CED-02 compliance
+      # Azure Policy for KSI-CED-RAT compliance
       # GitHub Actions
-      - name: KSI-CED-02 Compliance Check
+      - name: KSI-CED-RAT Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ced.compliance.ksi_ced_02 \
@@ -1253,23 +1261,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CED-02 Validation'
+        displayName: 'KSI-CED-RAT Validation'
         inputs:
           script: |
-            # Validate KSI-CED-02 compliance
+            # Validate KSI-CED-RAT compliance
             python validate.py --pattern ced.compliance.ksi_ced_02
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CED-02
+    description: Continuous monitoring for KSI-CED-RAT
     implementation: |
-      # Azure Monitor for KSI-CED-02 continuous monitoring
+      # Azure Monitor for KSI-CED-RAT continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CED-02"
+      | where OperationNameValue contains "KSI-CED-RAT"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1278,7 +1286,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: ced.compliance.ksi_ced_03
 name: Development and Engineering Education Detection
-description: Detects compliance indicators for KSI-CED-03 - Development and Engineering Education
+description: Detects compliance indicators for KSI-CED-RAT - Development and Engineering Education
 family: CED
 severity: MEDIUM
 pattern_type: configuration
@@ -1289,8 +1297,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Development and Engineering Education compliance check
-  description_template: Configuration may not fully implement KSI-CED-03 - Development and Engineering Education
-  remediation_template: Review and implement KSI-CED-03 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CED-RAT - Development and Engineering Education
+  remediation_template: Review and implement KSI-CED-RAT requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1305,27 +1313,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CED-03
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CED-03 compliance configuration
+  name: KSI-CED-RAT compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CED-03 compliance report
+  name: KSI-CED-RAT compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CED-03 compliance enforcement
+    description: Azure Policy for KSI-CED-RAT compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CED-03 compliance
+      # Azure Policy for KSI-CED-RAT compliance
       # GitHub Actions
-      - name: KSI-CED-03 Compliance Check
+      - name: KSI-CED-RAT Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ced.compliance.ksi_ced_03 \
@@ -1333,23 +1341,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CED-03 Validation'
+        displayName: 'KSI-CED-RAT Validation'
         inputs:
           script: |
-            # Validate KSI-CED-03 compliance
+            # Validate KSI-CED-RAT compliance
             python validate.py --pattern ced.compliance.ksi_ced_03
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CED-03
+    description: Continuous monitoring for KSI-CED-RAT
     implementation: |
-      # Azure Monitor for KSI-CED-03 continuous monitoring
+      # Azure Monitor for KSI-CED-RAT continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CED-03"
+      | where OperationNameValue contains "KSI-CED-RAT"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1358,7 +1366,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: ced.compliance.ksi_ced_04
 name: Incident Response and Disaster Recovery Education Detection
-description: Detects compliance indicators for KSI-CED-04 - Incident Response and Disaster Recovery Education
+description: Detects compliance indicators for KSI-CED-RAT - Incident Response and Disaster Recovery Education
 family: CED
 severity: MEDIUM
 pattern_type: configuration
@@ -1369,8 +1377,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Incident Response and Disaster Recovery Education compliance check
-  description_template: Configuration may not fully implement KSI-CED-04 - Incident Response and Disaster Recovery Education
-  remediation_template: Review and implement KSI-CED-04 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CED-RAT - Incident Response and Disaster Recovery Education
+  remediation_template: Review and implement KSI-CED-RAT requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1385,27 +1393,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CED-04
+- KSI-CED-RAT
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CED-04 compliance configuration
+  name: KSI-CED-RAT compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CED-04 compliance report
+  name: KSI-CED-RAT compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CED-04 compliance enforcement
+    description: Azure Policy for KSI-CED-RAT compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CED-04 compliance
+      # Azure Policy for KSI-CED-RAT compliance
       # GitHub Actions
-      - name: KSI-CED-04 Compliance Check
+      - name: KSI-CED-RAT Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ced.compliance.ksi_ced_04 \
@@ -1413,23 +1421,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CED-04 Validation'
+        displayName: 'KSI-CED-RAT Validation'
         inputs:
           script: |
-            # Validate KSI-CED-04 compliance
+            # Validate KSI-CED-RAT compliance
             python validate.py --pattern ced.compliance.ksi_ced_04
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CED-04
+    description: Continuous monitoring for KSI-CED-RAT
     implementation: |
-      # Azure Monitor for KSI-CED-04 continuous monitoring
+      # Azure Monitor for KSI-CED-RAT continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CED-04"
+      | where OperationNameValue contains "KSI-CED-RAT"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1452,13 +1460,13 @@ languages:
     - rotation_policy
 finding:
   title_template: Azure Key Vault with HSM Protection Detected
-  description_template: "Hardware-backed key management configured using Azure Key Vault Premium SKU, compliant with KSI-CED-03"
+  description_template: "Hardware-backed key management configured using Azure Key Vault Premium SKU, compliant with KSI-CED-RAT"
   remediation_template: "N/A - Positive finding"
 tags:
 - key_management
 - positive
 related_ksis:
-- KSI-CED-03
+- KSI-CED-RAT
 ---
 pattern_id: ced.key_management.hardcoded_key
 name: Hardcoded Encryption Key
@@ -1515,7 +1523,7 @@ tags:
 - key_management
 - negative
 related_ksis:
-- KSI-CED-03
+- KSI-CED-RAT
 ---
 pattern_id: ced.sanitization.secure_deletion
 name: Secure Data Sanitization
@@ -1575,13 +1583,13 @@ languages:
     - crypto.randomBytes
 finding:
   title_template: Secure Data Sanitization Detected
-  description_template: "Multi-pass secure data sanitization implemented, compliant with KSI-CED-04"
+  description_template: "Multi-pass secure data sanitization implemented, compliant with KSI-CED-RAT"
   remediation_template: "N/A - Positive finding"
 tags:
 - data_sanitization
 - positive
 related_ksis:
-- KSI-CED-04
+- KSI-CED-RAT
 ---
 pattern_id: ced.sanitization.insecure_deletion
 name: Insecure Data Deletion
@@ -1645,4 +1653,4 @@ tags:
 - data_sanitization
 - negative
 related_ksis:
-- KSI-CED-04
+- KSI-CED-RAT

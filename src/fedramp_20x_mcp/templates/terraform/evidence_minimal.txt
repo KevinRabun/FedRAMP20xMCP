@@ -1,329 +1,337 @@
 ## Terraform Template
 
 ```hcl
-# evidence_minimal.tf - Minimal Evidence Collection Architecture
-# Quick-start architecture for pilot FedRAMP 20x evidence collection projects
-# Suitable for: Initial testing, proof-of-concept, 1-5 KSIs
+# evidence_minimal.tf - Minimal evidence storage
+# Smallest hardened deployment: one evidence account and one immutable container.
 #
-# FedRAMP 20x KSI Alignment:
-# - KSI-MLA-01: Log aggregation and centralized logging
-# - KSI-MLA-02: Log retention policies
-# - KSI-CED-01: Continuous evidence collection
-# - FRR-ADS: Authorization Data Sharing (machine-readable evidence)
+# CR26 (FedRAMP Consolidated Rules for 2026) references for evidence storage:
+#   KSI-MLA-RVL / KSI-MLA-OSM / KSI-MLA-ALA  log review, SIEM/log aggregation, log access
+#   KSI-SVC-SIN  information secured       KSI-SVC-RUD  removing unwanted data
+#   KSI-CMT-LMC  logging changes           VER-TFR-MRH  historical activity
+#   IVV-CSO-SEI / IVV-CSO-SEE  supply evidence of implementation / effectiveness
+#   FRC-CSX-VVK / FRC-CSX-VVR  automated verification and validation (KSIs / rules)
+#   SDR-CSX-KMT  KSI metrics
+# CR26 sets no numeric log or evidence retention period. The 1095 day (3 year) default is an
+# organizational choice; keep it configurable.
+#
+# Blob layout convention (one container per evidence stream):
+#   <container>/<report-or-app>/<yyyy-MM-dd or version>/<runId or buildId>/<files>
+#   Each run folder also carries:
+#     run.json             provenance: pipeline, buildId, commit, rulesVersion, collectedAt
+#     sha256-manifest.txt  SHA-256 of every evidence file in the folder
+#   Upload with Entra auth and WITHOUT --overwrite (versioning is off on purpose; with
+#   container-level WORM an overwrite of an existing blob name fails instead of silently
+#   creating a version):
+#     az storage blob upload-batch --auth-mode login --account-name <account> \
+#       --destination <container> --destination-path <report-or-app>/<date>/<runId> --source ./out
+#
+# Locking is a deliberate, one-way, out-of-band step. Once a time-based retention policy is
+# locked it can only be extended (never shortened or removed) and the storage account cannot
+# be deleted while retained blobs exist. Review the unlocked policy first, then lock it with
+# `az storage container immutability-policy lock` (or the portal).
+# Keep lock_immutability_policy = false in code; lock out of band after review.
+#
+# Lifecycle: tier to cool after 30 days since creation. There is deliberately NO delete
+# rule. Expiry of retained evidence is a records-management decision, not a lifecycle default.
+#
+# Baseline: StorageV2 Standard RA-GRS (parameterized), Hot tier, shared key and SAS disabled,
+# public network access disabled, private endpoint (blob) with private DNS zone group,
+# optional customer-managed key (user-assigned identity + versionless Key Vault key),
+# infrastructure encryption, no SFTP/NFSv3, versioning OFF, change feed ON, no blob soft
+# delete or point-in-time restore (incompatible with immutability), container soft delete 90d.
+# Writers: one user-assigned managed identity per stream with Storage Blob Data Contributor
+# scoped to its own container. Readers: an Entra group with Storage Blob Data Reader on the
+# account. No access keys, SAS tokens or connection strings with AccountKey anywhere.
 
 terraform {
   required_version = ">= 1.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
+      version = "~> 4.0"
     }
   }
 }
 
 provider "azurerm" {
-  features {
-    key_vault {
-      purge_soft_delete_on_destroy = false
-    }
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
+  features {}
+  subscription_id     = var.subscription_id
+  storage_use_azuread = true # Entra auth for storage; shared keys are disabled
 }
 
-# ============================================================================
-# Variables
-# ============================================================================
-
-variable "location" {
-  description = "Azure region for resources"
-  type        = string
-  default     = "eastus"
+variable "subscription_id" {
+  type = string
 }
 
 variable "resource_group_name" {
-  description = "Resource group name"
+  description = "Existing resource group for the evidence account"
   type        = string
 }
 
-variable "log_retention_days" {
-  description = "Log retention in days (30-730)"
+variable "location" {
+  type    = string
+  default = "eastus"
+}
+
+variable "replication_type" {
+  description = "Storage replication. RAGRS by default (organizational baseline)."
+  type        = string
+  default     = "RAGRS"
+}
+
+variable "immutability_period_in_days" {
+  description = "Container WORM period in days since creation. 1095 (3 years) is an organizational choice, not a FedRAMP requirement."
   type        = number
-  default     = 90
-  validation {
-    condition     = var.log_retention_days >= 30 && var.log_retention_days <= 730
-    error_message = "Log retention must be between 30 and 730 days."
-  }
+  default     = 1095
 }
 
-variable "evidence_retention_days" {
-  description = "Evidence retention in days (365-2555)"
-  type        = number
-  default     = 365
-  validation {
-    condition     = var.evidence_retention_days >= 365 && var.evidence_retention_days <= 2555
-    error_message = "Evidence retention must be between 365 and 2555 days."
-  }
+variable "lock_immutability_policy" {
+  description = "Keep false. Locking is one-way: once locked the policy can only be extended and the account cannot be deleted while retained blobs exist."
+  type        = bool
+  default     = false
 }
 
-# ============================================================================
-# Random Suffix
-# ============================================================================
-
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-  upper   = false
+variable "enable_cmk" {
+  description = "Use a customer-managed key when cmk_key_vault_key_id and cmk_identity_id are provided"
+  type        = bool
+  default     = true
 }
 
-# ============================================================================
-# Resource Group
-# ============================================================================
-
-data "azurerm_resource_group" "evidence" {
-  name = var.resource_group_name
+variable "cmk_key_vault_key_id" {
+  description = "Versionless Key Vault key ID (empty = Microsoft-managed key)"
+  type        = string
+  default     = ""
 }
 
-# ============================================================================
-# Log Analytics Workspace - Centralized Logging (KSI-MLA-01, KSI-MLA-02)
-# ============================================================================
+variable "cmk_identity_id" {
+  description = "User-assigned identity ID with Key Vault Crypto Service Encryption User on the key (empty = Microsoft-managed key)"
+  type        = string
+  default     = ""
+}
 
-# Supports: KSI-MLA-01 (log aggregation), KSI-MLA-02 (retention policies)
-resource "azurerm_log_analytics_workspace" "evidence" {
-  name                = "law-evidence-${random_string.suffix.result}"
-  location            = var.location
-  resource_group_name = data.azurerm_resource_group.evidence.name
-  sku                 = "PerGB2018"
-  retention_in_days   = var.log_retention_days
+variable "private_endpoint_subnet_id" {
+  type = string
+}
+
+variable "blob_private_dns_zone_id" {
+  description = "Resource ID of privatelink.blob.core.windows.net"
+  type        = string
+}
+
+variable "log_analytics_workspace_id" {
+  description = "Workspace for StorageRead/StorageWrite/StorageDelete diagnostics"
+  type        = string
+}
+
+variable "reader_group_object_id" {
+  description = "Entra group object ID granted Storage Blob Data Reader on the account (group, not individuals)"
+  type        = string
+}
+
+variable "container_name" {
+  description = "Evidence container name (one stream)"
+  type        = string
+  default     = "evidence-reports"
+}
+
+locals {
+  name_suffix = substr(md5(var.subscription_id), 0, 8)
+  cmk_enabled = var.enable_cmk && var.cmk_key_vault_key_id != "" && var.cmk_identity_id != ""
+  streams = toset([var.container_name])
 
   tags = {
-    Purpose = "FedRAMP 20x Evidence Collection"
-    Scope   = "Minimal"
+    Compliance       = "FedRAMP 20x CR26"
+    Purpose          = "Evidence Storage"
+    ImmutabilityDays = tostring(var.immutability_period_in_days)
   }
 }
 
 # ============================================================================
-# Storage Account - Evidence Artifact Storage (KSI-CED-01, FRR-ADS)
+# Evidence Storage Account
+# Supports: KSI-SVC-SIN (information secured), KSI-SVC-RUD (removing unwanted data)
 # ============================================================================
 
-# Supports: KSI-CED-01 (continuous evidence collection), FRR-ADS (machine-readable evidence)
 resource "azurerm_storage_account" "evidence" {
-  name                            = "stevidence${random_string.suffix.result}"
-  location                        = var.location
-  resource_group_name             = data.azurerm_resource_group.evidence.name
-  account_tier                    = "Standard"
-  account_replication_type        = "LRS"
-  access_tier                     = "Hot"
-  enable_https_traffic_only       = true
-  min_tls_version                 = "TLS1_2"
-  allow_nested_items_to_be_public = false
+  name                     = "stevidmin${local.name_suffix}"
+  resource_group_name      = var.resource_group_name
+  location                 = var.location
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = var.replication_type
+  access_tier              = "Hot"
+
+  shared_access_key_enabled         = false # Entra only
+  default_to_oauth_authentication   = true
+  public_network_access_enabled     = false
+  allow_nested_items_to_be_public   = false
+  https_traffic_only_enabled        = true
+  min_tls_version                   = "TLS1_2"
+  local_user_enabled                = false
+  sftp_enabled                      = false # SFTP and NFSv3 are incompatible with immutability
+  nfsv3_enabled                     = false
+  infrastructure_encryption_enabled = true
+  cross_tenant_replication_enabled  = false
+  allowed_copy_scope                = "AAD"
+
+  dynamic "identity" {
+    for_each = local.cmk_enabled ? [1] : []
+    content {
+      type         = "UserAssigned"
+      identity_ids = [var.cmk_identity_id]
+    }
+  }
+
+  dynamic "customer_managed_key" {
+    for_each = local.cmk_enabled ? [1] : []
+    content {
+      key_vault_key_id          = var.cmk_key_vault_key_id # versionless: rotation is automatic
+      user_assigned_identity_id = var.cmk_identity_id
+    }
+  }
 
   blob_properties {
-    delete_retention_policy {
-      days = 30
-    }
+    # Versioning is OFF on purpose: with container-level WORM and no versioning, an
+    # overwrite of an existing blob name fails outright instead of silently creating a version.
+    versioning_enabled  = false
+    change_feed_enabled = true # audit trail of blob changes
+
     container_delete_retention_policy {
-      days = 30
+      days = 90
     }
+    # No delete_retention_policy (blob soft delete) and no restore_policy:
+    # both are incompatible with immutability.
   }
 
-  tags = {
-    Purpose = "FedRAMP 20x Evidence Storage"
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
   }
+
+  tags = local.tags
 }
+
+# ============================================================================
+# Containers (one per evidence stream), each private and WORM
+# ============================================================================
 
 resource "azurerm_storage_container" "evidence" {
-  name                  = "evidence-artifacts"
-  storage_account_name  = azurerm_storage_account.evidence.name
-  container_access_type = "private"
+  for_each = local.streams
 
-  metadata = {
-    purpose   = "FedRAMP 20x evidence storage"
-    retention = "${var.evidence_retention_days} days"
-  }
+  name                  = each.value
+  storage_account_id    = azurerm_storage_account.evidence.id
+  container_access_type = "private"
 }
+
+resource "azurerm_storage_container_immutability_policy" "evidence" {
+  for_each = local.streams
+
+  storage_container_resource_manager_id = azurerm_storage_container.evidence[each.key].resource_manager_id
+  immutability_period_in_days           = var.immutability_period_in_days
+  protected_append_writes_enabled       = false
+  locked                                = var.lock_immutability_policy
+}
+
+# ============================================================================
+# Lifecycle management (tier only, never delete)
+# ============================================================================
 
 resource "azurerm_storage_management_policy" "evidence" {
   storage_account_id = azurerm_storage_account.evidence.id
 
   rule {
-    name    = "DeleteOldEvidence"
+    name    = "tier-evidence-to-cool-30d"
     enabled = true
 
     filters {
-      blob_types   = ["blockBlob"]
-      prefix_match = ["evidence-artifacts/"]
+      blob_types = ["blockBlob"]
     }
 
     actions {
       base_blob {
-        delete_after_days_since_modification_greater_than = var.evidence_retention_days
+        tier_to_cool_after_days_since_creation_greater_than = 30
+        # No delete action: retention expiry is a records decision.
       }
     }
   }
 }
 
 # ============================================================================
-# Managed Identity - Secure Authentication (KSI-IAM-05)
+# Private endpoint (blob) with private DNS zone group
 # ============================================================================
 
-# Supports: KSI-IAM-05 (service accounts use managed identities, not credentials)
-resource "azurerm_user_assigned_identity" "evidence_collector" {
-  name                = "id-evidence-collector-${random_string.suffix.result}"
+resource "azurerm_private_endpoint" "blob" {
+  name                = "pe-${azurerm_storage_account.evidence.name}-blob"
+  resource_group_name = var.resource_group_name
   location            = var.location
-  resource_group_name = data.azurerm_resource_group.evidence.name
+  subnet_id           = var.private_endpoint_subnet_id
 
-  tags = {
-    Purpose = "Evidence Collection Identity"
+  private_service_connection {
+    name                           = "blob"
+    private_connection_resource_id = azurerm_storage_account.evidence.id
+    subresource_names              = ["blob"]
+    is_manual_connection           = false
   }
+
+  private_dns_zone_group {
+    name                 = "default"
+    private_dns_zone_ids = [var.blob_private_dns_zone_id]
+  }
+
+  tags = local.tags
 }
 
-# Grant Storage Blob Data Contributor role
-resource "azurerm_role_assignment" "storage_contributor" {
-  scope                = azurerm_storage_account.evidence.id
+# ============================================================================
+# RBAC: per-container writers, group readers. No keys, no SAS.
+# Any function, app or collector writes using one of these managed identities (Entra only).
+# ============================================================================
+
+resource "azurerm_user_assigned_identity" "writer" {
+  for_each = local.streams
+
+  name                = "id-evidence-writer-${each.value}-${local.name_suffix}"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  tags                = local.tags
+}
+
+resource "azurerm_role_assignment" "writer" {
+  for_each = local.streams
+
+  # Container scope, not account: a writer for one stream cannot touch another.
+  scope                = azurerm_storage_container.evidence[each.key].resource_manager_id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_user_assigned_identity.evidence_collector.principal_id
+  principal_id         = azurerm_user_assigned_identity.writer[each.key].principal_id
+  principal_type       = "ServicePrincipal"
 }
 
-# Grant Log Analytics Reader role
-resource "azurerm_role_assignment" "log_reader" {
-  scope                = azurerm_log_analytics_workspace.evidence.id
-  role_definition_name = "Log Analytics Reader"
-  principal_id         = azurerm_user_assigned_identity.evidence_collector.principal_id
-}
-
-# ============================================================================
-# Azure Function - Evidence Collection Automation (KSI-CED-01)
-# ============================================================================
-
-resource "azurerm_service_plan" "evidence" {
-  name                = "asp-evidence-${random_string.suffix.result}"
-  location            = var.location
-  resource_group_name = data.azurerm_resource_group.evidence.name
-  os_type             = "Linux"
-  sku_name            = "Y1" # Consumption plan
-
-  tags = {
-    Purpose = "Evidence Collection Functions"
-  }
-}
-
-resource "azurerm_linux_function_app" "evidence" {
-  name                       = "func-evidence-${random_string.suffix.result}"
-  location                   = var.location
-  resource_group_name        = data.azurerm_resource_group.evidence.name
-  service_plan_id            = azurerm_service_plan.evidence.id
-  storage_account_name       = azurerm_storage_account.evidence.name
-  storage_account_access_key = azurerm_storage_account.evidence.primary_access_key
-  https_only                 = true
-
-  identity {
-    type = "UserAssigned"
-    identity_ids = [
-      azurerm_user_assigned_identity.evidence_collector.id
-    ]
-  }
-
-  site_config {
-    application_stack {
-      python_version = "3.11"
-    }
-    ftps_state        = "Disabled"
-    minimum_tls_version = "1.2"
-  }
-
-  app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME"       = "python"
-    "LOG_ANALYTICS_WORKSPACE_ID"     = azurerm_log_analytics_workspace.evidence.workspace_id
-    "STORAGE_ACCOUNT_NAME"           = azurerm_storage_account.evidence.name
-    "EVIDENCE_CONTAINER_NAME"        = azurerm_storage_container.evidence.name
-    "MANAGED_IDENTITY_CLIENT_ID"     = azurerm_user_assigned_identity.evidence_collector.client_id
-  }
-
-  tags = {
-    Purpose = "Evidence Collection Automation"
-  }
+resource "azurerm_role_assignment" "reader" {
+  scope                = azurerm_storage_account.evidence.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = var.reader_group_object_id
+  principal_type       = "Group"
 }
 
 # ============================================================================
-# Event Grid - Evidence Collection Notifications (KSI-MLA-05)
+# Diagnostics: StorageRead / StorageWrite / StorageDelete to Log Analytics
+# Supports: KSI-MLA-OSM, KSI-MLA-ALA, KSI-CMT-LMC
 # ============================================================================
 
-resource "azurerm_eventgrid_system_topic" "evidence" {
-  name                   = "evgt-evidence-${random_string.suffix.result}"
-  location               = var.location
-  resource_group_name    = data.azurerm_resource_group.evidence.name
-  source_arm_resource_id = azurerm_storage_account.evidence.id
-  topic_type             = "Microsoft.Storage.StorageAccounts"
+resource "azurerm_monitor_diagnostic_setting" "blob" {
+  name                       = "evidence-blob-to-law"
+  target_resource_id         = "${azurerm_storage_account.evidence.id}/blobServices/default"
+  log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  tags = {
-    Purpose = "Evidence Event Processing"
+  enabled_log {
+    category = "StorageRead"
   }
-}
-
-resource "azurerm_eventgrid_system_topic_event_subscription" "evidence_uploaded" {
-  name                = "evidence-uploaded"
-  system_topic        = azurerm_eventgrid_system_topic.evidence.name
-  resource_group_name = data.azurerm_resource_group.evidence.name
-
-  webhook_endpoint {
-    url = "https://${azurerm_linux_function_app.evidence.default_hostname}/api/evidence-notification"
-  }
-
-  included_event_types = [
-    "Microsoft.Storage.BlobCreated"
-  ]
-
-  subject_filter {
-    subject_begins_with = "/blobServices/default/containers/${azurerm_storage_container.evidence.name}/"
-  }
-
-  retry_policy {
-    max_delivery_attempts = 30
-    event_time_to_live    = 1440
-  }
-}
-
-# ============================================================================
-# Diagnostic Settings - Audit Logging (KSI-MLA-05)
-# ============================================================================
-
-resource "azurerm_monitor_diagnostic_setting" "storage" {
-  name                       = "storage-diagnostics"
-  target_resource_id         = azurerm_storage_account.evidence.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.evidence.id
-
   enabled_log {
     category = "StorageWrite"
   }
-
   enabled_log {
     category = "StorageDelete"
   }
-
-  metric {
+  enabled_metric {
     category = "Transaction"
-    enabled  = true
-  }
-}
-
-resource "azurerm_monitor_diagnostic_setting" "function" {
-  name                       = "function-diagnostics"
-  target_resource_id         = azurerm_linux_function_app.evidence.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.evidence.id
-
-  enabled_log {
-    category = "FunctionAppLogs"
-  }
-
-  metric {
-    category = "AllMetrics"
-    enabled  = true
   }
 }
 
@@ -331,80 +339,52 @@ resource "azurerm_monitor_diagnostic_setting" "function" {
 # Outputs
 # ============================================================================
 
-output "log_analytics_workspace_id" {
-  description = "Log Analytics Workspace ID"
-  value       = azurerm_log_analytics_workspace.evidence.id
-}
-
-output "log_analytics_workspace_name" {
-  description = "Log Analytics Workspace Name"
-  value       = azurerm_log_analytics_workspace.evidence.name
-}
-
 output "storage_account_name" {
-  description = "Storage Account Name"
-  value       = azurerm_storage_account.evidence.name
+  value = azurerm_storage_account.evidence.name
 }
 
-output "evidence_container_name" {
-  description = "Evidence Container Name"
-  value       = azurerm_storage_container.evidence.name
+output "storage_account_id" {
+  value = azurerm_storage_account.evidence.id
 }
 
-output "function_app_name" {
-  description = "Function App Name"
-  value       = azurerm_linux_function_app.evidence.name
+output "container_names" {
+  value = sort(tolist(local.streams))
 }
 
-output "managed_identity_id" {
-  description = "Managed Identity Resource ID"
-  value       = azurerm_user_assigned_identity.evidence_collector.id
+output "writer_identities" {
+  description = "Per-container writer managed identities (client_id is what a collector uses with Entra auth)"
+  value = {
+    for k, v in azurerm_user_assigned_identity.writer : k => {
+      client_id    = v.client_id
+      principal_id = v.principal_id
+    }
+  }
 }
 
-output "managed_identity_client_id" {
-  description = "Managed Identity Client ID"
-  value       = azurerm_user_assigned_identity.evidence_collector.client_id
+output "blob_layout" {
+  value = "<container>/<report-or-app>/<yyyy-MM-dd or version>/<runId or buildId>/<files> + run.json + sha256-manifest.txt"
 }
 ```
 
 ## Deployment Instructions
 
 ```bash
-# Initialize Terraform
 terraform init
-
-# Create resource group
-az group create --name rg-evidence-minimal --location eastus
-
-# Plan deployment
-terraform plan \
-  -var="resource_group_name=rg-evidence-minimal" \
-  -var="location=eastus" \
-  -var="log_retention_days=90" \
-  -var="evidence_retention_days=365"
-
-# Apply deployment
-terraform apply \
-  -var="resource_group_name=rg-evidence-minimal" \
-  -var="location=eastus" \
-  -var="log_retention_days=90" \
-  -var="evidence_retention_days=365"
-
-# View outputs
-terraform output
+terraform plan -out=tfplan \
+  -var subscription_id=<sub> -var resource_group_name=<rg> \
+  -var private_endpoint_subnet_id=<subnet-id> \
+  -var blob_private_dns_zone_id=<privatelink.blob.core.windows.net zone id> \
+  -var log_analytics_workspace_id=<workspace-id> \
+  -var reader_group_object_id=<entra-group-object-id>
+terraform apply tfplan
 ```
 
 ## Usage Notes
 
-**Purpose:** Minimal evidence collection architecture for pilot FedRAMP 20x projects.
+- Public network access is disabled: upload from a runner or agent with private connectivity to the endpoint.
+- Writers authenticate with their managed identity or federated workload identity (Entra). Shared key access is disabled, so connection strings with AccountKey and SAS tokens do not work.
+- The immutability policies are created unlocked (`lock_immutability_policy = false`). Lock out of band when ready.
+- Retention (1095 days) is an organizational choice, not a FedRAMP number. CR26 does not set one.
+- Grant the CMK identity Key Vault Crypto Service Encryption User on the key before enabling CMK. Leave the cmk variables empty to use a Microsoft-managed key.
 
-**Scope:** Suitable for 1-5 KSIs, initial testing.
-
-**Next Steps:**
-1. Deploy infrastructure using Terraform commands above
-2. Deploy evidence collection code to Azure Function
-3. Configure KSI-specific evidence collectors
-4. Test evidence collection and storage
-5. Scale to single-ksi or category architecture as needed
-
-**Upgrade Path:** Migrate to `evidence_single_ksi.tf` for production workloads.
+*Generated by FedRAMP 20x MCP Server - Evidence Infrastructure (Terraform)*

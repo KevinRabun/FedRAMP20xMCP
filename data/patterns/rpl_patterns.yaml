@@ -1,6 +1,6 @@
 pattern_id: rpl.storage.geo_redundancy
 name: Geo-Redundant Storage Configuration
-description: Detects geo-redundant storage configuration for disaster recovery (KSI-RPL-02)
+description: Detects geo-redundant storage configuration for disaster recovery (KSI-RPL-ARP)
 family: RPL
 severity: HIGH
 pattern_type: resource_configuration
@@ -24,7 +24,7 @@ languages:
     regex_fallback: resource\s+"azurerm_storage_account"(?!.*account_replication_type\s*=\s*("GRS"|"RAGRS"|"GZRS"|"RAGZRS"))
 finding:
   title_template: Storage account lacks geo-redundant replication
-  description_template: '{resource_type} uses locally-redundant storage. KSI-RPL-02
+  description_template: '{resource_type} uses locally-redundant storage. KSI-RPL-ARP
     requires geo-redundant replication for disaster recovery.'
   remediation_template: "Enable geo-redundant storage:\n\nBicep:\nresource storageAccount\
     \ 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n  name: storageAccountName\n\
@@ -65,7 +65,7 @@ nist_controls:
 - cp-7
 - cp-9
 related_ksis:
-- KSI-RPL-02
+- KSI-RPL-ARP
 evidence_artifacts:
 - artifact_type: logs
   name: Storage replication status logs
@@ -242,7 +242,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-RPL-02
+    requirement_id: KSI-RPL-ARP
     requirement_name: Recovery Plan
     impact_levels:
     - Low
@@ -265,7 +265,7 @@ testing:
 ---
 pattern_id: rpl.backup.missing_policy
 name: Missing Backup Policy
-description: Detects resources without backup configuration (KSI-RPL-03)
+description: Detects resources without backup configuration (KSI-RPL-ABO)
 family: RPL
 severity: CRITICAL
 pattern_type: resource_configuration
@@ -285,7 +285,7 @@ languages:
     regex_fallback: resource\s+"azurerm_(virtual_machine|sql_server|postgresql_server|mysql_server)"(?!.*azurerm_backup_)
 finding:
   title_template: Resource lacks backup configuration
-  description_template: '{resource_type} does not have backup policy configured. KSI-RPL-03
+  description_template: '{resource_type} does not have backup policy configured. KSI-RPL-ABO
     requires automated backups for data protection.'
   remediation_template: "Configure backup policy:\n\nBicep (VM Backup):\n// Recovery\
     \ Services Vault\nresource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-01-01'\
@@ -331,10 +331,9 @@ finding:
     ]\n    months   = [\"January\"]\n  }\n}\n\nresource \"azurerm_backup_protected_vm\"\
     \ \"main\" {\n  resource_group_name = azurerm_resource_group.main.name\n  recovery_vault_name\
     \ = azurerm_recovery_services_vault.main.name\n  source_vm_id        = azurerm_virtual_machine.main.id\n\
-    \  backup_policy_id    = azurerm_backup_policy_vm.main.id\n}\n\nFedRAMP Backup\
-    \ Requirements:\n- **Daily backups**: Minimum requirement\n- **30-day retention**:\
-    \ Short-term recovery\n- **Weekly backups**: 12 weeks retention\n- **Monthly backups**:\
-    \ 12 months retention\n- **Yearly backups**: 7 years retention (audit/compliance)\n\
+    \  backup_policy_id    = azurerm_backup_policy_vm.main.id\n}\n\nExample Backup\
+    \ Policy (set values to match your recovery objectives, KSI-RPL-RRO):\n- **Daily backups**\n- **Short-term retention**:\
+    \ example 30 days\n- **Weekly and monthly backups**: example retention per policy\n\
     - **Encryption**: All backups must be encrypted\n- **Testing**: Regular restore\
     \ testing required\n"
   evidence_collection:
@@ -357,7 +356,7 @@ nist_controls:
 - cp-9.2
 - cp-10
 related_ksis:
-- KSI-RPL-03
+- KSI-RPL-ABO
 evidence_artifacts:
 - artifact_type: logs
   name: Backup job execution logs
@@ -535,7 +534,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-RPL-03
+    requirement_id: KSI-RPL-ABO
     requirement_name: System Backups
     impact_levels:
     - Low
@@ -558,7 +557,7 @@ testing:
 ---
 pattern_id: rpl.compliance.ksi_rpl_04
 name: Recovery Testing Detection
-description: Detects compliance indicators for KSI-RPL-04 - Recovery Testing
+description: Detects compliance indicators for KSI-RPL-TRC - Recovery Testing
 family: RPL
 severity: MEDIUM
 pattern_type: configuration
@@ -569,8 +568,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Recovery Testing compliance check
-  description_template: Configuration may not fully implement KSI-RPL-04 - Recovery Testing
-  remediation_template: Review and implement KSI-RPL-04 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-RPL-TRC - Recovery Testing
+  remediation_template: Review and implement KSI-RPL-TRC requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -585,27 +584,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-RPL-04
+- KSI-RPL-TRC
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-RPL-04 compliance configuration
+  name: KSI-RPL-TRC compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-RPL-04 compliance report
+  name: KSI-RPL-TRC compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-RPL-04 compliance enforcement
+    description: Azure Policy for KSI-RPL-TRC compliance enforcement
     implementation: |
-      # Azure Policy for KSI-RPL-04 compliance
+      # Azure Policy for KSI-RPL-TRC compliance
       # GitHub Actions
-      - name: KSI-RPL-04 Compliance Check
+      - name: KSI-RPL-TRC Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern rpl.compliance.ksi_rpl_04 \
@@ -613,23 +612,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-RPL-04 Validation'
+        displayName: 'KSI-RPL-TRC Validation'
         inputs:
           script: |
-            # Validate KSI-RPL-04 compliance
+            # Validate KSI-RPL-TRC compliance
             python validate.py --pattern rpl.compliance.ksi_rpl_04
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-RPL-04
+    description: Continuous monitoring for KSI-RPL-TRC
     implementation: |
-      # Azure Monitor for KSI-RPL-04 continuous monitoring
+      # Azure Monitor for KSI-RPL-TRC continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-RPL-04"
+      | where OperationNameValue contains "KSI-RPL-TRC"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -652,7 +651,7 @@ languages:
     - Recovery Procedures
 finding:
   title_template: Recovery plan documented
-  description_template: Recovery plan aligned with RTO/RPO objectives, compliant with KSI-RPL-02.
+  description_template: Recovery plan aligned with RTO/RPO objectives, compliant with KSI-RPL-ARP.
   remediation_template: N/A - Positive finding
 tags:
 - recovery
@@ -660,7 +659,7 @@ tags:
 nist_controls:
 - cp-10
 related_ksis:
-- KSI-RPL-02
+- KSI-RPL-ARP
 ---
 pattern_id: rpl.recovery.no_plan
 name: No Recovery Plan
@@ -688,7 +687,7 @@ languages:
     - "No recovery"
 finding:
   title_template: No recovery plan
-  description_template: No documented recovery procedures. KSI-RPL-02 requires recovery plan aligned with objectives.
+  description_template: No documented recovery procedures. KSI-RPL-ARP requires recovery plan aligned with objectives.
   remediation_template: Document recovery procedures including database, application, and network recovery steps.
 tags:
 - recovery
@@ -696,7 +695,7 @@ tags:
 nist_controls:
 - cp-10
 related_ksis:
-- KSI-RPL-02
+- KSI-RPL-ARP
 ---
 pattern_id: rpl.backup.automated_configuration
 name: Automated Backup Configuration
@@ -719,7 +718,7 @@ languages:
     - Microsoft.RecoveryServices
 finding:
   title_template: Automated backups configured
-  description_template: System backups aligned with RPO objectives, compliant with KSI-RPL-03.
+  description_template: System backups aligned with RPO objectives, compliant with KSI-RPL-ABO.
   remediation_template: N/A - Positive finding
 tags:
 - backup
@@ -727,7 +726,7 @@ tags:
 nist_controls:
 - cp-9
 related_ksis:
-- KSI-RPL-03
+- KSI-RPL-ABO
 ---
 pattern_id: rpl.recovery.testing_schedule
 name: Recovery Testing Schedule
@@ -744,7 +743,7 @@ languages:
     - Validate Recovery
 finding:
   title_template: Recovery testing scheduled
-  description_template: Regular disaster recovery testing configured, compliant with KSI-RPL-04.
+  description_template: Regular disaster recovery testing configured, compliant with KSI-RPL-TRC.
   remediation_template: N/A - Positive finding
 tags:
 - recovery
@@ -753,7 +752,7 @@ tags:
 nist_controls:
 - cp-4
 related_ksis:
-- KSI-RPL-04
+- KSI-RPL-TRC
 ---
 pattern_id: rpl.recovery.no_testing
 name: No Recovery Testing
@@ -781,7 +780,7 @@ languages:
     - "Never tested"
 finding:
   title_template: Recovery procedures never tested
-  description_template: Recovery procedures not tested. KSI-RPL-04 requires regular recovery testing and validation.
+  description_template: Recovery procedures not tested. KSI-RPL-TRC requires regular recovery testing and validation.
   remediation_template: Schedule quarterly disaster recovery tests to validate procedures and meet RTO/RPO objectives.
 tags:
 - recovery
@@ -791,7 +790,7 @@ tags:
 nist_controls:
 - cp-4
 related_ksis:
-- KSI-RPL-04
+- KSI-RPL-TRC
 ---
 pattern_id: rpl.backup.no_configuration
 name: No Backup Configuration
@@ -824,7 +823,7 @@ languages:
     - "No backup"
 finding:
   title_template: No automated backup configuration
-  description_template: Automated backups not configured. KSI-RPL-03 requires system backups aligned with RPO objectives.
+  description_template: Automated backups not configured. KSI-RPL-ABO requires system backups aligned with RPO objectives.
   remediation_template: Configure automated backups using Azure Backup with appropriate frequency to meet RPO requirements.
 tags:
 - backup
@@ -833,4 +832,4 @@ tags:
 nist_controls:
 - cp-9
 related_ksis:
-- KSI-RPL-03
+- KSI-RPL-ABO

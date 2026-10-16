@@ -102,15 +102,17 @@ async def check_package_vulnerabilities_impl(
         # FedRAMP compliance note
         if critical or high:
             response["fedramp_compliance"] = {
-                "requirement": "KSI-SVC-08 (Secure Dependencies), KSI-TPR-03 (Supply Chain Security)",
-                "status": "NON_COMPLIANT",
-                "note": "FedRAMP 20x requires remediation of HIGH/CRITICAL vulnerabilities within 30 days of disclosure.",
-                "action": "Document vulnerability in POA&M and track remediation timeline."
+                "requirement": "KSI-SCR-MON (Monitoring Supply Chain Risk), VDR-TFR-PVR (Mitigation and Remediation Expectations)",
+                "status": "ACTION_REQUIRED",
+                "note": ("CR26 does not use fixed severity-based day counts. Remediation timeframes in VDR-TFR-PVR "
+                         "depend on the Potential Agency Impact N-rating (VER-EVA-EPA), internet reachability and "
+                         "likely exploitability. Evaluate this finding with those factors."),
+                "action": "Evaluate and track this vulnerability under your vulnerability detection and response process (VDR family)."
             }
         else:
             response["fedramp_compliance"] = {
-                "requirement": "KSI-SVC-08 (Secure Dependencies)",
-                "status": "COMPLIANT",
+                "requirement": "KSI-SCR-MON (Monitoring Supply Chain Risk)",
+                "status": "NO_ISSUE_FOUND",
                 "note": "Continue monitoring for new vulnerabilities. Maintain inventory of dependencies."
             }
         
@@ -233,7 +235,7 @@ async def scan_dependency_file_impl(
         response["recommendation"] = f"🚨 {critical_count} CRITICAL vulnerabilities found. Immediate action required."
         response["urgency"] = "IMMEDIATE"
     elif high_count > 0:
-        response["recommendation"] = f"⚠️ {high_count} HIGH vulnerabilities found. Upgrade within 30 days per FedRAMP 20x."
+        response["recommendation"] = f"⚠️ {high_count} HIGH vulnerabilities found. Evaluate against VDR-TFR-PVR timeframes (N-rating, internet reachability, exploitability) and upgrade."
         response["urgency"] = "HIGH"
     elif total_vulns > 0:
         response["recommendation"] = f"{total_vulns} vulnerabilities found. Review and plan upgrades."

@@ -118,7 +118,7 @@ class EvidenceCollector {
     
     /**
      * Store evidence in Azure Blob Storage with immutability and metadata.
-     * FRR-ADS requirement: Machine-readable format with proper metadata tagging.
+     * CDS-CSO-PUB and FRC-CSO-JSN: JSON evidence with proper metadata tagging.
      * Azure Blob Immutability: https://learn.microsoft.com/azure/storage/blobs/immutable-storage-overview
      */
     async storeEvidence(ksiId: string, evidence: Evidence): Promise<void> {

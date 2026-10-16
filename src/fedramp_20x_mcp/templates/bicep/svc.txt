@@ -3,8 +3,10 @@
 ```bicep
 // main.bicep - Service Management Evidence Collection
 param location string = resourceGroup().location
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period.')
+param logRetentionDays int
 
-// Key Vault for secret management (KSI-SVC-06) and CMK encryption (SC-12)
+// Key Vault for secret management (KSI-SVC-ASM) and CMK encryption (SC-12)
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: 'kv-fedramp-secrets'
   location: location
@@ -95,7 +97,7 @@ resource keyVaultDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
         enabled: true
         retentionPolicy: {
           enabled: true
-          days: 730
+          days: logRetentionDays  // organization-defined
         }
       }
     ]
@@ -107,7 +109,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   location: location
   properties: {
     sku: { name: 'PerGB2018' }
-    retentionInDays: 730
+    retentionInDays: logRetentionDays  // organization-defined
   }
 }
 

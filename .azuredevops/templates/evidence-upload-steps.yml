@@ -1,0 +1,163 @@
+# Upload a directory of evidence to the WORM evidence storage account.
+#
+# Defaults target IntelliGRC's compliance evidence account (infra-azure-storage
+# evidence-storage.tf, AB#15917):
+#   account    intellievidence  (private endpoint only, no shared keys, CMK)
+#   container  vdr-reports      (container-level time-based retention, 1095 days)
+#   identity   evidence-writer  (WIF service connection; Storage Blob Data
+#                                Contributor on the evidence containers only)
+#
+# Blob layout, the same convention the IntelliGRC.CRM reports use:
+#   <container>/<reportName>/<yyyy-MM-dd>/<runId>/<files>
+#     run.json            provenance (written here unless sourceDir has one)
+#     pipeline-run.json   this pipeline run's identity, always written
+#     sha256-manifest.txt sha256 of every other file, for later integrity checks
+#
+# The container is immutable and versioning is off, so an existing blob name
+# can never be overwritten: upload-batch runs WITHOUT --overwrite and a
+# collision fails the step. runId defaults to Build.BuildId plus the job
+# attempt, so a re-run gets a new folder instead of colliding.
+#
+# Requirements on the job running these steps:
+#   - Linux agent with az CLI and network reach to the account's private
+#     endpoint (IntelliGRC: intelli-pool-1). Microsoft-hosted agents cannot
+#     reach it.
+#   - The pipeline must be authorized for `serviceConnection`, or the run fails
+#     at queue time, not at this step.
+#   - Only pipelines in the IntelliGRC ADO project may use the defaults. The
+#     Charles project must not reference IntelliGRC service connections,
+#     pools or storage; give it its own parameters or leave upload off.
+
+parameters:
+  - name: sourceDir
+    type: string
+  # Top-level folder in the container, e.g. 'fedramp20x-scan/<repo>' or
+  # 'ksi-evidence/KSI-SVC-SIN'. Must not contain spaces.
+  - name: reportName
+    type: string
+  - name: serviceConnection
+    type: string
+    default: 'evidence-writer'
+  - name: storageAccount
+    type: string
+    default: 'intellievidence'
+  - name: container
+    type: string
+    default: 'vdr-reports'
+  # Override the run folder name; empty = $(Build.BuildId)-$(System.JobAttempt).
+  - name: runId
+    type: string
+    default: ''
+  # true: a failed upload fails the job. Set false only while trialing a new
+  # stream; evidence that silently fails to store is a gap, not a warning.
+  - name: blocking
+    type: boolean
+    default: true
+  # true: stage the files, write the manifest and print what would be
+  # uploaded, without calling Azure. Useful before the writer grant exists.
+  - name: dryRun
+    type: boolean
+    default: false
+
+steps:
+- bash: |
+    set -euo pipefail
+    src='${{ parameters.sourceDir }}'
+    report='${{ parameters.reportName }}'
+    case "$report" in *' '*|''|/*|*..*) echo "##vso[task.logissue type=error]Invalid reportName '$report'"; exit 1;; esac
+    if [ -z "$(ls -A "$src" 2>/dev/null)" ]; then
+      echo "##vso[task.logissue type=error]No files in $src; nothing to upload"
+      exit 1
+    fi
+
+    run_id='${{ parameters.runId }}'
+    [ -n "$run_id" ] || run_id="$(Build.BuildId)-$(System.JobAttempt)"
+    day=$(date -u +%Y-%m-%d)
+    prefix="${report%/}/$day/$run_id"
+
+    stage="$(Agent.TempDirectory)/evidence-stage/$run_id"
+    rm -rf "$stage" && mkdir -p "$stage"
+    cp -r "$src"/. "$stage"/
+    rm -f "$stage/sha256-manifest.txt"
+
+    cat > "$stage/pipeline-run.json" <<EOF
+    {
+      "reportName": "$report",
+      "runId": "$run_id",
+      "buildId": "$(Build.BuildId)",
+      "buildNumber": "$(Build.BuildNumber)",
+      "jobAttempt": "$(System.JobAttempt)",
+      "pipeline": "$(Build.DefinitionName)",
+      "project": "$(System.TeamProject)",
+      "repository": "$(Build.Repository.Name)",
+      "sourceBranch": "$(Build.SourceBranch)",
+      "sourceVersion": "$(Build.SourceVersion)",
+      "reason": "$(Build.Reason)",
+      "requestedFor": "$(Build.RequestedFor)",
+      "uploadedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "destination": "${{ parameters.storageAccount }}/${{ parameters.container }}/$prefix"
+    }
+    EOF
+    # A producer-written run.json (e.g. fedramp-20x-scan's, which carries the
+    # rules version and sha256) is kept as-is; otherwise reuse this one.
+    [ -f "$stage/run.json" ] || cp "$stage/pipeline-run.json" "$stage/run.json"
+
+    (cd "$stage" && find . -type f ! -name sha256-manifest.txt -print0 | sort -z | xargs -0 sha256sum > sha256-manifest.txt)
+    count=$(find "$stage" -type f | wc -l | tr -d ' ')
+
+    echo "Staged $count files for ${{ parameters.storageAccount }}/${{ parameters.container }}/$prefix"
+    echo "##vso[task.setvariable variable=evidenceStage]$stage"
+    echo "##vso[task.setvariable variable=evidencePrefix]$prefix"
+    echo "##vso[task.setvariable variable=evidenceFileCount]$count"
+  displayName: 'Stage evidence (${{ parameters.reportName }})'
+  condition: succeededOrFailed()
+  continueOnError: ${{ not(parameters.blocking) }}
+
+- ${{ if eq(parameters.dryRun, true) }}:
+  - bash: |
+      echo "Dry run: would upload $(evidenceFileCount) files to ${{ parameters.storageAccount }}/${{ parameters.container }}/$(evidencePrefix)"
+      (cd "$(evidenceStage)" && find . -type f | sort)
+    displayName: 'Dry run: list evidence'
+    condition: and(succeededOrFailed(), ne(variables['evidenceStage'], ''))
+
+- ${{ if ne(parameters.dryRun, true) }}:
+  - task: AzureCLI@2
+    name: evidenceUpload
+    displayName: 'Upload evidence to ${{ parameters.storageAccount }}/${{ parameters.container }}'
+    condition: and(succeededOrFailed(), ne(variables['evidenceStage'], ''))
+    continueOnError: ${{ not(parameters.blocking) }}
+    inputs:
+      azureSubscription: '${{ parameters.serviceConnection }}'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        set -euo pipefail
+        account='${{ parameters.storageAccount }}'
+        container='${{ parameters.container }}'
+        prefix='$(evidencePrefix)'
+
+        # No --overwrite: the container is WORM, so a name collision must fail.
+        az storage blob upload-batch \
+          --auth-mode login \
+          --account-name "$account" \
+          --destination "$container" \
+          --destination-path "$prefix" \
+          --source "$(evidenceStage)" \
+          --only-show-errors \
+          --output none
+
+        # Verify by reading back, not by trusting the upload's exit code.
+        stored=$(az storage blob list \
+          --auth-mode login \
+          --account-name "$account" \
+          --container-name "$container" \
+          --prefix "$prefix/" \
+          --num-results 5000 \
+          --query "length(@)" -o tsv --only-show-errors)
+        expected='$(evidenceFileCount)'
+        if [ "$stored" != "$expected" ]; then
+          echo "##vso[task.logissue type=error]Stored $stored blobs under $prefix, expected $expected"
+          exit 1
+        fi
+        echo "Verified $stored blobs at $account/$container/$prefix"
+        echo "##vso[task.setvariable variable=evidenceUri;isOutput=true]https://$account.blob.core.windows.net/$container/$prefix/"

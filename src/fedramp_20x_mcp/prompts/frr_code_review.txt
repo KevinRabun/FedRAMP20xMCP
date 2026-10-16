@@ -1,13 +1,13 @@
 # FRR Code Review Guide
 
-I'll help you review code for FedRAMP Requirement (FRR) compliance using AST-powered semantic analysis.
+I'll help you review code for FedRAMP Rule (FRR) compliance under the FedRAMP Consolidated Rules for 2026 (CR26) using AST-powered semantic analysis.
 
 ## Review Process
 
 ### 1. Identify Review Scope
 
 **What are you reviewing?**
-- [ ] Single requirement (analyze_frr_code)
+- [ ] Single rule (analyze_frr_code)
 - [ ] Entire family (analyze_frr_family)
 - [ ] Comprehensive scan (analyze_all_frrs)
 
@@ -18,45 +18,50 @@ I'll help you review code for FedRAMP Requirement (FRR) compliance using AST-pow
 
 ### 2. Choose Your FRR Focus
 
+CR26 has 17 FRR families and 245 rules. Many rules vary by Certification Class (A, B, C, D); check varies_by_class with `get_frr_metadata`.
+
 **Most Common FRR Families for Code Reviews:**
 
-**VDR (Vulnerability Detection and Response) - 59 requirements:**
-- FRR-VDR-01: Vulnerability scanning implementation
-- FRR-VDR-08: Patch management procedures
-- FRR-VDR-11: Deviation tracking and approvals
-- FRR-VDR-TF-01: Remediation timeframe compliance
-- FRR-VDR-AC-01: Authenticated vulnerability scanning
-- Use: `analyze_frr_family("VDR", code, language)`
+**VDR (Vulnerability Detection and Response) and VER (Vulnerability Evaluation and Reporting):**
+- VDR-CSO-DET: Vulnerability detection implementation
+- VDR-CSO-ADT: Automated detection
+- VDR-CSO-DAC: Detection after changes
+- VDR-TFR-PVR: Mitigation and remediation timeframes (by Class, N-rating, reachability)
+- VER-EVA-EIR: Evaluate internet-reachability
+- VER-RPT-VDT: Vulnerability report fields
+- VER-TFR-MHR: Monthly activity report
+- Use: `analyze_frr_family("VDR", code, language)` and `analyze_frr_family("VER", code, language)`
 
-**ADS (Authorization Data Sharing) - 22 requirements:**
-- FRR-ADS-01: Machine-readable evidence format
-- FRR-ADS-02: Real-time data accuracy
-- FRR-ADS-AC-01: API authentication and authorization
-- FRR-ADS-TC-01: Testing and validation
-- Use: `analyze_frr_family("ADS", code, language)`
+**CDS (Certification Data Sharing):**
+- CDS-CSO-PUB: Public information in human-readable and JSON formats
+- CDS-CSO-CBF: Automated consistency between formats
+- CDS-TRC-PAC: Documented programmatic access
+- CDS-TRC-ACL: Access logging
+- Use: `analyze_frr_family("CDS", code, language)`
 
-**RSC (Recommended Secure Configuration) - 10 requirements:**
-- FRR-RSC-01: Security baseline configuration
-- FRR-RSC-02: Configuration management
-- FRR-RSC-03: Hardening standards
-- Use: `analyze_frr_family("RSC", code, language)`
+**SCG (Secure Configuration Guide):**
+- SCG-CSO-RSC: Recommended secure configuration
+- SCG-CSO-SDF: Secure defaults
+- SCG-ENH-EXP and SCG-ENH-API: Export and API capabilities for settings
+- Use: `analyze_frr_family("SCG", code, language)`
 
-**UCM (Using Cryptographic Modules) - 4 requirements:**
-- FRR-UCM-01: FIPS 140-3 validated modules
-- FRR-UCM-02: Key management
-- FRR-UCM-03: Encryption standards
-- Use: `analyze_frr_family("UCM", code, language)`
+**CMU (Cryptographic Module Use):**
+- CMU-CSO-CMD: Cryptographic module documentation
+- CMU-CSO-CAT: Agency tenants configured with validated modules by default
+- CMU-CSO-UVM: Using validated cryptographic modules (by Class)
+- Use: `analyze_frr_family("CMU", code, language)`
 
-**CCM (Collaborative Continuous Monitoring) - 25 requirements:**
-- FRR-CCM-01: Continuous monitoring procedures
-- FRR-CCM-QR-01 through QR-11: Quarterly review requirements
+**CCM (Collaborative Continuous Monitoring):**
+- CCM-OCR-AVL: Ongoing Certification Report every 3 months
+- CCM-OCR-FBM: Feedback mechanism
+- CCM-QTR-MTG: Quarterly Review meeting (by Class)
 - Use: `analyze_frr_family("CCM", code, language)`
 
 ### 3. Run FRR Analysis
 
-**For Specific Requirement:**
+**For Specific Rule:**
 ```
-> analyze_frr_code with frr_id="FRR-VDR-01" and code="[paste code]" and language="python"
+> analyze_frr_code with frr_id="VDR-CSO-DET" and code="[paste code]" and language="python"
 ```
 
 **For Entire Family:**
@@ -71,43 +76,39 @@ I'll help you review code for FedRAMP Requirement (FRR) compliance using AST-pow
 
 ### 4. Review Findings
 
-**Finding Severity Levels:**
+**Finding Severity Levels (tool output ranking, not a CR26 concept):**
 - **Critical**: Must fix before deployment (blocking compliance issue)
 - **High**: Security risk or major compliance gap
 - **Medium**: Configuration improvement needed
 - **Low**: Best practice recommendation
 
 **Review Checklist:**
-- [ ] Understand each finding's FRR requirement reference
+- [ ] Understand each finding's FRR rule reference and its force (MUST, SHOULD, MAY)
 - [ ] Check NIST 800-53 control mappings
 - [ ] Review remediation recommendations
 - [ ] Identify quick wins vs. architectural changes
-- [ ] Plan implementation timeline
 
 ### 5. Address Findings
 
 **Remediation Workflow:**
-1. **Prioritize Critical/High findings** - Address blocking compliance issues first
-2. **Review Azure-specific guidance** - Use recommended Azure services
-3. **Implement fixes** - Apply remediation recommendations
-4. **Re-run analysis** - Verify fixes resolved findings
-5. **Document decisions** - Record any accepted risks or deviations
+1. **Prioritize MUST rules and blocking findings**
+2. **Review Azure-specific guidance**
+3. **Implement fixes**
+4. **Re-run analysis**
+5. **Document decisions** in the Security Decision Record (explain how the rule is followed, or the reason and resulting risk of not following it)
 
 **Get Additional Context:**
-- Requirement details: `get_frr_metadata("FRR-VDR-01")`
-- Evidence automation: `get_frr_evidence_automation("FRR-VDR-01")`
+- Rule details: `get_frr_metadata("VDR-CSO-DET")`
+- Evidence automation: `get_frr_evidence_automation("VDR-CSO-DET")`
 - Family overview: `list_frrs_by_family("VDR")`
 
 ### 6. Integration with Pull Requests
-
-**Pre-merge FRR Validation:**
 
 **Option 1: Targeted Family Review**
 ```yaml
 # .github/workflows/frr-review.yml
 - name: VDR Compliance Check
   run: |
-    # Analyze for vulnerability management compliance
     analyze_frr_family("VDR", changed_files, "python")
 ```
 
@@ -121,97 +122,91 @@ I'll help you review code for FedRAMP Requirement (FRR) compliance using AST-pow
     language: 'bicep'
 ```
 
-**Option 3: Specific Requirements**
+**Option 3: Specific Rules**
 ```yaml
 # GitLab CI
 frr-check:
   script:
-    - analyze_frr_code("FRR-ADS-01", "$CI_COMMIT_FILE", "python")
-    - analyze_frr_code("FRR-VDR-01", "$CI_COMMIT_FILE", "python")
+    - analyze_frr_code("CDS-CSO-PUB", "$CI_COMMIT_FILE", "python")
+    - analyze_frr_code("VDR-CSO-DET", "$CI_COMMIT_FILE", "python")
 ```
 
 ## Common Scenarios
 
-### Scenario 1: Vulnerability Management Review (VDR)
-**Goal:** Ensure CI/CD pipeline implements vulnerability scanning
+### Scenario 1: Vulnerability Management Review (VDR, VER)
+**Goal:** Ensure the CI/CD pipeline implements vulnerability detection and reporting
 
 **Steps:**
 1. `analyze_frr_family("VDR", pipeline_yaml, "github-actions")`
 2. Check for:
-   - FRR-VDR-01: Vulnerability scanning tools (Trivy, Defender, Qualys)
-   - FRR-VDR-08: Patch management automation
-   - FRR-VDR-TF-01: Remediation timeframe tracking
-   - FRR-VDR-AC-01: Authenticated scanning
+   - VDR-CSO-DET: Scanning tools (Trivy, Defender, Qualys)
+   - VDR-CSO-DAC: Detection on new or significantly changed resources
+   - VER-EVA-EIR and VER-EVA-ELX: Reachability and exploitability evaluation
+   - VER-TFR-MAV: Accepted-vulnerability tracking after 192 days
 3. Review findings and implement recommended tools
 4. Re-run analysis to verify compliance
 
-### Scenario 2: API Security Review (ADS)
-**Goal:** Validate Authorization Data Sharing API implementation
+### Scenario 2: Certification Data Sharing Review (CDS)
+**Goal:** Validate trust center and Certification Data implementation
 
 **Steps:**
-1. `analyze_frr_family("ADS", api_code, "python")`
+1. `analyze_frr_family("CDS", api_code, "python")`
 2. Check for:
-   - FRR-ADS-01: Machine-readable JSON/XML format
-   - FRR-ADS-AC-01: OAuth2/Azure AD authentication
-   - FRR-ADS-TC-01: Test coverage for API endpoints
+   - CDS-CSO-PUB: JSON public information
+   - CDS-TRC-PAC: Programmatic access with authentication
+   - CDS-TRC-ACL: Access logging
+   - CDS-CSO-CBF: Consistency automation between formats
 3. Review Azure API Management recommendations
-4. Implement authentication and data format validation
 
-### Scenario 3: Infrastructure Security Review (RSC + UCM)
+### Scenario 3: Infrastructure Security Review (SCG + CMU)
 **Goal:** Ensure secure configuration and cryptographic compliance
 
 **Steps:**
-1. `analyze_frr_family("RSC", bicep_code, "bicep")`
-2. `analyze_frr_family("UCM", bicep_code, "bicep")`
+1. `analyze_frr_family("SCG", bicep_code, "bicep")`
+2. `analyze_frr_family("CMU", bicep_code, "bicep")`
 3. Check for:
-   - FRR-RSC-01: CIS/STIG baseline compliance
-   - FRR-UCM-01: FIPS 140-3 cryptographic modules
-   - FRR-UCM-02: Azure Key Vault integration
+   - SCG-CSO-RSC and SCG-CSO-SDF: Secure configuration and defaults
+   - CMU-CSO-CMD: Documented cryptographic modules
+   - CMU-CSO-CAT: Validated modules by default for agency tenants
+   - KSI-SVC-ASM: Azure Key Vault integration
 4. Apply hardening recommendations
-5. Validate drift detection is enabled
 
 ### Scenario 4: Comprehensive Pre-deployment Review
-**Goal:** Full FRR compliance scan before production deployment
-
 **Steps:**
 1. `analyze_all_frrs(application_code, "csharp")`
 2. `analyze_all_frrs(infrastructure_code, "terraform")`
 3. `analyze_all_frrs(cicd_pipeline, "azure-pipelines")`
-4. Review findings across all 10 FRR families
+4. Review findings across all FRR families
 5. Create remediation plan by priority
 6. Track progress using `get_frr_implementation_status()`
 
 ## Tips for Effective FRR Code Reviews
 
 **Best Practices:**
-- ✅ Run FRR analysis early in development (shift-left security)
-- ✅ Integrate FRR checks into PR workflows
-- ✅ Focus on code-detectable requirements (73% of FRRs)
-- ✅ Document process-based requirements separately
-- ✅ Combine FRR + KSI analysis for comprehensive coverage
-- ✅ Use family-specific analysis for targeted reviews
-- ✅ Leverage Azure-specific recommendations
-- ✅ Re-run analysis after fixes to verify resolution
+- Run FRR analysis early in development (shift-left security)
+- Integrate FRR checks into PR workflows
+- Document process-based rules separately; not all rules are code-detectable
+- Combine FRR and KSI analysis for comprehensive coverage
+- Use family-specific analysis for targeted reviews
+- Re-run analysis after fixes to verify resolution
 
 **Common Pitfalls to Avoid:**
-- ❌ Skipping VDR family in CI/CD pipelines
-- ❌ Ignoring ADS requirements for evidence APIs
-- ❌ Missing UCM cryptographic requirements
-- ❌ Not validating RSC baselines in IaC
-- ❌ Treating all findings as equal priority
-- ❌ Fixing symptoms without addressing root causes
+- Skipping VDR and VER in CI/CD pipelines
+- Ignoring CDS requirements for trust center and Certification Data
+- Missing CMU cryptographic requirements
+- Not validating SCG baselines in IaC
+- Treating all findings as equal priority
+- Fixing symptoms without addressing root causes
 
 ## Next Steps
 
-**After completing FRR code review:**
 1. Use `get_frr_evidence_automation()` to set up automated evidence collection
 2. Refer to `frr_implementation_roadmap` for strategic planning
 3. Check `frr_family_assessment` for ongoing compliance validation
 4. Integrate findings into your security dashboard
-5. Schedule periodic FRR re-scans (weekly/monthly)
 
 **Related Tools:**
-- `get_frr_metadata(frr_id)` - Understand requirement details
+- `get_frr_metadata(frr_id)` - Understand rule details
 - `get_frr_evidence_automation(frr_id)` - Automate evidence collection
-- `list_frrs_by_family(family)` - Explore family requirements
+- `list_frrs_by_family(family)` - Explore family rules
 - `get_frr_implementation_status()` - Track overall progress

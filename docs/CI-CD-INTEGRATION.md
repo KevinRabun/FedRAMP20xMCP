@@ -1,244 +1,139 @@
-# CI/CD Integration Guide
+# CI/CD Integration and Evidence Storage
 
-The FedRAMP 20x MCP Server supports **two distinct usage models**:
+The server has two usage models over the same rules data and pattern engine:
 
-1. **Interactive Development** (VS Code + MCP): Real-time guidance for developers writing code
-2. **Automated CI/CD** (Direct Analyzer Use): Automated compliance checking in pipelines
+1. **Interactive** (an MCP client such as Claude Code or VS Code): guidance, rule lookups, code review.
+2. **Automated** (pipelines): the `fedramp-20x-scan` command, no MCP client needed.
 
-## Why Two Models?
+Both evaluate against the **FedRAMP Consolidated Rules for 2026** (CR26), loaded from
+[`FedRAMP/rules`](https://github.com/FedRAMP/rules) with a pinned snapshot bundled in the package
+(`src/fedramp_20x_mcp/rules_data/`) as the offline fallback.
 
-**MCP Protocol Limitation:** The Model Context Protocol requires an LLM client (like Claude or GitHub Copilot) for human-in-the-loop interaction. This isn't available in automated CI/CD pipelines.
+## `fedramp-20x-scan`
 
-**Solution:** Use the underlying analyzer classes directly in CI/CD scripts, bypassing the MCP layer entirely.
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────┐
-│     Interactive Development         │
-│                                     │
-│  Developer → VS Code + Claude →     │
-│  MCP Server → Interactive Guidance  │
-└─────────────────────────────────────┘
-
-┌─────────────────────────────────────┐
-│        Automated CI/CD              │
-│                                     │
-│  Pipeline → Python Script →         │
-│  Import Analyzer Classes →          │
-│  Generate Reports → Gate Build      │
-└─────────────────────────────────────┘
-```
-
-## GitHub Actions Integration
-
-Use the provided workflow to analyze pull requests automatically:
-
-**File:** `.github/workflows/fedramp-compliance-check.yml`
-
-```yaml
-name: FedRAMP 20x Compliance Check
-
-on:
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  analyze-python:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      
-      - name: Install FedRAMP Analyzer
-        run: pip install fedramp-20x-mcp
-      
-      - name: Analyze Python Code
-        run: |
-          python -c "
-          from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
-          
-          analyzer = PythonAnalyzer()
-          result = analyzer.analyze(open('src/app.py').read(), 'src/app.py', [])
-          
-          # Print formatted report
-          print(result.pr_comment)
-          
-          # Exit with error if high-priority issues
-          if result.summary['high'] > 0:
-              exit(1)
-          "
-      
-      - name: Upload Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: compliance-report
-          path: '*-compliance-report.md'
-```
-
-**Complete Example:** See `.github/workflows/fedramp-compliance-check.yml` for a comprehensive workflow that analyzes:
-- Bicep infrastructure code
-- Terraform infrastructure code
-- Python application code
-- C# application code
-- Java application code
-- TypeScript/JavaScript application code
-
-## Azure DevOps Integration
-
-Use the provided pipeline to analyze code in Azure DevOps:
-
-**File:** `.azuredevops/fedramp-compliance-pipeline.yml`
-
-```yaml
-trigger:
-  branches:
-    include: [main, develop]
-
-pool:
-  vmImage: 'ubuntu-latest'
-
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.10'
-
-- script: |
-    pip install fedramp-20x-mcp
-  displayName: 'Install FedRAMP Analyzer'
-
-- task: PythonScript@0
-  displayName: 'Analyze Infrastructure'
-  inputs:
-    scriptSource: 'inline'
-    script: |
-      from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
-      
-      analyzer = BicepAnalyzer()
-      result = analyzer.analyze(open('main.bicep').read(), 'main.bicep')
-      
-      # Fail build on high-priority issues
-      if result.summary['high'] > 0:
-          exit(1)
-```
-
-**Complete Example:** See `.azuredevops/fedramp-compliance-pipeline.yml` for a full multi-stage pipeline.
-
-## Standalone Python Script
-
-For custom CI/CD platforms or local testing:
-
-**File:** `examples/ci_cd_integration.py`
-
-```python
-from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
-from pathlib import Path
-
-# Initialize analyzer
-analyzer = PythonAnalyzer()
-
-# Analyze file
-code = Path('src/app.py').read_text()
-result = analyzer.analyze(code, 'src/app.py', [])
-
-# Check results
-print(f"High Priority: {result.summary['high']}")
-print(f"Medium Priority: {result.summary['medium']}")
-print(f"Low Priority: {result.summary['low']}")
-
-# Print formatted markdown report
-print(result.pr_comment)
-
-# Exit with error code if high-priority issues
-if result.summary['high'] > 0:
-    exit(1)
-```
-
-**Usage:**
 ```bash
-# Analyze a single file
-python examples/ci_cd_integration.py src/app.py
-
-# Analyze entire directory
-python examples/ci_cd_integration.py infrastructure/
-
-# Generate JSON output
-python examples/ci_cd_integration.py src/ --format json > report.json
+pip install -e .                      # editable: the pattern library lives in data/patterns
+fedramp-20x-scan . --output-dir fedramp-scan --fail-on high --exclude 'tests/*'
 ```
 
-## Available Analyzers
+| Option | Default | Purpose |
+|---|---|---|
+| `--fail-on` | `high` | Exit 1 if any issue is at or above `critical`/`high`/`medium`/`low`; `none` never fails |
+| `--families` | all | Comma-separated pattern families, e.g. `IAM,SVC,MLA` |
+| `--profile` | none | Application profile that removes inapplicable findings (`web-app`, `api-service`, `cli-tool`, ...) |
+| `--exclude` | build/vendor dirs | Extra relative-path globs; repeatable |
+| `--patterns-dir` | `data/patterns` | Alternate pattern library (also `FEDRAMP_PATTERNS_DIR`) |
 
-Import and use analyzers directly in your CI/CD scripts:
+Exit codes: `0` pass, `1` gate tripped, `2` tool error.
 
-```python
-# Infrastructure Code Analyzers
-from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
-from fedramp_20x_mcp.analyzers.terraform_analyzer import TerraformAnalyzer
+Outputs in `--output-dir`:
 
-# Application Code Analyzers
-from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
-from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer
-from fedramp_20x_mcp.analyzers.java_analyzer import JavaAnalyzer
-from fedramp_20x_mcp.analyzers.typescript_analyzer import TypeScriptAnalyzer
+| File | Contents |
+|---|---|
+| `findings.json` | Findings, summary by severity and requirement, gate result, provenance |
+| `report.md` | Human-readable report (also posted to the Azure DevOps build summary) |
+| `run.json` | Provenance: tool version, **rules version and sha256**, pattern count, inputs, CI context, timestamps, sha256 of the two outputs |
+
+Some patterns are catch-alls (`regex_fallback: ".*"`): they mark a rule that applies to the
+scanned resources but that code cannot show either way, such as the AFC inbox rules or the CED
+training indicator. The scanner lists those rules once under `summary.review_reminders` and in the
+report's "Rules to review outside code" section; they are not issues and do not trip the gate.
+`--include-review-reminders` counts them anyway.
+
+Every finding carries the CR26 rule or KSI ID it informs. `summary.invalid_requirement_ids`
+lists any ID that is not in the loaded rules release, which is how rules drift shows up in CI.
+Pattern findings are review signals, not a compliance determination.
+
+### Rules source
+
+| Variable | Effect |
+|---|---|
+| `FEDRAMP_RULES_OFFLINE=1` | Use the bundled snapshot; no network. Reproducible runs. |
+| `FEDRAMP_RULES_FILE=path` | Use a local rules JSON (air-gapped mirror). |
+| `FEDRAMP_RULES_URL=url` | Use another URL (internal mirror). |
+| `GITHUB_TOKEN` | Raises GitHub API limits for documentation fetches. |
+
+## Azure DevOps
+
+Templates in `.azuredevops/templates/`:
+
+| Template | Runs on | Does |
+|---|---|---|
+| `fedramp-scan-steps.yml` | Microsoft-hosted or self-hosted Linux | Installs the scanner, runs it, publishes the output, then enforces the gate as a separate last step |
+| `evidence-upload-steps.yml` | Agent with private-network reach to the evidence account | Stages a directory, writes `run.json`/`pipeline-run.json`/`sha256-manifest.txt`, uploads without overwrite, verifies by listing back |
+
+The gate step runs after the publish step, so a failing scan still produces its report, and the
+evidence stage stores failing results as well as passing ones.
+
+Pipelines:
+
+| File | Purpose |
+|---|---|
+| `.azuredevops/fedramp-compliance-pipeline.yml` | Scans this repo on push, PR and weekly; stores evidence for non-PR runs |
+| `examples/azure-devops/scan-and-store-evidence.yml` | Same, for an application repo consuming this repo's templates via `resources.repositories` |
+| `examples/azure-devops/ksi-evidence-collection.yml` | Daily read-only Azure Resource Graph collection for selected KSIs (`collect_ksi_evidence.py`), stored as evidence |
+
+### Evidence storage
+
+`evidence-upload-steps.yml` defaults to IntelliGRC's compliance evidence account (managed in
+`infra-azure-storage`, `evidence-storage.tf`):
+
+| Setting | Value |
+|---|---|
+| Account | `intellievidence`: private endpoint only, shared keys disabled, CMK, TLS 1.2 |
+| Container | `vdr-reports` (the writer also holds `sbom`, `grype-reports`, `scap-reports`) |
+| Immutability | Container-level time-based retention, 1095 days; versioning off, so an existing blob name can never be overwritten |
+| Writer | `evidence-writer` WIF service connection: Storage Blob Data Contributor on those containers only |
+| Readers | Entra group "Compliance Evidence Read-Only": Storage Blob Data Reader |
+| Agent | `intelli-pool-1` (Microsoft-hosted agents cannot reach the private endpoint) |
+
+Blob layout, shared with the IntelliGRC.CRM reports:
+
+```
+vdr-reports/<reportName>/<yyyy-MM-dd>/<buildId>-<jobAttempt>/
+  findings.json  report.md          # producer output
+  run.json                          # producer provenance (rules version + sha256)
+  pipeline-run.json                 # pipeline identity: build, commit, branch, requester
+  sha256-manifest.txt               # sha256 of every other file
 ```
 
-## Analysis Result Structure
+Report names in use: `fedramp20x-scan/<repo>`, `fedramp20x-ksi-evidence`.
 
-All analyzers return an `AnalysisResult` object with:
+Rules the template enforces:
 
-```python
-result = analyzer.analyze(code, filepath, dependencies)
+- **Entra only.** `az storage blob upload-batch --auth-mode login`; there is no key or SAS path.
+- **No overwrite.** `--overwrite` is never passed. A re-run gets a new `<buildId>-<attempt>` folder; a real collision fails the step.
+- **Verify the write.** The step lists the prefix back and fails if the blob count differs from what was staged.
+- **Blocking by default.** A failed upload fails the job, because evidence that silently failed to store is a gap. `blocking: false` exists only for trialing a new stream.
+- **No evidence from PR builds.** PR scans are review feedback.
 
-# Access findings
-for finding in result.findings:
-    print(f"{finding.requirement_id}: {finding.message}")
-    print(f"  Line {finding.line_number}: {finding.code_snippet}")
-    print(f"  Fix: {finding.recommendation}")
+Prerequisites before the first run with `uploadEvidence: true`:
 
-# Summary counts
-print(result.summary)  # {"high": 2, "medium": 5, "low": 3}
+1. The pipeline is in the **IntelliGRC** Azure DevOps project. Pipelines in the Charles project
+   must not reference IntelliGRC service connections, pools or storage; run them with upload off
+   or with their own parameters.
+2. The pipeline is authorized for `evidence-writer` and `intelli-pool-1`. An unauthorized
+   pipeline fails at queue time, not at the upload step.
+3. Use `evidenceDryRun: true` (or the template's `dryRun`) on the first run to see the staged
+   files and destination without writing.
 
-# Pre-formatted PR comment (markdown)
-print(result.pr_comment)
+Outside a pipeline, `examples/azure_evidence_store.py` applies the same layout, manifest,
+no-overwrite and verify rules with `DefaultAzureCredential`.
 
-# Dependencies checked (for app analyzers)
-print(result.dependencies_checked)
+## GitHub Actions
+
+`.github/workflows/fedramp-compliance-check.yml` runs the scanner and publishes the output as an
+artifact and job summary. GitHub-hosted runners cannot reach the private evidence account; store
+evidence from Azure DevOps.
+
+## Keeping the rules current
+
+FedRAMP updates CR26 in place (`info.version`, e.g. `2026.10.13.01`). The scanner fetches the
+live file by default and records the version it used. To move the bundled snapshot forward:
+
+```bash
+python scripts/update_rules_snapshot.py            # download, report version and ID changes
+python scripts/build_rules_crosswalk.py            # rebuild legacy-ID crosswalk against it
+python scripts/migrate_rule_ids.py                 # list stale IDs in the repo (add --apply to fix)
+pytest tests/test_rules_alignment.py
 ```
-
-## CI/CD Best Practices
-
-1. **Fail builds on high-priority issues**: Use exit codes to gate deployments
-2. **Upload reports as artifacts**: Save compliance reports for audit trails
-3. **Post PR comments**: Provide feedback directly in pull requests
-4. **Cache dependencies**: Speed up pipeline runs by caching the fedramp-20x-mcp package
-5. **Analyze changed files only**: Use git diff to target only modified files
-6. **Run in parallel**: Analyze different file types concurrently for faster results
-
-## Pre-commit Hooks
-
-Analyze code locally before committing:
-
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: local
-    hooks:
-      - id: fedramp-compliance
-        name: FedRAMP 20x Compliance Check
-        entry: python examples/ci_cd_integration.py
-        language: python
-        types: [python]
-        pass_filenames: true
-```
-
-## See Also
-
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Development setup and testing
-- [examples/ci_cd_integration.py](../examples/ci_cd_integration.py) - Complete script example
-- [.github/workflows/](../.github/workflows/) - GitHub Actions examples
-- [.azuredevops/](../.azuredevops/) - Azure DevOps pipeline examples

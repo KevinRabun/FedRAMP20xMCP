@@ -77,11 +77,11 @@ export class FRREvidenceCollector {
   // =========================================================================
 
   /**
-   * FRR-VDR-01: Critical Vulnerability Remediation
+   * VDR-CSO-DET: Critical Vulnerability Remediation
    * Collects evidence showing vulnerability remediation within SLA.
    */
   async collectVdr01Evidence(): Promise<EvidenceRecord> {
-    console.log("Collecting FRR-VDR-01 evidence: Critical Vulnerability Remediation");
+    console.log("Collecting VDR-CSO-DET evidence: Critical Vulnerability Remediation");
 
     const query = `
 SecurityRecommendation
@@ -106,7 +106,7 @@ SecurityRecommendation
     }
 
     return {
-      frrId: "FRR-VDR-01",
+      frrId: "VDR-CSO-DET",
       frrName: "Critical Vulnerability Remediation",
       collectionTimestamp: new Date().toISOString(),
       subscriptionId: this.subscriptionId,
@@ -123,10 +123,10 @@ SecurityRecommendation
   }
 
   /**
-   * FRR-VDR-08: Automated Patching
+   * VER-EVA-EIR: Automated Patching
    */
   async collectVdr08Evidence(): Promise<EvidenceRecord> {
-    console.log("Collecting FRR-VDR-08 evidence: Automated Patching");
+    console.log("Collecting VER-EVA-EIR evidence: Automated Patching");
 
     const query = `
 resources
@@ -151,7 +151,7 @@ resources
       nonCompliant.length === 0 ? "compliant" : "non_compliant";
 
     return {
-      frrId: "FRR-VDR-08",
+      frrId: "VER-EVA-EIR",
       frrName: "Automated Patching",
       collectionTimestamp: new Date().toISOString(),
       subscriptionId: this.subscriptionId,
@@ -173,10 +173,10 @@ resources
   // =========================================================================
 
   /**
-   * FRR-RSC-01: Security Baseline Compliance
+   * SCG-CSO-RSC: Security Baseline Compliance
    */
   async collectRsc01Evidence(): Promise<EvidenceRecord> {
-    console.log("Collecting FRR-RSC-01 evidence: Security Baseline Compliance");
+    console.log("Collecting SCG-CSO-RSC evidence: Security Baseline Compliance");
 
     const query = `
 securityresources
@@ -200,7 +200,7 @@ securityresources
       complianceRate >= 90 ? "compliant" : "non_compliant";
 
     return {
-      frrId: "FRR-RSC-01",
+      frrId: "SCG-CSO-RSC",
       frrName: "Security Baseline Compliance",
       collectionTimestamp: new Date().toISOString(),
       subscriptionId: this.subscriptionId,
@@ -221,10 +221,10 @@ securityresources
   // =========================================================================
 
   /**
-   * FRR-ADS-01: Audit Log Completeness
+   * CDS-CSO-PUB: Audit Log Completeness
    */
   async collectAds01Evidence(): Promise<EvidenceRecord> {
-    console.log("Collecting FRR-ADS-01 evidence: Audit Log Completeness");
+    console.log("Collecting CDS-CSO-PUB evidence: Audit Log Completeness");
 
     const query = `
 AzureActivity
@@ -244,7 +244,7 @@ AzureActivity
       gaps.length === 0 ? "compliant" : "needs_review";
 
     return {
-      frrId: "FRR-ADS-01",
+      frrId: "CDS-CSO-PUB",
       frrName: "Audit Log Completeness",
       collectionTimestamp: new Date().toISOString(),
       subscriptionId: this.subscriptionId,
@@ -265,10 +265,10 @@ AzureActivity
   // =========================================================================
 
   /**
-   * FRR-SCN-01: Network Security Configuration
+   * SCN-CSO-EVA: Network Security Configuration
    */
   async collectScn01Evidence(): Promise<EvidenceRecord> {
-    console.log("Collecting FRR-SCN-01 evidence: Network Security Configuration");
+    console.log("Collecting SCN-CSO-EVA evidence: Network Security Configuration");
 
     const query = `
 resources
@@ -289,7 +289,7 @@ resources
       results.length === 0 ? "compliant" : "non_compliant";
 
     return {
-      frrId: "FRR-SCN-01",
+      frrId: "SCN-CSO-EVA",
       frrName: "Network Security Configuration",
       collectionTimestamp: new Date().toISOString(),
       subscriptionId: this.subscriptionId,
@@ -310,10 +310,10 @@ resources
   // =========================================================================
 
   /**
-   * FRR-CCM-01: Change Management Audit Trail
+   * CCM-OCR-AVL: Change Management Audit Trail
    */
   async collectCcm01Evidence(): Promise<EvidenceRecord> {
-    console.log("Collecting FRR-CCM-01 evidence: Change Management Audit Trail");
+    console.log("Collecting CCM-OCR-AVL evidence: Change Management Audit Trail");
 
     const query = `
 AzureActivity
@@ -330,7 +330,7 @@ AzureActivity
     const uniqueCallers = new Set(results.map((r) => r["Caller"])).size;
 
     return {
-      frrId: "FRR-CCM-01",
+      frrId: "CCM-OCR-AVL",
       frrName: "Change Management Audit Trail",
       collectionTimestamp: new Date().toISOString(),
       subscriptionId: this.subscriptionId,

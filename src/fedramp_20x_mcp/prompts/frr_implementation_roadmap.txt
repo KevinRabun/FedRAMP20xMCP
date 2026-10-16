@@ -1,451 +1,276 @@
 # FRR Implementation Roadmap
 
-I'll help you create a strategic roadmap for implementing FedRAMP Requirements (FRR) across your system.
+I'll help you create a strategic roadmap for implementing FedRAMP Rules (FRR) under the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01).
 
 ## Executive Summary
 
-**FedRAMP 20x includes 199 FRR requirements** across 10 families. This roadmap provides a phased approach to implementation, prioritizing high-impact requirements and establishing foundational capabilities first.
+**CR26 includes 245 FRR rules** across 17 families (AFC, AGU, CCM, CDS, CMU, CPO, FRC, IEC, IVV, MAS, MKT, REC, SCG, SCN, SDR, VDR, VER) plus 46 Key Security Indicators in 10 families. Many rules vary by Certification Class (A, B, C, D) and some only apply to 20x or Rev5; first work out which rules apply to you, then phase the work. The week numbers below are an illustrative planning aid, not CR26 requirements.
 
 **Key Principles:**
-- ✅ Start with code-detectable requirements (73% of FRRs) for quick automation wins
-- ✅ Build foundational infrastructure before advanced capabilities
-- ✅ Prioritize VDR and ADS families (high audit visibility)
-- ✅ Integrate FRR compliance into existing DevOps workflows
-- ✅ Automate evidence collection from day one
+- Start with code-detectable rules for quick automation wins
+- Build foundational infrastructure before advanced capabilities
+- Prioritize VDR/VER and CDS (high audit visibility; VDR and VER are required from 2026-12-07)
+- Integrate FRR compliance into existing DevOps workflows
+- Automate evidence collection from day one
 
 ## Implementation Phases
 
-### Phase 1: Foundation & Quick Wins (Weeks 1-4)
+### Phase 1: Foundation and Quick Wins (illustrative: weeks 1-4)
 
-**Goal:** Establish core vulnerability management and secure configuration capabilities
+**Goal:** Establish vulnerability management, secure configuration and cryptographic module documentation
 
 **Priority Families:**
-1. **VDR (Vulnerability Detection and Response)** - 59 requirements
-2. **RSC (Recommended Secure Configuration)** - 10 requirements
-3. **UCM (Using Cryptographic Modules)** - 4 requirements
-
-**Why These First?**
-- High audit visibility and regulatory scrutiny
-- Significant security risk reduction
-- Strong automation potential (code-detectable)
-- Foundation for other FRR families
+1. **VDR and VER (Vulnerability Detection, Response, Evaluation and Reporting)**
+2. **SCG (Secure Configuration Guide)**
+3. **CMU (Cryptographic Module Use)**
 
 **Implementation Steps:**
 
-**Week 1-2: VDR Foundation**
-- [ ] Implement FRR-VDR-01: Vulnerability scanning in CI/CD
+**VDR foundation**
+- [ ] Implement VDR-CSO-DET: Vulnerability detection in CI/CD and for deployed resources
   - Tools: Trivy, Defender for Cloud, or Qualys
-  - Target: Every pipeline run scans containers and IaC
   - Evidence: Scan results exported to Azure Storage
   ```
-  > analyze_frr_code with frr_id="FRR-VDR-01" and code="[CI/CD pipeline]" and language="github-actions"
-  > get_frr_evidence_automation with frr_id="FRR-VDR-01"
+  > analyze_frr_code with frr_id="VDR-CSO-DET" and code="[CI/CD pipeline]" and language="github-actions"
+  > get_frr_evidence_automation with frr_id="VDR-CSO-DET"
   ```
 
-- [ ] Implement FRR-VDR-TF-01: Remediation timeframe tracking
-  - Critical: 15 days, High: 30 days, Moderate: 90 days
-  - Automated tracking in Azure DevOps/GitHub Issues
-  - Alert escalation for approaching deadlines
+- [ ] Implement VDR-TFR-PVR tracking: mitigation and remediation timeframes
+  - Timeframes depend on Certification Class, N-rating and internet-reachability (read the rule's varies_by_class table); there are no fixed Critical/High/Moderate buckets
+  - Track KEV due dates (VDR-TFR-KEV) and the 192-day accepted-vulnerability threshold (VER-TFR-MAV)
+  - Alert on approaching deadlines
 
-- [ ] Implement FRR-VDR-AC-01: Authenticated scanning
-  - Configure scanner with registry credentials
-  - Scan private container images and dependencies
-  - Validate authenticated scan coverage
+- [ ] Implement VER-EVA-*: evaluate exploitability, internet-reachability and Potential Agency Impact (VER-EVA-ELX, VER-EVA-EIR, VER-EVA-EPA)
 
-**Week 3: RSC & UCM Foundation**
-- [ ] Implement FRR-RSC-01: Security baseline configuration
+- [ ] Implement VER-TFR-MHR and VER-RPT-VDT: monthly reporting with the required fields
+
+**SCG and CMU foundation**
+- [ ] Implement SCG-CSO-RSC: Secure configuration recommendations
   - Apply CIS Benchmarks via Azure Policy
-  - Deploy policy assignments to all resource groups
-  - Configure drift detection and remediation
+  - Configure drift detection
   ```
-  > analyze_frr_family with family="RSC" and code="[Bicep/Terraform]" and language="bicep"
-  ```
-
-- [ ] Implement FRR-UCM-01: FIPS 140-3 cryptographic modules
-  - Enforce Azure Key Vault Premium SKU
-  - Configure FIPS mode for compute resources
-  - Validate TLS 1.2+ for all connections
-  ```
-  > analyze_frr_family with family="UCM" and code="[infrastructure]" and language="terraform"
+  > analyze_frr_family with family="SCG" and code="[Bicep/Terraform]" and language="bicep"
   ```
 
-**Week 4: Evidence Automation Setup**
-- [ ] Deploy evidence collection infrastructure
-  - Log Analytics workspace (730-day retention)
-  - Azure Storage for evidence artifacts (7-year retention)
-  - Azure Functions for scheduled evidence collection
-  - Event Grid for real-time evidence triggers
+- [ ] Implement CMU-CSO-CMD: Document cryptographic modules and their validation status
+  - Use validated modules where your Class requires it (CMU-CSO-UVM: MAY for A and B, SHOULD for C, MUST for D)
+  - Default agency tenants to validated modules (CMU-CSO-CAT)
+  ```
+  > analyze_frr_family with family="CMU" and code="[infrastructure]" and language="terraform"
+  ```
 
-- [ ] Configure evidence collection for Phase 1 FRRs
-  - VDR: Scan results, patch status, remediation tracking
-  - RSC: Configuration baselines, drift reports
-  - UCM: Cryptographic module validation, key rotation logs
+**Evidence automation setup**
+- [ ] Deploy evidence collection infrastructure (Log Analytics, Azure Storage, Azure Functions, Event Grid). CR26 sets no numeric retention period for evidence or logs; set retention from your own policy, except where a rule states one (for example CDS-TRC-ACL access summaries for at least six months)
+- [ ] Configure evidence collection for Phase 1 rules (scan results, remediation tracking, configuration baselines, cryptographic module lists)
 
 **Phase 1 Success Criteria:**
-- ✅ Vulnerability scanning in all CI/CD pipelines
-- ✅ Security baselines applied to all Azure resources
-- ✅ FIPS 140-3 cryptography enforced
-- ✅ Evidence automatically collected and stored
-- ✅ 73 FRRs implemented (37% coverage)
+- Vulnerability detection in all CI/CD pipelines and monthly reporting working
+- Secure configuration baselines applied
+- Cryptographic modules documented
+- Evidence automatically collected and stored
 
-### Phase 2: Data Sharing & Monitoring (Weeks 5-8)
+### Phase 2: Certification Data Sharing and Monitoring (illustrative: weeks 5-8)
 
-**Goal:** Implement authorization data sharing and continuous monitoring capabilities
+**Goal:** Implement Certification Data sharing and Ongoing Certification
 
 **Priority Families:**
-4. **ADS (Authorization Data Sharing)** - 22 requirements
-5. **CCM (Collaborative Continuous Monitoring)** - 25 requirements
-
-**Why These Next?**
-- FedRAMP 20x emphasizes continuous evidence sharing
-- Builds on Phase 1 evidence collection infrastructure
-- High automation potential
-- Required for continuous authorization
+4. **CDS (Certification Data Sharing)**
+5. **CCM (Collaborative Continuous Monitoring)**
 
 **Implementation Steps:**
 
-**Week 5-6: ADS Implementation**
-- [ ] Implement FRR-ADS-01: Machine-readable evidence API
-  - Deploy Azure API Management
-  - Create REST API for authorization data
-  - Implement JSON/XML evidence formats
-  - Document API schema and endpoints
+**CDS**
+- [ ] Implement CDS-CSO-PUB: Public information in human-readable and JSON formats
   ```
-  > analyze_frr_code with frr_id="FRR-ADS-01" and code="[API code]" and language="python"
-  > get_frr_evidence_automation with frr_id="FRR-ADS-01"
+  > analyze_frr_code with frr_id="CDS-CSO-PUB" and code="[API code]" and language="python"
+  > get_frr_evidence_automation with frr_id="CDS-CSO-PUB"
   ```
+- [ ] Implement CDS-CSO-UTC and CDS-TRC-PAC: FedRAMP-compatible trust center with documented programmatic access
+- [ ] Implement CDS-TRC-ACL and CDS-TRC-AAI: access logging and agency access inventory
+- [ ] Implement CDS-CSO-CBF: automation keeping human-readable and machine-readable formats consistent
+- [ ] Validate JSON against FedRAMP schemas (FRC-CSO-JSN)
 
-- [ ] Implement FRR-ADS-AC-01: API authentication
-  - Configure OAuth2 with Azure AD/Entra ID
-  - Implement API key management
-  - Set up role-based access control
-  - Enable API access logging
-
-- [ ] Implement FRR-ADS-TC-01: API testing and validation
-  - Create comprehensive test suite
-  - Validate data accuracy and completeness
-  - Test authentication and authorization flows
-  - Set up continuous API monitoring
-
-**Week 7-8: CCM Implementation**
-- [ ] Implement FRR-CCM-01: Continuous monitoring procedures
-  - Deploy Azure Monitor and Application Insights
-  - Configure diagnostic settings for all resources
-  - Create monitoring dashboards
-  - Set up automated alerting
+**CCM**
+- [ ] Implement CCM-OCR-AVL: Ongoing Certification Report every 3 months
+  - Include the information listed in the rule (changes to Certification Data, planned changes, accepted vulnerabilities, transformative changes, agencies using the product, reportable incidents)
   ```
   > analyze_frr_family with family="CCM" and code="[monitoring code]" and language="python"
   ```
-
-- [ ] Implement FRR-CCM-QR-01 through QR-11: Quarterly review automation
-  - Automate data collection for quarterly reviews
-  - Create quarterly review templates
-  - Set up review scheduling and reminders
-  - Generate quarterly compliance reports
-
-- [ ] Integrate ADS API with CCM monitoring
-  - Expose monitoring data via ADS API
-  - Real-time or hourly data updates
-  - Historical data access for quarterly reviews
+- [ ] Implement CCM-OCR-NRD, CCM-OCR-FBM, CCM-OCR-AFS: next report date, feedback mechanism, anonymized feedback summary
+- [ ] Implement CCM-QTR-MTG (strength varies by Class) with CCM-QTR-REG and CCM-QTR-NRD
+- [ ] Implement CDS-CSO-HAD: snapshots of Certification Data aligned to each Ongoing Certification Report
 
 **Phase 2 Success Criteria:**
-- ✅ Machine-readable evidence API operational
-- ✅ Continuous monitoring for all controls
-- ✅ Quarterly review automation implemented
-- ✅ API authenticated and tested
-- ✅ 120 FRRs implemented (60% coverage)
+- Certification Data available via trust center and programmatic access
+- Ongoing Certification Report process automated
+- Quarterly Review logistics in place
 
-### Phase 3: Change Management & Assessment (Weeks 9-12)
-
-**Goal:** Implement change notification and assessment procedures
+### Phase 3: Change Management, Scope and Assessment (illustrative: weeks 9-12)
 
 **Priority Families:**
-6. **SCN (Significant Change Notifications)** - 26 requirements
-7. **MAS (Minimum Assessment Scope)** - 12 requirements
-8. **PVA (Persistent Validation and Assessment)** - 22 requirements
+6. **SCN (Significant Change Notification)**
+7. **MAS (Minimum Assessment Scope)**
+8. **IVV (Independent Verification and Validation)** and **SDR (Security Decision Record)**
 
 **Implementation Steps:**
 
-**Week 9-10: SCN Implementation**
-- [ ] Implement FRR-SCN-01: Change notification procedures
-  - Define change classification (routine/adaptive/transformative)
-  - Create change notification templates
-  - Set up automated change detection
-  - Implement notification workflows
+**SCN**
+- [ ] Implement SCN-CSO-EVA: change evaluation and classification (routine recurring, adaptive, transformative)
+- [ ] Implement SCN-CSO-MAR and SCN-CSO-INF: audit records and notification content
+- [ ] Implement timing: SCN-ADP-NTF (10 business days after finishing), SCN-TRF-NIP (30 business days before), SCN-TRF-NFP (10 business days before), SCN-TRF-NAF and SCN-TRF-NAV (5 business days after)
   ```
   > analyze_frr_family with family="SCN" and code="[change process]" and language="python"
   ```
 
-- [ ] Integrate change management with CI/CD
-  - Approval gates for significant changes
-  - Change impact assessment automation
-  - Rollback procedures for failed changes
-
-**Week 11: MAS Implementation**
-- [ ] Implement FRR-MAS-01: Authorization boundary definition
-  - Document authorization boundary
-  - Create system component inventory
-  - Map system interconnections
-  - Define assessment scope
+**MAS**
+- [ ] Implement MAS-CSO-IIR, MAS-CSO-FLO, MAS-CSO-TPR, MAS-CSO-MDI: scope, flows, third parties, metadata
   ```
-  > analyze_frr_family with family="MAS" and code="[boundary docs]" and language="python"
+  > list_frrs_by_family with family="MAS"
   ```
 
-**Week 12: PVA Implementation**
-- [ ] Implement FRR-PVA-01: Continuous validation procedures
-  - Automate control testing where possible
-  - Schedule periodic assessments
-  - Track assessment findings and remediation
-  ```
-  > analyze_frr_family with family="PVA" and code="[validation code]" and language="python"
-  ```
+**IVV and SDR**
+- [ ] Implement persistent machine verification and validation per VDR-TFR-MVX (20x) or VDR-TFR-MVF (Rev5), and non-machine verification per VDR-TFR-NMV (every 3 months)
+- [ ] Prepare the Security Decision Record (SDR-CSO-FRR, SDR-CSX-KSI or SDR-CSF-CTF) and evidence for independent assessors (IVV-CSO-SEI, IVV-CSO-SEE)
 
-**Phase 3 Success Criteria:**
-- ✅ Change notification procedures operational
-- ✅ Authorization boundary documented and maintained
-- ✅ Continuous validation automated
-- ✅ 180 FRRs implemented (90% coverage)
-
-### Phase 4: Incident Response & Security Inbox (Weeks 13-16)
-
-**Goal:** Complete incident management and vulnerability disclosure capabilities
+### Phase 4: Incident and Communication (illustrative: weeks 13-16)
 
 **Priority Families:**
-9. **ICP (Incident Communications Procedures)** - 9 requirements
-10. **FSI (FedRAMP Security Inbox)** - 16 requirements
+9. **IEC (Incident Evaluation and Communication)**
+10. **AFC (Addressing FedRAMP Communication)**
 
 **Implementation Steps:**
-
-**Week 13-14: ICP Implementation**
-- [ ] Implement FRR-ICP-01: Incident notification procedures
-  - Document incident communication workflows
-  - Set up automated incident notifications
-  - Define escalation procedures
-  - Test incident communication channels
+- [ ] Implement IEC-CSO-EFR: reportability evaluation
+- [ ] Implement IEC-CSO-EFI and IEC-CSO-DPR: N-rating estimate, default N5
+- [ ] Implement IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR: reports within the Class and N-rating timeframes
   ```
-  > analyze_frr_family with family="ICP" and code="[incident code]" and language="python"
+  > analyze_frr_family with family="IEC" and code="[incident code]" and language="python"
   ```
-
-**Week 15-16: FSI Implementation**
-- [ ] Implement FRR-FSI-01: Security inbox and vulnerability disclosure
-  - Set up public vulnerability disclosure process
-  - Create security inbox monitoring
-  - Document response procedures and SLAs
-  - Test vulnerability disclosure workflow
+- [ ] Implement AFC-CSO-INB, AFC-CSO-RCV, AFC-CSO-EMR, AFC-CSO-CRA: FedRAMP Security Inbox handling
   ```
-  > analyze_frr_family with family="FSI" and code="[disclosure process]" and language="python"
+  > list_frrs_by_family with family="AFC"
   ```
 
-**Phase 4 Success Criteria:**
-- ✅ Incident communication procedures documented and tested
-- ✅ Vulnerability disclosure process operational
-- ✅ 199 FRRs implemented (100% coverage)
+**Other families to address as applicable:** FRC (certification, Class A rules, Class changes), CPO (Certification Package Overview), MKT (Marketplace listing), REC (assessor recognition), AGU (agency-facing).
 
 ## Prioritization Framework
 
 ### High Priority (Implement First)
-**Criteria:**
-- High audit visibility
-- Significant security risk
-- Required for authorization
-- Strong automation potential
+Criteria: high audit visibility, MUST force, required for certification, strong automation potential.
 
-**Top 10 FRRs to Implement:**
-1. FRR-VDR-01: Vulnerability scanning
-2. FRR-RSC-01: Security baselines
-3. FRR-UCM-01: FIPS 140-3 cryptography
-4. FRR-ADS-01: Machine-readable evidence API
-5. FRR-CCM-01: Continuous monitoring
-6. FRR-VDR-TF-01: Remediation timeframes
-7. FRR-ADS-AC-01: API authentication
-8. FRR-CCM-QR-01: Quarterly reviews
-9. FRR-SCN-01: Change notifications
-10. FRR-MAS-01: Authorization boundary
+**Top 10 rules to implement:**
+1. VDR-CSO-DET: Vulnerability detection
+2. VDR-CSO-RES: Vulnerability response
+3. SCG-CSO-RSC: Secure configuration
+4. CMU-CSO-CMD: Cryptographic module documentation
+5. CDS-CSO-PUB: Public information in JSON
+6. CCM-OCR-AVL: Ongoing Certification Report
+7. VER-TFR-MHR: Monthly vulnerability reporting
+8. CDS-CSO-UTC: Trust center
+9. SCN-CSO-EVA: Change evaluation
+10. MAS-CSO-IIR: Minimum Assessment Scope
 
-### Medium Priority (Implement Second)
-**Criteria:**
-- Supports high-priority FRRs
-- Moderate automation potential
-- Important for continuous authorization
+### Medium Priority
+- VDR-TFR-PVR timeframe tracking by Class
+- CDS-TRC-ACL access logging
+- CCM-QTR-MTG quarterly review automation
+- SCN-CSO-INF notification content
 
-**Focus Areas:**
-- VDR deviation management (FRR-VDR-EX)
-- ADS testing and validation (FRR-ADS-TC)
-- CCM agency-specific monitoring (FRR-CCM-AG)
-- SCN impact assessment (FRR-SCN-02)
-
-### Lower Priority (Implement Last)
-**Criteria:**
-- Process-based (manual procedures)
-- Supported by higher-priority FRRs
-- Less frequent activities
-
-**Focus Areas:**
-- PVA assessment scheduling
-- ICP communication testing
-- FSI metrics and reporting
+### Lower Priority
+- Process-based rules (REC, MKT, AGU as applicable)
+- Rules with SHOULD or MAY force for your Class
 
 ## Implementation Best Practices
 
-### 1. Start with Code-Detectable Requirements
-**73% of FRRs are code-detectable** - automate these first:
-- VDR: Scanning, patch management (90% code-detectable)
-- RSC: Configuration validation (85% code-detectable)
-- UCM: Cryptography enforcement (100% code-detectable)
-- ADS: API implementation (70% code-detectable)
+### 1. Start with code-detectable rules
+Automate detection, configuration validation, cryptography enforcement and API implementation first.
 
-### 2. Build Evidence Collection Early
-**Don't implement FRRs without evidence automation:**
+### 2. Build evidence collection early
 ```
-# For each FRR implemented, set up evidence collection:
-> get_frr_evidence_automation with frr_id="FRR-VDR-01"
-> get_frr_evidence_automation with frr_id="FRR-ADS-01"
+> get_frr_evidence_automation with frr_id="VDR-CSO-DET"
+> get_frr_evidence_automation with frr_id="CDS-CSO-PUB"
 ```
 
-### 3. Leverage Azure Services
-**Recommended Azure stack for FRR compliance:**
-- **VDR**: Defender for Cloud, Azure DevOps, Log Analytics
-- **RSC**: Azure Policy, Resource Graph, Blueprints
-- **UCM**: Key Vault Premium, Managed HSM
-- **ADS**: API Management, Functions, Application Insights
+### 3. Leverage Azure services
+- **VDR and VER**: Defender for Cloud, Azure DevOps, Log Analytics
+- **SCG**: Azure Policy, Resource Graph
+- **CMU**: Key Vault Premium, Managed HSM
+- **CDS**: API Management, Functions, Application Insights
 - **CCM**: Azure Monitor, Sentinel, Automation
 
-### 4. Integrate into Existing Workflows
-**Don't create separate compliance processes:**
+### 4. Integrate into existing workflows
 - Add FRR checks to existing CI/CD pipelines
 - Use existing monitoring infrastructure
 - Extend current change management procedures
-- Leverage existing security tools
 
-### 5. Validate Early and Often
-**Run FRR analysis throughout implementation:**
+### 5. Validate early and often
 ```
-# During development:
-> analyze_frr_code with frr_id="FRR-VDR-01" and code="[WIP code]" and language="python"
-
-# After implementation:
+> analyze_frr_code with frr_id="VDR-CSO-DET" and code="[WIP code]" and language="python"
 > analyze_frr_family with family="VDR" and code="[complete code]" and language="github-actions"
-
-# Track progress:
 > get_frr_implementation_status
 ```
 
 ## Tracking Implementation Progress
 
-### Use FRR Tools for Progress Monitoring
-
-**Check overall status:**
 ```
 > get_frr_implementation_status
-```
-
-**Review family-specific progress:**
-```
 > list_frrs_by_family with family="VDR"
-> list_frrs_by_family with family="ADS"
-```
-
-**Validate implementations:**
-```
+> list_frrs_by_family with family="CDS"
 > analyze_all_frrs with code="[codebase]" and language="python"
 ```
 
-### Key Metrics to Track
-
-**Implementation Metrics:**
-- FRRs implemented by family
-- Code-detectable vs. process-based coverage
+**Metrics to track:**
+- Rules implemented by family
+- Code-detectable versus process-based coverage
 - Evidence automation coverage
-- Time to implement per FRR
+- Vulnerabilities against VDR-TFR-PVR timeframes
+- Ongoing Certification Report and Quarterly Review completion
+- Significant change notification timeliness
 
-**Quality Metrics:**
-- Critical/high findings from FRR analysis
-- Evidence collection reliability
-- API uptime and performance (ADS)
-- Vulnerability remediation compliance (VDR)
+## Common Challenges and Solutions
 
-**Compliance Metrics:**
-- FRRs with automated evidence collection
-- FRRs passing continuous validation
-- Quarterly review completion rate
-- Change notification timeliness
+### "Too many rules to implement"
+Identify the rules that apply to your Class and Type, then focus on code-detectable ones first.
 
-## Common Challenges & Solutions
+### "Don't know where to start"
+Follow the phases: VDR/VER + SCG + CMU, then CDS + CCM, then SCN + MAS + IVV, then IEC + AFC.
 
-### Challenge 1: "Too many requirements to implement"
-**Solution:** Focus on code-detectable requirements first (73% of FRRs)
-- These have highest automation potential
-- Provide quickest compliance wins
-- Build foundation for process-based requirements
+### "Evidence collection is manual"
+Use `get_frr_evidence_automation()` for every rule and automate from day one; the rule's artifacts field lists what assessors expect.
 
-### Challenge 2: "Don't know where to start"
-**Solution:** Follow this roadmap's phased approach
-- Phase 1: VDR + RSC + UCM (foundation)
-- Phase 2: ADS + CCM (visibility)
-- Phase 3: SCN + MAS + PVA (operations)
-- Phase 4: ICP + FSI (completion)
+### "Rules overlap"
+Analyze by family, implement shared capabilities once, and leverage KSI alignment (rules reference related KSIs and controls).
 
-### Challenge 3: "Evidence collection is manual and time-consuming"
-**Solution:** Use `get_frr_evidence_automation()` for every FRR
-- Automate evidence collection from day one
-- Use Azure native services for evidence storage
-- Set up scheduled collection (Functions, Logic Apps)
-
-### Challenge 4: "Multiple FRRs conflict or overlap"
-**Solution:** Analyze by family to understand relationships
-```
-> analyze_frr_family with family="VDR" and code="[code]" and language="python"
-```
-- Identify common requirements across FRRs
-- Implement shared capabilities once
-- Leverage KSI alignment (FRRs map to KSIs)
-
-### Challenge 5: "How do I know if my implementation is compliant?"
-**Solution:** Use FRR analysis tools for continuous validation
-```
-> analyze_frr_code with frr_id="FRR-VDR-01" and code="[code]" and language="python"
-```
-- Automated compliance checking in CI/CD
-- Regular family assessments (monthly/quarterly)
-- Comprehensive pre-deployment scans
+### "How do I know if my implementation is compliant?"
+Use FRR analysis tools in CI/CD, run regular family assessments, and record decisions in the Security Decision Record.
 
 ## Integration with KSI Implementation
 
-**FRRs and KSIs are complementary:**
-- **KSIs** = Security posture indicators (72 total)
-- **FRRs** = Compliance requirements (199 total)
-- **Relationship**: Many FRRs map to specific KSIs
+- **KSIs** (46 in 10 families) are security outcomes you demonstrate with measures
+- **FRRs** (245 rules) are obligations on providers, agencies, assessors and FedRAMP
+- Many FRRs relate to specific KSIs and NIST controls
 
-**Combined Implementation Strategy:**
-1. Implement KSI (security control)
-2. Implement related FRRs (compliance requirements)
-3. Set up evidence collection for both
-4. Validate using both KSI and FRR analysis tools
-
-**Example: Vulnerability Management**
-- Implement KSI-AFR-04 (vulnerability scanning)
-- Implement FRR-VDR-01 through VDR-16 (VDR requirements)
-- Set up shared evidence collection
-- Run both KSI and FRR analysis for validation
+**Example: Vulnerability management**
+- Implement VDR-CSO-DET and VDR-CSO-RES
+- Relate to KSI-SCR-MON (monitoring supply chain risk) and KSI-MLA-EVC (evaluating configurations)
+- Share evidence collection across them
 
 ## Next Steps
 
-**To start FRR implementation:**
-1. Review Phase 1 priorities (VDR, RSC, UCM)
+1. Determine your Certification Class and Type
 2. Run initial FRR analysis: `analyze_all_frrs(code, language)`
 3. Set up evidence collection infrastructure
-4. Implement FRR-VDR-01 (vulnerability scanning) first
+4. Implement VDR-CSO-DET first
 5. Track progress with `get_frr_implementation_status()`
 
 **Related Prompts:**
-- `frr_code_review` - Detailed FRR code review guidance
-- `frr_family_assessment` - Family-specific assessment procedures
-- `ksi_implementation_priorities` - Align KSI with FRR implementation
-- `azure_ksi_automation` - Azure automation for KSIs and FRRs
+- `frr_code_review`
+- `frr_family_assessment`
+- `ksi_implementation_priorities`
+- `azure_ksi_automation`
 
 **Related Tools:**
-- `analyze_frr_code(frr_id, code, language)` - Analyze specific FRR
-- `analyze_frr_family(family, code, language)` - Analyze entire family
-- `analyze_all_frrs(code, language)` - Comprehensive FRR scan
-- `get_frr_evidence_automation(frr_id)` - Evidence automation guidance
-- `get_frr_implementation_status()` - Track implementation progress
+- `analyze_frr_code(frr_id, code, language)`
+- `analyze_frr_family(family, code, language)`
+- `analyze_all_frrs(code, language)`
+- `get_frr_evidence_automation(frr_id)`
+- `get_frr_implementation_status()`

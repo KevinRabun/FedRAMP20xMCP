@@ -9,6 +9,17 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
+def _normalize_requirement_id(requirement_id: str, data_loader) -> str:
+    """Map a legacy rule/KSI ID to its first CR26 crosswalk target; current IDs pass through."""
+    try:
+        entry = data_loader.resolve_legacy_id(requirement_id)
+    except Exception:
+        entry = None
+    if entry and entry.get("current_ids"):
+        return entry["current_ids"][0]
+    return requirement_id
+
 async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
     """
     Compare FedRAMP 20x requirements to Rev 4/Rev 5 to understand changes.
@@ -31,17 +42,17 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - POA&M tracking in Excel/Word
 
 **FedRAMP 20x Changes:**
-- **Collaborative Continuous Monitoring (CCM)**: Real-time data sharing via APIs (FRR-CCM)
-- **Quarterly Reviews**: Structured review process (FRR-CCM-QR-01 through QR-11)
-- **Key Security Indicators**: 72 KSIs to track continuously
-- **Authorization Data Sharing**: Machine-readable data instead of documents (FRR-ADS)
-- **Persistent Validation**: Continuous assessment, not annual (FRR-PVA)
+- **Collaborative Continuous Monitoring (CCM)**: Ongoing reports and structured review meetings (CCM family)
+- **Quarterly Reviews**: Structured review process (CCM-QTR rules, for example CCM-QTR-MTG)
+- **Key Security Indicators**: the KSIs (use list_ksi for the current set) are tracked continuously
+- **Certification Data Sharing**: Machine-readable data instead of documents (CDS family)
+- **Independent Verification and Validation (IVV)**: Verification and validation rules for certification (IVV family)
 
 **Key Requirements:**
-- FRR-CCM-01 through CCM-07: Base continuous monitoring
-- KSI-MLA-01: SIEM requirement
-- KSI-CMT-01: Log and monitor all changes
-- FRR-PVA-01 through PVA-18: Persistent validation standards""",
+- CCM-OCR rules (for example CCM-OCR-AVL): Ongoing report availability and handling
+- KSI-MLA-OSM: SIEM requirement
+- KSI-CMT-LMC: Log and monitor all changes
+- VDR-TFR-MVX and the other VDR-TFR rules: Persistent machine verification and validation""",
 
         "vulnerability management": """# Vulnerability Management: Rev 4/5 vs 20x
 
@@ -52,22 +63,22 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Risk-based decisions on false positives
 
 **FedRAMP 20x Changes:**
-- **Vulnerability Detection & Response Standard (VDR)**: Comprehensive timeframes by severity
-- **Automated Detection**: Emphasis on continuous scanning
-- **Risk-Based Timeframes**: Different deadlines based on impact level and CVSS
-- **Exception Process**: Formal process for remediation extensions (FRR-VDR-EX)
-- **Agency Reporting**: Must report vulnerabilities affecting agencies (FRR-VDR-RP)
+- **Vulnerability Detection and Response (VDR)**: Detection and response rules for the cloud service offering
+- **Automated Detection**: Emphasis on persistent, automated detection (VDR-CSO-ADT)
+- **Impact-Based Timeframes**: VDR-TFR-PVR sets mitigation and remediation expectations by the Potential Agency Impact N-rating, internet reachability and likely exploitability, not fixed severity buckets
+- **Known Exploited Vulnerabilities**: Dedicated rules (VDR-CSO-AKE, VDR-TFR-KEV)
+- **Evaluation and Reporting (VER)**: How vulnerabilities are evaluated (for example VER-EVA-EPA) and reported
 
-**Key Timeframes (FRR-VDR-TF):**
-- Critical/High + High Impact: 7-15 days
-- Medium: 30-90 days  
-- Low: 180 days
-- Zero-day: Immediate response required
+**Key Timeframes:**
+- Defined in VDR-TFR-PVR per certification class, N-rating and internet reachability.
+  Use get_control('VDR-TFR-PVR') for the exact day counts.
+- CR26 does not use 7/15/30/90 day severity buckets.
 
 **Key Requirements:**
-- FRR-VDR-01 through VDR-11: Detection and response
-- FRR-VDR-TF-HI-01 through HI-09: High impact timeframes
-- KSI-PIY-03: Vulnerability Disclosure Program""",
+- VDR-CSO rules (for example VDR-CSO-DET, VDR-CSO-RES): Detection and response
+- VDR-TFR rules: Timeframes and persistent verification
+- VER rules: Evaluation and reporting
+- KSI-PIY-RVD: Reviewing the vulnerability disclosure program""",
 
         "authorization boundary": """# Authorization Boundary: Rev 4/5 vs 20x
 
@@ -78,9 +89,9 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Manual tracking of components
 
 **FedRAMP 20x Changes:**
-- **Minimum Assessment Scope (MAS)**: Clear definition of what must be included (FRR-MAS)
+- **Minimum Assessment Scope (MAS)**: Clear definition of what must be included (MAS family)
 - **Information Resources**: Broader definition including non-machine resources
-- **Automated Inventory**: Required automated asset discovery (KSI-PIY-01)
+- **Automated Inventory**: Required automated asset discovery (KSI-PIY-GIV)
 - **Dynamic Boundaries**: Support for elastic/cloud-native architectures
 - **API-Based Documentation**: Machine-readable boundary definitions
 
@@ -93,10 +104,9 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Non-machine resources (policies, procedures)
 
 **Key Requirements:**
-- FRR-MAS-01 through MAS-05: Minimum scope
-- FRR-MAS-AY-01 through AY-06: Assessment year specifics
-- KSI-PIY-01: Automated inventory
-- KSI-CNA-02: Minimize attack surface""",
+- MAS rules (for example MAS-CSO-IIR): Minimum assessment scope
+- KSI-PIY-GIV: Automated inventory
+- KSI-CNA-MAT: Minimize attack surface""",
 
         "evidence collection": """# Evidence Collection: Rev 4/5 vs 20x
 
@@ -107,14 +117,14 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Emailed to FedRAMP PMO
 
 **FedRAMP 20x Changes:**
-- **Authorization Data Sharing (ADS)**: API-based continuous data sharing (FRR-ADS)
+- **Certification Data Sharing (CDS)**: Human and machine-readable data sharing (CDS family)
 - **Machine-Readable**: JSON/XML instead of Word/PDF
 - **Automated Collection**: "Automatically if possible" per FRD-ALL-07
 - **Continuous Updates**: Real-time data instead of annual snapshots
-- **Key Security Indicators**: 72 KSIs define what to track
+- **Key Security Indicators**: the KSIs define what to track (use list_ksi)
 
 **What to Track:**
-- All 72 KSI metrics continuously
+- All KSI metrics continuously
 - Vulnerability scan results (API)
 - Configuration baselines (IaC)
 - Access logs (SIEM integration)
@@ -123,9 +133,9 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Training completion records
 
 **Key Requirements:**
-- FRR-ADS-01 through ADS-10: Data sharing standards
-- FRR-KSI-01 & KSI-02: KSI tracking requirements
-- KSI-MLA-05: Infrastructure as Code
+- CDS rules (for example CDS-CSO-PUB, CDS-TRC-PAC): Data sharing standards
+- KSI rules: What to track
+- KSI-MLA-EVC: Infrastructure as Code
 - Definition FRD-ALL-07: "Regularly" means automated""",
 
         "change management": """# Change Management: Rev 4/5 vs 20x
@@ -137,11 +147,11 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Manual change logs
 
 **FedRAMP 20x Changes:**
-- **Significant Change Notifications (SCN)**: Structured notification process (FRR-SCN)
-- **Automated Change Tracking**: Required logging of all changes (KSI-CMT-01)
-- **CI/CD Integration**: Automated testing and validation (KSI-CMT-03)
+- **Significant Change Notifications (SCN)**: Structured notification process (SCN family)
+- **Automated Change Tracking**: Required logging of all changes (KSI-CMT-LMC)
+- **CI/CD Integration**: Automated testing and validation (KSI-CMT-VTD)
 - **Change Types**: Clear categorization (routine/recurring, administrative, transformative, impact)
-- **Immutable Infrastructure**: Emphasis on cloud-native patterns (KSI-CNA-04)
+- **Immutable Infrastructure**: Emphasis on cloud-native patterns (KSI-CNA-DFP)
 
 **What Triggers Notification:**
 - New services/components
@@ -151,10 +161,10 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Boundary modifications
 
 **Key Requirements:**
-- FRR-SCN-01 through SCN-10: Base notification requirements
-- FRR-SCN-TR-01 through TR-07: Transformative changes
-- KSI-CMT-01 through CMT-05: Change management KSIs
-- KSI-CMT-02: Redeployment procedures""",
+- SCN-CSO rules (for example SCN-CSO-EVA): Base evaluation and notification requirements
+- SCN-TRF rules (for example SCN-TRF-TPR): Transformative changes
+- KSI-CMT family (for example KSI-CMT-LMC): Change management KSIs
+- KSI-CMT-RMV: Redeployment procedures""",
 
         "incident response": """# Incident Response: Rev 4/5 vs 20x
 
@@ -165,10 +175,10 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Annual plan testing
 
 **FedRAMP 20x Changes:**
-- **Incident Communications Procedures (ICP)**: Structured communication requirements (FRR-ICP)
-- **FedRAMP Security Inbox**: Central reporting mechanism (FRR-FSI, KSI-AFR-08)
-- **Continuous Logging**: All incidents logged automatically (KSI-INR-02)
-- **After Action Reports**: Required for significant incidents (KSI-INR-03)
+- **Incident Evaluation and Communication (IEC)**: Structured incident evaluation and communication requirements (IEC family)
+- **FedRAMP Security Inbox**: Central reporting mechanism (AFC-CSO-INB)
+- **Continuous Logging**: All incidents logged automatically (KSI-INR-RPI)
+- **After Action Reports**: Required for significant incidents (KSI-INR-AAR)
 - **Agency Coordination**: Must notify affected agencies
 
 **Reporting Requirements:**
@@ -178,10 +188,10 @@ async def compare_with_rev4_impl(requirement_area: str, data_loader) -> str:
 - Coordinate with affected agencies
 
 **Key Requirements:**
-- FRR-ICP-01 through ICP-09: Communication procedures
-- FRR-FSI-01 through FSI-16: Security inbox usage
-- KSI-INR-01 through INR-03: Incident response KSIs
-- KSI-MLA-02: Audit logging"""
+- IEC rules (for example IEC-CSO-IIR): Incident evaluation and communication
+- AFC rules (for example AFC-CSO-INB): Security inbox usage
+- KSI-INR family (for example KSI-INR-RIR): Incident response KSIs
+- KSI-MLA-RVL: Audit logging"""
     }
     
     area_lower = requirement_area.lower()
@@ -209,7 +219,7 @@ I don't have specific comparison data for "{requirement_area}".
 2. **Annual → Continuous**: Assessment and monitoring are now continuous
 3. **Manual → Automated**: Strong emphasis on automation ("automatically if possible")
 4. **Static → Dynamic**: Support for cloud-native, elastic architectures
-5. **72 Key Security Indicators**: New framework defining what to track
+5. **Key Security Indicators**: New framework defining what to track
 6. **Collaborative Model**: CSP, agencies, and FedRAMP share data continuously
 
 Try searching with one of the available areas, or use search_requirements to find specific requirements."""
@@ -221,15 +231,16 @@ async def get_implementation_examples_impl(requirement_id: str, data_loader) -> 
     Provide practical implementation examples for a specific requirement.
     
     Args:
-        requirement_id: The requirement ID (e.g., "FRR-VDR-01", "KSI-IAM-01")
+        requirement_id: The requirement ID (e.g., "VDR-CSO-DET", "KSI-IAM-APM")
     
     Returns:
         Practical implementation guidance and examples
     """
+    requirement_id = _normalize_requirement_id(requirement_id, data_loader)
     examples = {
-        "KSI-IAM-01": """# Implementation Example: KSI-IAM-01 (Phishing-Resistant MFA)
+        "KSI-IAM-APM": """# Implementation Example: KSI-IAM-APM (Adopting Passwordless Methods)
 
-**Requirement:** Implement phishing-resistant multi-factor authentication
+**Requirement:** Use secure passwordless methods when feasible, otherwise strong passwords with phishing-resistant MFA
 
 **Good Implementations:**
 
@@ -273,7 +284,7 @@ async def get_implementation_examples_impl(requirement_id: str, data_loader) -> 
 - List of users with security keys
 - IdP audit logs showing FIDO2 usage""",
 
-        "KSI-MLA-01": """# Implementation Example: KSI-MLA-01 (SIEM)
+        "KSI-MLA-OSM": """# Implementation Example: KSI-MLA-OSM (SIEM)
 
 **Requirement:** Implement Security Information and Event Management
 
@@ -312,10 +323,9 @@ async def get_implementation_examples_impl(requirement_id: str, data_loader) -> 
    Kubernetes (AKS) → Container Insights → Sentinel
    ```
 
-**Retention Requirements:**
-- Security logs: 1 year minimum
-- Audit logs: Per NARA requirements (usually 3+ years)
-- Configure automated archival to Azure Blob Storage
+**Retention:**
+- CR26 defines no numeric log retention period. Set retention per your logging policy (see KSI-MLA-LET) and agency agreements.
+- Configure automated archival to Azure Blob Storage (use WORM containers for evidence)
 
 **Evidence to Collect:**
 - SIEM architecture diagram
@@ -323,7 +333,7 @@ async def get_implementation_examples_impl(requirement_id: str, data_loader) -> 
 - Retention policy documentation
 - Sample SIEM queries/dashboards""",
 
-        "FRR-VDR-01": """# Implementation Example: FRR-VDR-01 (Vulnerability Detection)
+        "VDR-CSO-DET": """# Implementation Example: VDR-CSO-DET (Vulnerability Detection)
 
 **Requirement:** Implement automated vulnerability detection
 
@@ -363,7 +373,7 @@ async def get_implementation_examples_impl(requirement_id: str, data_loader) -> 
 ```
 Critical/High → Create ticket automatically
 Auto-assign to security team
-Set due date per FRR-VDR-TF requirements
+Set due date per VDR-TFR-PVR timeframes (N-rating, internet reachability, exploitability)
 Send alert to Slack/PagerDuty
 ```
 
@@ -373,7 +383,7 @@ Send alert to Slack/PagerDuty
 - Remediation tracking (Jira/GitHub Issues)
 - Scan frequency proof""",
 
-        "KSI-SVC-06": """# Implementation Example: KSI-SVC-06 (Secret Management)
+        "KSI-SVC-ASM": """# Implementation Example: KSI-SVC-ASM (Secret Management)
 
 **Requirement:** Implement secure secret management
 
@@ -439,9 +449,9 @@ Send alert to Slack/PagerDuty
 - Access audit logs
 - No secrets in git (use git-secrets, truffleHog)""",
 
-        "FRR-ADS-01": """# Implementation Example: FRR-ADS-01 (Authorization Data Sharing)
+        "CDS-CSO-PUB": """# Implementation Example: CDS-CSO-PUB (Public Information)
 
-**Requirement:** Share authorization data via API
+**Requirement:** Share public certification information and make data available in human and machine-readable form (CDS-TRC-HMR) with programmatic access (CDS-TRC-PAC)
 
 **Good Implementation:**
 
@@ -454,23 +464,16 @@ Send alert to Slack/PagerDuty
    GET /api/v1/change-notifications
    
    Authentication: OAuth 2.0 or mTLS
-   Format: Machine-readable (JSON/XML required; OSCAL is one optional NIST standard approach)
+   Format: Human and machine-readable (JSON is a common choice; CR26 does not require OSCAL)
    ```
 
-2. **OSCAL Format Example**
+2. **JSON Response Example**
    ```json
    {
-     "system-security-plan": {
-       "uuid": "...",
-       "metadata": {...},
-       "system-characteristics": {
-         "system-information": {...},
-         "authorization-boundary": {
-           "diagrams": [...],
-           "components": [...]
-         }
-       }
-     }
+     "fedramp_id": "...",
+     "service": "...",
+     "generated": "2026-01-01T00:00:00Z",
+     "data": {}
    }
    ```
 
@@ -483,17 +486,17 @@ Send alert to Slack/PagerDuty
    ```
 
 **Data to Expose:**
-- System boundary (OSCAL SSP format)
-- Current vulnerabilities (OSCAL Assessment Results)
-- KSI metrics (JSON)
-- POA&Ms (OSCAL POA&M format)
-- Recent changes/incidents
+- Public information and service list (CDS-CSO-PUB, CDS-CSO-SVC)
+- Certification reports and historical data (CDS-CSO-FRC, CDS-CSO-HAD)
+- KSI evidence summaries (JSON)
+- Significant change notifications (SCN family)
+- Access logging for agency access (CDS-TRC-ACL)
 
 **Security:**
 - Require mTLS or OAuth 2.0
 - Rate limiting
 - Audit all access
-- Only expose to FedRAMP and authorizing agencies
+- Limit access per the CDS access rules (CDS-TRC-SSM, CDS-UTC-AGA)
 
 **Evidence to Collect:**
 - API documentation (OpenAPI/Swagger)
@@ -507,32 +510,32 @@ Send alert to Slack/PagerDuty
     
     # Try to provide general guidance based on requirement type
     if "IAM" in requirement_id:
-        return "For IAM requirements, see KSI-IAM-01 example using get_implementation_examples('KSI-IAM-01')"
+        return "For IAM requirements, see KSI-IAM-APM example using get_implementation_examples('KSI-IAM-APM')"
     elif "VDR" in requirement_id:
-        return "For VDR requirements, see FRR-VDR-01 example using get_implementation_examples('FRR-VDR-01')"
+        return "For VDR requirements, see VDR-CSO-DET example using get_implementation_examples('VDR-CSO-DET')"
     elif "MLA" in requirement_id:
-        return "For monitoring/logging, see KSI-MLA-01 example using get_implementation_examples('KSI-MLA-01')"
+        return "For monitoring/logging, see KSI-MLA-OSM example using get_implementation_examples('KSI-MLA-OSM')"
     elif "SVC" in requirement_id:
-        return "For service requirements, see KSI-SVC-06 example using get_implementation_examples('KSI-SVC-06')"
-    elif "ADS" in requirement_id:
-        return "For data sharing, see FRR-ADS-01 example using get_implementation_examples('FRR-ADS-01')"
+        return "For service requirements, see KSI-SVC-ASM example using get_implementation_examples('KSI-SVC-ASM')"
+    elif "CDS" in requirement_id:
+        return "For data sharing, see CDS-CSO-PUB example using get_implementation_examples('CDS-CSO-PUB')"
     
     return f"""# Implementation Examples Not Available
 
 I don't have specific implementation examples for {requirement_id} yet.
 
 **Available examples:**
-- KSI-IAM-01: Phishing-resistant MFA
-- KSI-MLA-01: SIEM implementation
-- FRR-VDR-01: Vulnerability scanning
-- KSI-SVC-06: Secret management
-- FRR-ADS-01: Authorization data sharing API
+- KSI-IAM-APM: Passwordless methods and phishing-resistant MFA
+- KSI-MLA-OSM: SIEM implementation
+- VDR-CSO-DET: Vulnerability scanning
+- KSI-SVC-ASM: Secret management
+- CDS-CSO-PUB: Certification data sharing API
 
 **General Implementation Steps:**
 1. Use get_control('{requirement_id}') to see requirement details
 2. Search for cloud-native implementations of the requirement
 3. Consider automation opportunities ("automatically if possible")
-4. Document your implementation for 3PAO assessment
+4. Document your implementation for independent assessment
 5. Set up continuous evidence collection
 
 Use search_requirements to find related requirements."""
@@ -549,29 +552,31 @@ async def check_requirement_dependencies_impl(requirement_id: str, data_loader) 
     Returns:
         List of related and dependent requirements
     """
+    requirement_id = _normalize_requirement_id(requirement_id, data_loader)
     dependencies = {
-        "FRR-VDR": ["KSI-PIY-03 (Vulnerability Disclosure Program)", "KSI-SVC-07 (Patching)", 
-                    "FRR-FSI (Security Inbox)", "FRR-CCM (Continuous Monitoring)"],
-        "FRR-ADS": ["FRR-KSI (KSI Tracking)", "FRR-CCM (Continuous Monitoring)", 
-                    "All KSI metrics must be shareable via API"],
-        "FRR-CCM": ["FRR-ADS (Data Sharing)", "FRR-PVA (Persistent Validation)", 
-                    "KSI-MLA-01 (SIEM)", "All 72 KSIs"],
-        "FRR-MAS": ["KSI-PIY-01 (Automated Inventory)", "FRR-SCN (Change Notifications)", 
-                    "KSI-CNA-02 (Attack Surface)"],
-        "KSI-MLA-01": ["KSI-MLA-02 through MLA-08 (Related logging requirements)", 
-                       "FRR-CCM (Continuous Monitoring)", "KSI-INR-02 (Incident Logging)"],
-        "KSI-IAM-01": ["KSI-IAM-02 through IAM-07 (Related identity requirements)", 
-                       "KSI-IAM-06 (Suspicious Activity)", "KSI-MLA-02 (Audit Logging)"],
-        "FRR-SCN": ["FRR-MAS (Boundary Changes)", "FRR-VDR (New Vulnerabilities)", 
-                    "KSI-CMT (Change Management)", "FRR-FSI (Notification Channel)"],
-        "FRR-ICP": ["FRR-FSI (Security Inbox)", "KSI-INR (Incident Response)", 
-                    "FRR-VDR (Vulnerability Reporting)"],
-        "FRR-PVA": ["FRR-CCM (Continuous Monitoring)", "KSI-CNA-08 (Persistent Assessment)", 
-                    "All 72 KSIs must be validated continuously"],
-        "KSI-CMT-01": ["KSI-CMT-02 through CMT-05", "FRR-SCN (Change Notifications)", 
-                       "KSI-MLA-02 (Audit Logging)", "KSI-CMT-03 (Automated Testing)"]
+        "VDR": ["KSI-PIY-RVD (Reviewing Vulnerability Disclosures)", "KSI-SCR-MON (Monitoring Supply Chain Risk)",
+                "VER (Vulnerability Evaluation and Reporting)", "AFC (Addressing FedRAMP Communication)",
+                "CCM (Collaborative Continuous Monitoring)"],
+        "CDS": ["CCM (Collaborative Continuous Monitoring)", "VER (reporting content shared through CDS)",
+                "All KSI evidence and rule data must be shareable in human and machine-readable form"],
+        "CCM": ["CDS (Certification Data Sharing)", "IVV (Independent Verification and Validation)",
+                "KSI-MLA-OSM (SIEM)", "The KSIs generate the data reviewed in ongoing reports"],
+        "MAS": ["KSI-PIY-GIV (Generating Inventories)", "SCN (Significant Change Notifications)",
+                "KSI-CNA-MAT (Minimizing Attack Surface)"],
+        "KSI-MLA-OSM": ["KSI-MLA-RVL (Reviewing Logs)", "KSI-MLA-LET (Logging Event Types)",
+                        "CCM (Collaborative Continuous Monitoring)", "KSI-INR-RPI (Reviewing Past Incidents)"],
+        "KSI-IAM-APM": ["KSI-IAM-SNU (Securing Non-User Authentication)", "KSI-IAM-ELP (Ensuring Least Privilege)",
+                        "KSI-IAM-SUS (Responding to Suspicious Activity)", "KSI-MLA-RVL (Reviewing Logs)"],
+        "SCN": ["MAS (Boundary Changes)", "VDR (New Vulnerabilities)",
+                "KSI-CMT (Change Management)", "AFC (Notification Channel)"],
+        "IEC": ["AFC (FedRAMP Security Inbox, AFC-CSO-INB)", "KSI-INR (Incident Response)",
+                "VDR (Vulnerability Reporting)"],
+        "IVV": ["CCM (Collaborative Continuous Monitoring)", "KSI-MLA-EVC (Evaluating Configurations)",
+                "KSI-CNA-EIS (Enforcing Intended State)"],
+        "KSI-CMT-LMC": ["KSI-CMT-RMV (Redeploying vs Modifying)", "SCN (Significant Change Notifications)",
+                        "KSI-MLA-RVL (Reviewing Logs)", "KSI-CMT-VTD (Validating Throughout Deployment)"]
     }
-    
+
     # Check for family match
     for family, deps in dependencies.items():
         if requirement_id.startswith(family):
@@ -590,20 +595,20 @@ No specific dependency mappings available for this requirement.
 
 **General Dependency Patterns:**
 
-**FRR-VDR** (Vulnerability) depends on:
+**VDR** (Vulnerability Detection and Response) depends on:
 - Vulnerability scanning tools
-- FedRAMP Security Inbox for reporting
+- FedRAMP Security Inbox for reporting (AFC-CSO-INB)
 - Patching processes
 
-**FRR-CCM** (Continuous Monitoring) depends on:
-- Authorization Data Sharing API
-- All 72 KSI metrics
+**CCM** (Collaborative Continuous Monitoring) depends on:
+- Certification data sharing (CDS)
+- All KSI metrics
 - SIEM implementation
 
-**FRR-ADS** (Data Sharing) depends on:
+**CDS** (Certification Data Sharing) depends on:
 - All requirements generating data
 - API infrastructure
-- OSCAL format adoption
+- A human and machine-readable data format of your choice
 
 **KSI-* (Key Security Indicators)** depend on:
 - Automated collection tools
@@ -624,8 +629,9 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
     Returns:
         Effort estimation and timeline guidance
     """
+    requirement_id = _normalize_requirement_id(requirement_id, data_loader)
     estimates = {
-        "KSI-IAM-01": """# Effort Estimate: KSI-IAM-01 (Phishing-Resistant MFA)
+        "KSI-IAM-APM": """# Effort Estimate: KSI-IAM-APM (Adopting Passwordless Methods)
 
 **Timeline:** 2-4 weeks
 
@@ -649,7 +655,7 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
 **Complexity:** Medium
 **Blocker Risk:** Low - well-established technology""",
 
-        "KSI-MLA-01": """# Effort Estimate: KSI-MLA-01 (SIEM Implementation)
+        "KSI-MLA-OSM": """# Effort Estimate: KSI-MLA-OSM (SIEM Implementation)
 
 **Timeline:** 6-12 weeks
 
@@ -658,7 +664,7 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
 - Architecture design: 1 week
 - Log source integration: 3-4 weeks
 - Dashboard/alert creation: 2-3 weeks
-- Retention configuration: 1 week
+- Retention configuration (per your policy): 1 week
 - Documentation: 1 week
 - Testing: 1-2 weeks
 
@@ -676,7 +682,7 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
 **Complexity:** High
 **Blocker Risk:** Medium - requires coordination across teams""",
 
-        "FRR-VDR-01": """# Effort Estimate: FRR-VDR-01 (Vulnerability Detection)
+        "VDR-CSO-DET": """# Effort Estimate: VDR-CSO-DET (Vulnerability Detection)
 
 **Timeline:** 4-8 weeks
 
@@ -700,18 +706,18 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
 **Complexity:** Medium
 **Blocker Risk:** High - initial scan will find many vulnerabilities requiring remediation""",
 
-        "FRR-ADS-01": """# Effort Estimate: FRR-ADS-01 (Authorization Data Sharing API)
+        "CDS-CSO-PUB": """# Effort Estimate: CDS-CSO-PUB (Certification Data Sharing API)
 
 **Timeline:** 12-16 weeks
 
 **Effort Breakdown:**
-- API design (OSCAL format): 2-3 weeks
+- API design (machine-readable format): 2-3 weeks
 - Backend development: 4-6 weeks
 - Authentication/authorization: 2 weeks
 - Data aggregation from sources: 3-4 weeks
 - Testing: 2 weeks
 - Documentation: 1-2 weeks
-- FedRAMP review: 2-3 weeks
+- Review with FedRAMP and assessors: 2-3 weeks
 
 **Team Required:**
 - Backend developer (lead)
@@ -726,7 +732,7 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
 **Complexity:** High
 **Blocker Risk:** High - requires all other data sources to be ready""",
 
-        "FRR-CCM": """# Effort Estimate: FRR-CCM (Collaborative Continuous Monitoring)
+        "CCM": """# Effort Estimate: CCM (Collaborative Continuous Monitoring)
 
 **Timeline:** 16-24 weeks (most complex)
 
@@ -752,15 +758,15 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
 **Blocker Risk:** High - depends on many other requirements
 
 **Prerequisites:**
-- SIEM (KSI-MLA-01)
-- Vulnerability scanning (FRR-VDR)
-- All 72 KSI collection methods
-- Authorization Data Sharing API (FRR-ADS)"""
+- SIEM (KSI-MLA-OSM)
+- Vulnerability scanning (VDR)
+- All KSI collection methods
+- Certification Data Sharing API (CDS)"""
     }
     
     # Check for family-level estimates
     if "CCM" in requirement_id:
-        return estimates.get("FRR-CCM", "See FRR-CCM for family estimate")
+        return estimates.get("CCM", "See CCM for family estimate")
     
     if requirement_id in estimates:
         return estimates[requirement_id]
@@ -783,11 +789,11 @@ async def estimate_implementation_effort_impl(requirement_id: str, data_loader) 
 - Cultural/process change: Add 2-4 weeks for each team affected
 
 **Available Detailed Estimates:**
-- KSI-IAM-01: MFA (2-4 weeks)
-- KSI-MLA-01: SIEM (6-12 weeks)
-- FRR-VDR-01: Vulnerability scanning (4-8 weeks)
-- FRR-ADS-01: Data sharing API (12-16 weeks)
-- FRR-CCM: Continuous monitoring (16-24 weeks)
+- KSI-IAM-APM: Passwordless methods and MFA (2-4 weeks)
+- KSI-MLA-OSM: SIEM (6-12 weeks)
+- VDR-CSO-DET: Vulnerability scanning (4-8 weeks)
+- CDS-CSO-PUB: Data sharing API (12-16 weeks)
+- CCM: Continuous monitoring (16-24 weeks)
 
 Use get_control('{requirement_id}') to understand scope, then estimate based on:
 1. Technical complexity
@@ -812,7 +818,7 @@ async def get_cloud_native_guidance_impl(technology: str, data_loader) -> str:
 
 **Key Requirements:**
 
-**1. Container Scanning (FRR-VDR, KSI-PIY-05)**
+**1. Container Scanning (VDR, KSI-SCR-MON)**
 ```yaml
 # Scan images in CI/CD
 - name: Scan container image
@@ -822,13 +828,13 @@ async def get_cloud_native_guidance_impl(technology: str, data_loader) -> str:
     exit-code: '1'
 ```
 
-**2. Immutable Infrastructure (KSI-CNA-04)**
+**2. Immutable Infrastructure (KSI-CNA-DFP)**
 - Use immutable container images
 - Never SSH into pods to make changes
 - Redeploy rather than patch in place
 - Tag images with git commit SHA
 
-**3. Network Policies (KSI-CNA-01, CNA-03)**
+**3. Network Policies (KSI-CNA-RNT, CNA-03)**
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -841,7 +847,7 @@ spec:
   # Then create specific allow rules
 ```
 
-**4. Secret Management (KSI-SVC-06)**
+**4. Secret Management (KSI-SVC-ASM)**
 ```yaml
 # Use Azure Key Vault Provider for Secrets Store CSI Driver
 # Per Azure WAF Security pillar: https://learn.microsoft.com/azure/aks/csi-secrets-store-driver
@@ -862,7 +868,7 @@ spec:
     tenantId: "<tenant-id>"
 ```
 
-**5. Logging (KSI-MLA-01, MLA-02)**
+**5. Logging (KSI-MLA-OSM, MLA-02)**
 ```bash
 # AKS automatically forwards logs to Azure Monitor/Container Insights
 # Enable Container Insights on your AKS cluster:
@@ -872,12 +878,12 @@ az aks enable-addons -a monitoring -n myAKSCluster -g myResourceGroup
 # Query logs in Log Analytics or Sentinel
 ```
 
-**6. Monitoring (KSI-MLA-01, KSI-CNA-08)**
+**6. Monitoring (KSI-MLA-OSM, KSI-CNA-EIS)**
 - Use Azure Monitor for metrics and Container Insights per Azure WAF Operational Excellence
 - Configure Microsoft Defender for Containers for runtime security (Azure WAF Security: https://learn.microsoft.com/azure/defender-for-cloud/defender-for-containers-introduction)
 - Use Azure Policy for Kubernetes admission control per Azure WAF Governance
 
-**7. Authorization Boundary (FRR-MAS)**
+**7. Authorization Boundary (MAS)**
 Must include:
 - All namespaces
 - Control plane components
@@ -896,7 +902,7 @@ Must include:
 
 **Key Requirements:**
 
-**1. Image Scanning (FRR-VDR)**
+**1. Image Scanning (VDR)**
 ```dockerfile
 # Use minimal base images
 FROM cgr.dev/chainguard/python:latest-dev AS builder
@@ -906,7 +912,7 @@ FROM cgr.dev/chainguard/python:latest-dev AS builder
 docker run aquasec/trivy image myapp:latest
 ```
 
-**2. Image Signing (KSI-SVC-05, SVC-09)**
+**2. Image Signing (KSI-SVC-VRI, SVC-09)**
 ```bash
 # Use Azure Container Registry content trust or Notation
 # Per Azure WAF Security: https://learn.microsoft.com/azure/container-registry/container-registry-content-trust
@@ -918,7 +924,7 @@ notation sign myregistry.azurecr.io/myapp:v1.0.0
 notation verify myregistry.azurecr.io/myapp:v1.0.0
 ```
 
-**3. Runtime Security (KSI-CNA-05, KSI-CNA-08)**
+**3. Runtime Security (KSI-CNA-RVP, KSI-CNA-EIS)**
 - Use minimal base images (distroless, Alpine) per Azure WAF Security best practices
 - Run as non-root user
 - Use read-only root filesystem
@@ -931,13 +937,13 @@ USER nonroot:nonroot
 COPY --chown=nonroot:nonroot app /app
 ```
 
-**4. Secret Management (KSI-SVC-06)**
+**4. Secret Management (KSI-SVC-ASM)**
 ❌ Never bake secrets into images
 ❌ Don't use ENV vars for secrets
 ✓ Mount secrets at runtime from vault
 ✓ Use cloud provider secret services
 
-**5. Logging (KSI-MLA-02)**
+**5. Logging (KSI-MLA-RVL)**
 ```python
 # Log to stdout/stderr (12-factor)
 import logging
@@ -945,7 +951,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # Container runtime forwards to SIEM
 ```
 
-**6. Patching (KSI-SVC-07)**
+**6. Patching (VDR-CSO-RES)**
 - Rebuild images regularly (weekly minimum)
 - Automate with Renovate/Dependabot
 - Use tag pinning: `image:v1.2.3` not `image:latest`
@@ -961,7 +967,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 **Key Requirements:**
 
-**1. Function Scanning (FRR-VDR)**
+**1. Function Scanning (VDR)**
 ```yaml
 # Scan dependencies in CI/CD
 - name: Scan Python dependencies
@@ -974,7 +980,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
   uses: aquasecurity/tfsec-action@v1.0.0
 ```
 
-**2. Secret Management (KSI-SVC-06)**
+**2. Secret Management (KSI-SVC-ASM)**
 ```python
 # Azure Functions example with Managed Identity
 # Per Azure WAF Security and Azure Functions best practices: https://learn.microsoft.com/azure/azure-functions/security-concepts
@@ -993,7 +999,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Use password...
 ```
 
-**3. Logging (KSI-MLA-01, MLA-02)**
+**3. Logging (KSI-MLA-OSM, MLA-02)**
 ```python
 import json
 import logging
@@ -1011,7 +1017,7 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     # Logs go to Application Insights → Log Analytics → Sentinel
 ```
 
-**4. IAM/Authorization (KSI-IAM-05)**
+**4. IAM/Authorization (KSI-IAM-ELP)**
 ```bicep
 // Principle of least privilege with Managed Identity
 resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
@@ -1033,12 +1039,12 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 }
 ```
 
-**5. Monitoring (KSI-CNA-08)**
+**5. Monitoring (KSI-CNA-EIS)**
 - Enable Application Insights for tracing
 - Azure Monitor metrics/alerts
 - Integrate with Sentinel (SIEM)
 
-**6. Authorization Boundary (FRR-MAS)**
+**6. Authorization Boundary (MAS)**
 Must include:
 - All Azure Functions
 - API Management/Application Gateway
@@ -1046,7 +1052,7 @@ Must include:
 - Managed Identities
 - Secrets in Key Vault
 
-**7. Change Management (KSI-CMT-03)**
+**7. Change Management (KSI-CMT-VTD)**
 ```yaml
 # Automated testing
 - name: Run tests
@@ -1075,7 +1081,7 @@ Must include:
 
 **Key Requirements:**
 
-**1. Infrastructure as Code (KSI-MLA-05)**
+**1. Infrastructure as Code (KSI-MLA-EVC)**
 ```hcl
 # Everything in Terraform with Azure Provider
 resource "azurerm_linux_virtual_machine" "web" {
@@ -1114,7 +1120,7 @@ resource "azurerm_linux_virtual_machine" "web" {
 }
 ```
 
-**2. Configuration Scanning (FRR-VDR, KSI-PIY-05)**
+**2. Configuration Scanning (VDR, KSI-MLA-EVC)**
 ```yaml
 # GitHub Actions
 - name: tfsec
@@ -1127,7 +1133,7 @@ resource "azurerm_linux_virtual_machine" "web" {
   run: terraform validate
 ```
 
-**3. State File Security (KSI-SVC-06)**
+**3. State File Security (KSI-SVC-ASM)**
 ```hcl
 # Remote state with encryption in Azure Storage
 terraform {
@@ -1144,7 +1150,7 @@ terraform {
 }
 ```
 
-**4. Automated Inventory (KSI-PIY-01)**
+**4. Automated Inventory (KSI-PIY-GIV)**
 ```bash
 # Terraform maintains inventory
 terraform state list
@@ -1153,7 +1159,7 @@ terraform show -json | jq '.values.root_module.resources'
 # Export to CMDB/asset inventory
 ```
 
-**5. Change Management (KSI-CMT-01, FRR-SCN)**
+**5. Change Management (KSI-CMT-LMC, SCN)**
 ```yaml
 # Pull request workflow
 - name: Terraform plan
@@ -1167,7 +1173,7 @@ terraform show -json | jq '.values.root_module.resources'
   # Shows what will change before apply
 ```
 
-**6. Recommended Secure Configuration (FRR-RSC)**
+**6. Recommended Secure Configuration (SCG-CSO-RSC)**
 ```hcl
 # Compliance module
 module "fedramp_baseline" {
@@ -1182,7 +1188,7 @@ module "fedramp_baseline" {
 }
 ```
 
-**7. Documentation (FRR-MAS, FRR-ADS)**
+**7. Documentation (MAS, CDS)**
 ```hcl
 # Self-documenting infrastructure
 resource "azurerm_linux_virtual_machine" "web" {
@@ -1231,7 +1237,7 @@ I don't have specific guidance for "{technology}".
 
 **General Cloud-Native Principles for FedRAMP 20x:**
 
-1. **Immutable Infrastructure** (KSI-CNA-04)
+1. **Immutable Infrastructure** (KSI-CNA-DFP)
    - Deploy, don't modify in place
    - Infrastructure as Code
    - Automated builds
@@ -1241,17 +1247,17 @@ I don't have specific guidance for "{technology}".
    - Automated testing
    - Automated security scanning
 
-3. **Observability** (KSI-MLA-01)
+3. **Observability** (KSI-MLA-OSM)
    - Centralized logging
    - Distributed tracing
    - Metrics collection
 
 4. **Security by Default** (Azure WAF Security Pillar)
-   - Least privilege IAM (KSI-IAM-05)
-   - Network segmentation (KSI-CNA-01)
+   - Least privilege IAM (KSI-IAM-ELP)
+   - Network segmentation (KSI-CNA-RNT)
    - Encryption everywhere (Azure WAF: https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
 
-5. **API-First** (FRR-ADS)
+5. **API-First** (CDS)
    - Everything exposed as APIs
    - Machine-readable configs
    - Programmatic access
@@ -1278,19 +1284,19 @@ async def validate_architecture_impl(architecture_description: str, data_loader)
     
     # Check for key components
     if "kubernetes" in desc_lower or "k8s" in desc_lower or "aks" in desc_lower:
-        findings.append("✓ Kubernetes/AKS detected - ensure KSI-CNA-04 (Immutable Infrastructure) compliance")
-        recommendations.append("Implement network policies per KSI-CNA-01 using Azure Policy for AKS (Azure WAF: https://learn.microsoft.com/azure/aks/best-practices)")
+        findings.append("✓ Kubernetes/AKS detected - ensure KSI-CNA-DFP (Immutable Infrastructure) compliance")
+        recommendations.append("Implement network policies per KSI-CNA-RNT using Azure Policy for AKS (Azure WAF: https://learn.microsoft.com/azure/aks/best-practices)")
     
     if "lambda" in desc_lower or "serverless" in desc_lower or "azure functions" in desc_lower or "function app" in desc_lower:
-        findings.append("✓ Serverless detected - ensure function-level identity/RBAC per KSI-IAM-05")
-        recommendations.append("Enable Application Insights per Azure WAF Operational Excellence and forward to Sentinel for KSI-MLA-01 compliance (https://learn.microsoft.com/azure/azure-functions/security-concepts)")
+        findings.append("✓ Serverless detected - ensure function-level identity/RBAC per KSI-IAM-ELP")
+        recommendations.append("Enable Application Insights per Azure WAF Operational Excellence and forward to Sentinel for KSI-MLA-OSM compliance (https://learn.microsoft.com/azure/azure-functions/security-concepts)")
     
     if "database" in desc_lower or "rds" in desc_lower or "postgres" in desc_lower or "azure sql" in desc_lower or "cosmos" in desc_lower:
         findings.append("✓ Database detected - ensure encryption per Azure WAF Security pillar (TDE for Azure SQL: https://learn.microsoft.com/azure/azure-sql/database/transparent-data-encryption-tde-overview)")
-        recommendations.append("Verify audit logging enabled per KSI-MLA-02 and backed up per KSI-RPL-03 (Azure WAF Reliability: https://learn.microsoft.com/azure/well-architected/reliability/)")
+        recommendations.append("Verify audit logging enabled per KSI-MLA-RVL and backed up per KSI-RPL-ABO (Azure WAF Reliability: https://learn.microsoft.com/azure/well-architected/reliability/)")
     
     if "api" in desc_lower or "rest" in desc_lower:
-        findings.append("✓ API detected - consider for Authorization Data Sharing (FRR-ADS)")
+        findings.append("✓ API detected - consider for Certification Data Sharing (CDS)")
         recommendations.append("Implement OAuth 2.0 or mTLS authentication")
     
     # Check for security concerns
@@ -1298,29 +1304,29 @@ async def validate_architecture_impl(architecture_description: str, data_loader)
     
     if "public" in desc_lower and "internet" in desc_lower:
         concerns.append("⚠ Public internet exposure detected - ensure WAF and DDoS protection (Azure WAF: https://learn.microsoft.com/azure/web-application-firewall/)")
-        concerns.append("⚠ Review KSI-CNA-01 (Restrict Network Traffic) carefully")
+        concerns.append("⚠ Review KSI-CNA-RNT (Restrict Network Traffic) carefully")
     
     if "ssh" in desc_lower or "bastion" in desc_lower:
         concerns.append("⚠ SSH access detected - consider Azure Bastion for secure RDP/SSH per Azure WAF Security (https://learn.microsoft.com/azure/bastion/bastion-overview)")
-        concerns.append("⚠ If SSH required, ensure phishing-resistant MFA per KSI-IAM-01")
+        concerns.append("⚠ If SSH required, ensure phishing-resistant MFA per KSI-IAM-APM")
     
     if "password" in desc_lower or "credentials" in desc_lower:
-        concerns.append("⚠ Credential management mentioned - ensure secret manager (KSI-SVC-06)")
+        concerns.append("⚠ Credential management mentioned - ensure secret manager (KSI-SVC-ASM)")
     
     # Check for missing components
     missing = []
     
     if "log" not in desc_lower and "siem" not in desc_lower:
-        missing.append("❌ No logging/SIEM mentioned - required by KSI-MLA-01")
+        missing.append("❌ No logging/SIEM mentioned - required by KSI-MLA-OSM")
     
     if "monitor" not in desc_lower:
-        missing.append("❌ No monitoring mentioned - required by FRR-CCM")
+        missing.append("❌ No monitoring mentioned - relevant to CCM")
     
     if "backup" not in desc_lower:
-        missing.append("❌ No backup mentioned - required by KSI-RPL-03")
+        missing.append("❌ No backup mentioned - required by KSI-RPL-ABO")
     
     if "vulnerability" not in desc_lower and "scan" not in desc_lower:
-        missing.append("❌ No vulnerability scanning mentioned - required by FRR-VDR")
+        missing.append("❌ No vulnerability scanning mentioned - relevant to VDR")
     
     # Build result
     result = f"# Architecture Validation Results\n\n"
@@ -1351,23 +1357,23 @@ async def validate_architecture_impl(architecture_description: str, data_loader)
     
     result += """## Key Areas to Address
 
-**1. Authorization Boundary (FRR-MAS)**
+**1. Authorization Boundary (MAS)**
 - Document all components processing Federal Customer Data
 - Include dev/staging if they use prod data
 - Include all third-party services
 
-**2. Continuous Monitoring (FRR-CCM)**
+**2. Continuous Monitoring (CCM)**
 - SIEM for centralized logging
 - Vulnerability scanning (automated)
 - KSI metric collection
 
-**3. Data Sharing (FRR-ADS)**
-- API for sharing authorization data
-- Machine-readable format required (JSON/XML); OSCAL is one optional NIST standard approach
+**3. Data Sharing (CDS)**
+- API for sharing certification data (CDS family)
+- Human and machine-readable format (JSON is common; CR26 does not require OSCAL)
 - OAuth 2.0 or mTLS authentication
 
 **4. Key Security Indicators**
-- Track all 72 KSIs continuously
+- Track all KSIs continuously
 - Automate collection where possible
 - Integrate with SIEM/monitoring
 
@@ -1385,7 +1391,7 @@ async def get_ksi_implementation_matrix_impl(ksi_family: str, data_loader) -> st
     including recommended Azure services, complexity, and suggested implementation order.
     
     Args:
-        ksi_family: KSI family code (e.g., "IAM", "MLA", "CNA", "AFR", "SVC", "RPL", "TPR", "INR", "PIY", "CMT")
+        ksi_family: KSI family code (e.g., "IAM", "MLA", "CNA", "SCR", "SVC", "RPL", "INR", "PIY", "CMT", "CED")
     
     Returns:
         Implementation matrix with all KSIs in the family
@@ -1410,48 +1416,48 @@ Use get_ksi_implementation_matrix with one of the above family codes."""
     family_name_map = {
         'IAM': 'Identity and Access Management',
         'MLA': 'Monitoring, Logging, and Auditing',
-        'AFR': 'Automated Findings and Remediation',
-        'CNA': 'Cloud-Native Architecture',
-        'SVC': 'Service Management',
-        'RPL': 'Recovery and Planning',
-        'TPR': 'Third-Party Risk',
+        'CNA': 'Cloud Native Architecture',
+        'SVC': 'Service Configuration',
+        'RPL': 'Recovery Planning',
+        'SCR': 'Supply Chain Risk',
         'INR': 'Incident Response',
-        'PIY': 'Privacy and Inventory',
-        'CMT': 'Change Management and Testing'
+        'PIY': 'Policy and Inventory',
+        'CMT': 'Change Management',
+        'CED': 'Cybersecurity Education'
     }
-    
+
     azure_services_map = {
         'IAM': ['Microsoft Entra ID', 'Conditional Access', 'Privileged Identity Management', 'Azure RBAC', 'Microsoft Entra ID Protection'],
         'MLA': ['Azure Monitor', 'Log Analytics', 'Microsoft Sentinel', 'Application Insights', 'Azure Policy', 'Azure Automation'],
-        'AFR': ['Microsoft Defender for Cloud', 'Microsoft Defender for Containers', 'Azure Policy', 'Azure Security Center', 'GitHub Advanced Security'],
         'CNA': ['Azure Kubernetes Service', 'Azure Container Registry', 'Azure Policy for AKS', 'Azure Firewall', 'Azure Virtual Network'],
         'SVC': ['Azure Key Vault', 'Azure Automation', 'Azure Update Management', 'Azure Backup', 'Azure Monitor'],
         'RPL': ['Azure Backup', 'Azure Site Recovery', 'Azure Blob Storage', 'Recovery Services Vault', 'Azure Policy'],
-        'TPR': ['Microsoft Purview', 'Azure Policy', 'Microsoft Defender for Cloud', 'Azure Security Center'],
+        'SCR': ['Microsoft Defender for Cloud', 'Microsoft Defender for Containers', 'GitHub Advanced Security', 'Azure Container Registry', 'Azure Policy'],
+        'CED': ['Microsoft Viva Learning', 'Microsoft Entra ID Governance', 'Microsoft Purview'],
         'INR': ['Microsoft Sentinel', 'Azure Logic Apps', 'Azure Monitor', 'Microsoft Defender XDR', 'Azure Automation'],
         'PIY': ['Microsoft Purview', 'Azure Resource Graph', 'Azure Policy', 'Microsoft Defender for Cloud', 'Azure Automation'],
         'CMT': ['Azure DevOps', 'GitHub Actions', 'Azure Policy', 'Azure Monitor', 'Azure Automation', 'Azure Resource Manager']
     }
     
     complexity_map = {
-        'KSI-IAM-01': 'Medium', 'KSI-IAM-02': 'Medium', 'KSI-IAM-03': 'Low', 'KSI-IAM-04': 'Low', 'KSI-IAM-05': 'Medium', 'KSI-IAM-06': 'High', 'KSI-IAM-07': 'Medium',
-        'KSI-MLA-01': 'High', 'KSI-MLA-02': 'High', 'KSI-MLA-03': 'Medium', 'KSI-MLA-04': 'Medium', 'KSI-MLA-05': 'High', 'KSI-MLA-06': 'Low', 'KSI-MLA-07': 'Low', 'KSI-MLA-08': 'Medium',
-        'KSI-AFR-01': 'Medium', 'KSI-AFR-02': 'High', 'KSI-AFR-03': 'Medium', 'KSI-AFR-04': 'Medium', 'KSI-AFR-05': 'Low',
-        'KSI-CNA-01': 'Medium', 'KSI-CNA-02': 'Low', 'KSI-CNA-03': 'Medium', 'KSI-CNA-04': 'High', 'KSI-CNA-05': 'Medium', 'KSI-CNA-06': 'High', 'KSI-CNA-07': 'Medium', 'KSI-CNA-08': 'High',
-        'KSI-SVC-01': 'Medium', 'KSI-SVC-02': 'Medium', 'KSI-SVC-03': 'Medium', 'KSI-SVC-04': 'High', 'KSI-SVC-05': 'High', 'KSI-SVC-06': 'High', 'KSI-SVC-07': 'Medium', 'KSI-SVC-08': 'Low', 'KSI-SVC-09': 'Medium',
-        'KSI-RPL-01': 'Medium', 'KSI-RPL-02': 'Medium', 'KSI-RPL-03': 'High', 'KSI-RPL-04': 'Medium',
-        'KSI-TPR-01': 'Low', 'KSI-TPR-02': 'Medium', 'KSI-TPR-03': 'Medium', 'KSI-TPR-04': 'High',
-        'KSI-INR-01': 'Medium', 'KSI-INR-02': 'Medium', 'KSI-INR-03': 'Low',
-        'KSI-PIY-01': 'High', 'KSI-PIY-02': 'Medium', 'KSI-PIY-03': 'Low', 'KSI-PIY-04': 'Medium', 'KSI-PIY-05': 'Medium',
-        'KSI-CMT-01': 'High', 'KSI-CMT-02': 'Medium', 'KSI-CMT-03': 'High', 'KSI-CMT-04': 'Medium', 'KSI-CMT-05': 'Low'
+        'KSI-IAM-APM': 'Medium', 'KSI-IAM-SNU': 'Low', 'KSI-IAM-JIT': 'Low', 'KSI-IAM-ELP': 'Medium', 'KSI-IAM-SUS': 'High', 'KSI-IAM-AAM': 'Medium',
+        'KSI-MLA-OSM': 'High', 'KSI-MLA-RVL': 'High', 'KSI-MLA-EVC': 'High', 'KSI-MLA-LET': 'Low', 'KSI-MLA-ALA': 'Medium',
+        'MAS-CSO-IIR': 'Medium', 'CDS-CSO-PUB': 'Medium', 'VDR-CSO-DET': 'Medium', 'SCN-CSO-EVA': 'Low',
+        'KSI-CNA-RNT': 'Medium', 'KSI-CNA-MAT': 'Low', 'KSI-CNA-ULN': 'Medium', 'KSI-CNA-DFP': 'High', 'KSI-CNA-RVP': 'Medium', 'KSI-CNA-OFA': 'High', 'KSI-CNA-IBP': 'Medium', 'KSI-CNA-EIS': 'High',
+        'KSI-SVC-EIS': 'Medium', 'KSI-SVC-SIN': 'Medium', 'KSI-SVC-ACM': 'High', 'KSI-SVC-VRI': 'High', 'KSI-SVC-ASM': 'High', 'KSI-SVC-PRR': 'Low', 'KSI-SVC-VCM': 'Medium',
+        'KSI-RPL-RRO': 'Medium', 'KSI-RPL-ARP': 'Medium', 'KSI-RPL-ABO': 'High', 'KSI-RPL-TRC': 'Medium',
+        'KSI-SCR-MIT': 'Medium', 'KSI-SCR-MON': 'High',
+        'KSI-INR-RIR': 'Medium', 'KSI-INR-RPI': 'Medium', 'KSI-INR-AAR': 'Low',
+        'KSI-PIY-GIV': 'High', 'KSI-PIY-RVD': 'Low', 'KSI-PIY-RSD': 'Medium', 'KSI-PIY-RES': 'Low', 'KSI-PIY-RIS': 'Low',
+        'KSI-CMT-LMC': 'High', 'KSI-CMT-RMV': 'Medium', 'KSI-CMT-VTD': 'High', 'KSI-CMT-RVP': 'Medium'
     }
     
     priority_map = {
-        'KSI-IAM-01': 'Critical', 'KSI-MLA-01': 'Critical', 'KSI-MLA-02': 'Critical', 'KSI-AFR-01': 'Critical', 'KSI-SVC-06': 'Critical',
-        'KSI-IAM-02': 'High', 'KSI-IAM-05': 'High', 'KSI-CNA-04': 'High', 'KSI-CNA-08': 'High', 'KSI-RPL-03': 'High', 'KSI-PIY-01': 'High', 'KSI-CMT-01': 'High', 'KSI-CMT-03': 'High',
+        'KSI-IAM-APM': 'Critical', 'KSI-MLA-OSM': 'Critical', 'KSI-MLA-RVL': 'Critical', 'MAS-CSO-IIR': 'Critical', 'KSI-SVC-ASM': 'Critical',
+        'KSI-IAM-ELP': 'High', 'KSI-CNA-DFP': 'High', 'KSI-CNA-EIS': 'High', 'KSI-RPL-ABO': 'High', 'KSI-PIY-GIV': 'High', 'KSI-CMT-LMC': 'High', 'KSI-CMT-VTD': 'High',
     }
     
-    family_name = family_name_map.get(family_upper, family_upper)
+    family_name = family_ksis[0].get('category') or family_name_map.get(family_upper, family_upper)
     azure_services = azure_services_map.get(family_upper, ['Microsoft Entra ID', 'Azure Monitor', 'Azure Policy'])
     
     result = f"""# {family_upper} Implementation Matrix: {family_name}
@@ -1550,7 +1556,7 @@ python collect_{family_upper.lower()}_evidence.py
 ### 4. Test and Validate
 - Verify all KSIs can be demonstrated
 - Ensure evidence collection is automated
-- Test integration with Authorization Data Sharing API
+- Test integration with Certification Data Sharing API
 
 ## Key Dependencies
 
@@ -1561,9 +1567,9 @@ python collect_{family_upper.lower()}_evidence.py
 - Azure Key Vault for secrets
 
 **Related Requirements:**
-- FRR-CCM: Continuous monitoring
-- FRR-ADS: Authorization data sharing
-- FRR-KSI: KSI tracking requirements
+- CCM: Continuous monitoring
+- CDS: Authorization data sharing
+- KSI: KSI tracking requirements
 
 ## Common Challenges
 
@@ -1605,7 +1611,7 @@ async def generate_implementation_checklist_impl(ksi_id: str, data_loader) -> st
     including Azure service setup, code deployment, testing, and evidence collection.
     
     Args:
-        ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-MLA-01")
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-APM", "KSI-MLA-OSM")
     
     Returns:
         Detailed implementation checklist with Azure-specific steps
@@ -1615,9 +1621,10 @@ async def generate_implementation_checklist_impl(ksi_id: str, data_loader) -> st
     ksi = data_loader.get_ksi(ksi_id)
     if not ksi:
         return f"KSI '{ksi_id}' not found. Use list_ksi to see all available KSIs."
-    
+
+    ksi_id = ksi.get('id', ksi_id)
     ksi_name = ksi.get('name', 'N/A')
-    ksi_description = ksi.get('description', 'N/A')
+    ksi_description = ksi.get('statement') or ksi.get('description', 'N/A')
     category = ksi.get('category', 'N/A')
     
     result = f"""# Implementation Checklist: {ksi_id}
@@ -1696,7 +1703,7 @@ az deployment group show \\
     if family == 'IAM':
         result += """**2.1 Configure Microsoft Entra ID**
 - [ ] Enable Conditional Access policies
-- [ ] Configure MFA settings (phishing-resistant required)
+- [ ] Configure MFA settings (passwordless preferred, otherwise phishing-resistant MFA)
 - [ ] Set up Privileged Identity Management (PIM) for admin roles
 - [ ] Configure Azure RBAC for least privilege
 - [ ] Enable Identity Protection
@@ -1712,7 +1719,7 @@ az deployment group show \\
         result += """**2.1 Configure Azure Monitor & Sentinel**
 - [ ] Deploy Microsoft Sentinel workspace
 - [ ] Enable all relevant data connectors
-- [ ] Configure log retention (1 year minimum)
+- [ ] Configure log retention per your logging policy (CR26 sets no numeric period)
 - [ ] Set up Log Analytics workspace
 - [ ] Enable diagnostic settings for all Azure resources
 
@@ -1724,7 +1731,7 @@ az deployment group show \\
 - [ ] Test log ingestion
 
 """
-    elif family == 'AFR':
+    elif family == 'SCR':
         result += """**2.1 Configure Microsoft Defender**
 - [ ] Enable Microsoft Defender for Cloud
 - [ ] Enable Defender for Containers
@@ -1819,15 +1826,15 @@ curl https://func-{ksi_id.lower()}-collector.azurewebsites.net/api/health
 - [ ] Test end-to-end evidence collection
 - [ ] Verify evidence stored correctly in Blob Storage
 - [ ] Test evidence retrieval
-- [ ] Verify evidence format (JSON/OSCAL)
+- [ ] Verify evidence format (JSON or another machine-readable format)
 - [ ] Test API integration (if applicable)
 
 **4.3 Compliance Validation**
 - [ ] Evidence demonstrates compliance with {ksi_id}
 - [ ] Evidence is complete and accurate
 - [ ] Evidence collection is automated
-- [ ] Evidence retention meets requirements (1+ years)
-- [ ] Evidence is accessible via API (FRR-ADS)
+- [ ] Evidence retention set per your policy and agency agreements (CR26 sets no numeric period)
+- [ ] Evidence is accessible via API (CDS)
 
 **4.4 Security Testing**
 - [ ] No secrets in code or logs
@@ -1848,7 +1855,7 @@ curl https://func-{ksi_id.lower()}-collector.azurewebsites.net/api/health
 **5.2 Compliance Documentation**
 - [ ] Control implementation statement written
 - [ ] Evidence collection procedure documented
-- [ ] Add to System Security Plan (SSP)
+- [ ] Update your documentation (for example the Secure Configuration Guide, SCG-CSO-RSC)
 - [ ] Update Authorization Boundary diagram
 - [ ] Document in Configuration Management Plan
 
@@ -1892,10 +1899,10 @@ az storage blob list \\
 - [ ] Set up weekly evidence review
 - [ ] Document evidence access procedures
 
-### Step 7: Integration with FRR-ADS
+### Step 7: Integration with CDS
 
 **7.1 API Setup**
-- [ ] Expose evidence via Authorization Data Sharing API
+- [ ] Expose evidence via Certification Data Sharing API
 - [ ] Configure authentication (OAuth 2.0 or mTLS)
 - [ ] Test API endpoints
 - [ ] Document API for FedRAMP PMO
@@ -1923,7 +1930,7 @@ az storage blob list \\
 - [ ] Internal audit completed
 - [ ] All evidence requirements met
 - [ ] Documentation complete and approved
-- [ ] 3PAO review scheduled (if applicable)
+- [ ] Independent assessment scheduled (if applicable)
 - [ ] Stakeholders notified of completion
 
 ### Continuous Improvement
@@ -1949,7 +1956,7 @@ az storage blob list \\
 **Troubleshooting steps:**
 1. Review evidence specification
 2. Check data transformation logic
-3. Validate against OSCAL schema (if using OSCAL)
+3. Validate against your chosen machine-readable schema
 4. Test with sample data
 5. Review FedRAMP requirements
 
@@ -1970,7 +1977,7 @@ az storage blob list \\
 ✅ Evidence demonstrates compliance with {ksi_id}
 ✅ Documentation complete and approved
 ✅ Team trained on operation and troubleshooting
-✅ Integration with FRR-ADS API working
+✅ Integration with CDS API working
 ✅ Monitoring and alerting configured
 ✅ Internal audit passed
 
@@ -2008,7 +2015,7 @@ async def generate_implementation_questions_impl(requirement_id: str, data_loade
     Helps teams think through FedRAMP 20x implementation considerations by providing
     thoughtful questions about architecture, operations, compliance, and trade-offs.
     
-    Works with both requirements (e.g., "FRR-CCM-01") and KSIs (e.g., "KSI-IAM-01").
+    Works with both requirements (e.g., "CCM-OCR-AVL") and KSIs (e.g., "KSI-IAM-APM").
     
     Args:
         requirement_id: The requirement or KSI ID to generate questions for
@@ -2024,7 +2031,7 @@ async def generate_implementation_questions_impl(requirement_id: str, data_loade
         item = data_loader.get_ksi(requirement_id)
     
     if not item:
-        return f"Requirement or KSI '{requirement_id}' not found. Please check the ID format (e.g., 'FRR-CCM-01' or 'KSI-IAM-01')."
+        return f"Requirement or KSI '{requirement_id}' not found. Please check the ID format (e.g., 'CCM-OCR-AVL' or 'KSI-IAM-APM')."
     
     title = item.get('title', item.get('name', 'N/A'))
     description = item.get('description', item.get('statement', 'N/A'))
@@ -2202,7 +2209,7 @@ async def generate_implementation_questions_impl(requirement_id: str, data_loade
 - [ ] Do we have executive sponsorship and budget approval?
 - [ ] Have we identified all affected systems and data flows?
 - [ ] Do we know who is accountable for this control's success?
-- [ ] Have we validated our approach with a FedRAMP expert or 3PAO?
+- [ ] Have we validated our approach with a FedRAMP expert or independent assessor?
 
 ### Success Criteria:
 - [ ] Control can be demonstrated to work as designed

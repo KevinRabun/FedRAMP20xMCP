@@ -86,7 +86,7 @@ def _apply_context_filter(findings: list[Finding], context: ApplicationContext) 
     for finding in findings:
         # Check if finding's pattern_id maps to a suppressed family
         if finding.pattern_id and finding.requirement_id:
-            # Extract family from requirement_id like "KSI-IAM-01" -> "IAM"
+            # Extract family from requirement_id like "KSI-IAM-APM" -> "IAM"
             parts = finding.requirement_id.split("-")
             if len(parts) >= 2:
                 family = parts[1] if parts[0] in ("KSI", "FRR") else parts[0]

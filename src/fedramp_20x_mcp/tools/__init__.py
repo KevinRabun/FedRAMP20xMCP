@@ -30,7 +30,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     # Requirements tools
     @mcp.tool()
     async def get_control(control_id: str) -> str:
-        """Get detailed information about a specific FedRAMP 20x requirement."""
+        """Get detailed information about a specific FedRAMP 20x (CR26) requirement. Legacy IDs are resolved through the CR26 crosswalk."""
         return await requirements.get_control_impl(control_id, data_loader)
     
     @mcp.tool()
@@ -42,6 +42,23 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     async def search_requirements(keywords: str) -> str:
         """Search for FedRAMP 20x requirements containing specific keywords."""
         return await requirements.search_requirements_impl(keywords, data_loader)
+
+    @mcp.tool()
+    async def get_control_parameters(control_id: str) -> str:
+        """
+        Get FedRAMP parameter values and guidance for a NIST SP 800-53 control.
+
+        Reads the CTL (control parameters) section of the FedRAMP Consolidated
+        Rules for 2026, which lists the organization-defined parameter values
+        FedRAMP sets for a control.
+
+        Args:
+            control_id: NIST control identifier (e.g., "AC-6(1)", "ac-6.1", "SC-28")
+
+        Returns:
+            Parameter ids and FedRAMP-defined values for the control
+        """
+        return await requirements.get_control_parameters_impl(control_id, data_loader)
     
     # Definition tools
     @mcp.tool()
@@ -62,7 +79,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     # KSI tools
     @mcp.tool()
     async def get_ksi(ksi_id: str) -> str:
-        """Get detailed information about a specific Key Security Indicator."""
+        """Get detailed information about a specific Key Security Indicator. Legacy KSI IDs are resolved through the CR26 crosswalk."""
         return await ksi.get_ksi_impl(ksi_id, data_loader)
     
     @mcp.tool()
@@ -100,12 +117,12 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         - Azure services needed
         - Collection methods and schedules
         - Storage requirements and retention
-        - FRR-ADS API integration
+        - Authorization data sharing (CDS family) API integration
         - Code examples and infrastructure templates
         - Implementation effort and prerequisites
         
         Args:
-            ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+            ksi_id: The KSI identifier (e.g., "KSI-IAM-APM", "KSI-CNA-RNT")
         
         Returns:
             Comprehensive evidence automation recommendations
@@ -123,7 +140,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         - REST API calls for Microsoft Graph
         
         Args:
-            ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+            ksi_id: The KSI identifier (e.g., "KSI-IAM-APM", "KSI-CNA-RNT")
         
         Returns:
             Collection queries with descriptions and usage guidance
@@ -141,7 +158,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         - File formats and retention requirements
         
         Args:
-            ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+            ksi_id: The KSI identifier (e.g., "KSI-IAM-APM", "KSI-CNA-RNT")
         
         Returns:
             Evidence artifacts list with collection details
@@ -163,7 +180,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         or CI/CD pipelines for the specified FRR.
         
         Args:
-            frr_id: FRR identifier (e.g., "FRR-VDR-01", "FRR-RSC-01")
+            frr_id: FRR identifier (e.g., "VDR-CSO-DET", "SCG-CSO-RSC")
             code: Code to analyze
             language: Language/platform (python, csharp, java, typescript, bicep, terraform, 
                      github-actions, azure-pipelines, gitlab-ci)
@@ -183,7 +200,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """
         Analyze code against all FedRAMP requirements.
         
-        Performs comprehensive analysis across all 199 FRR requirements.
+        Performs comprehensive analysis across every FRR requirement that has code patterns.
         
         Args:
             code: Code to analyze
@@ -206,7 +223,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         Analyze code against all requirements in a specific FRR family.
         
         Args:
-            family: Family code (VDR, RSC, UCM, SCN, ADS, CCM, MAS, ICP, FSI, PVA, KSI)
+            family: CR26 FRR family code (e.g., VDR, SCG, CMU, SCN, CDS, CCM, MAS, IEC, AFC, IVV)
             code: Code to analyze
             language: Language/platform
             file_path: Optional file path for context
@@ -224,8 +241,8 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         Shows implementation status and code detectability for each FRR.
         
         Args:
-            family: Family code (VDR, RSC, UCM, SCN, ADS, CCM, MAS, ICP, FSI, PVA, KSI)
-        
+            family: CR26 FRR family code (e.g., VDR, SCG, CMU, SCN, CDS, CCM, MAS, IEC, AFC, IVV)
+
         Returns:
             List of FRRs with status indicators
         """
@@ -239,7 +256,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         Returns NIST controls, related KSIs, impact levels, and detection strategy.
         
         Args:
-            frr_id: FRR identifier (e.g., "FRR-VDR-01")
+            frr_id: FRR identifier (e.g., "VDR-CSO-DET")
         
         Returns:
             Detailed FRR metadata
@@ -258,7 +275,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         - Evidence artifacts to collect
         
         Args:
-            frr_id: FRR identifier (e.g., "FRR-VDR-01")
+            frr_id: FRR identifier (e.g., "VDR-CSO-DET")
         
         Returns:
             Evidence automation recommendations
@@ -408,28 +425,28 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     @mcp.tool()
     async def validate_fedramp_config(code: str, file_type: str, strict_mode: bool = True) -> dict:
         """
-        Validate Infrastructure as Code against FedRAMP 20x MANDATORY requirements BEFORE generating/deploying.
-        
-        🚨 USE THIS TOOL BEFORE FINALIZING ANY TEMPLATE/CODE 🚨
-        
-        This tool checks for CRITICAL violations that will cause compliance failures:
-        - Log Analytics retention < 730 days (CRITICAL)
-        - Platform-managed keys instead of Customer-Managed Keys (CRITICAL)
-        - Key Vault Standard SKU instead of Premium (CRITICAL)
-        - Public access enabled instead of disabled (CRITICAL)
+        Validate Infrastructure as Code against common FedRAMP 20x hardening practices BEFORE generating/deploying.
+
+        Use this tool before finalizing a template. It checks Azure hardening practices
+        that support the 20x KSIs (the FedRAMP Consolidated Rules for 2026 define no
+        numeric log retention period, so retention findings are advisory):
+        - Short Log Analytics retention (advisory, set per your own policy and agency agreements)
+        - Platform-managed keys instead of Customer-Managed Keys (recommended practice)
+        - Key Vault Standard SKU instead of Premium (recommended practice)
+        - Public access enabled instead of disabled (HIGH)
         - Missing diagnostic settings (HIGH)
         
         Returns:
         - passed: bool - Whether ALL validations passed
-        - violations: list - CRITICAL issues that MUST be fixed
+        - violations: list - High-severity issues that should be fixed
         - warnings: list - Non-critical issues that SHOULD be fixed
         - compliant_values: list - Requirements that passed validation
         
         Example usage:
         1. Generate Bicep/Terraform code
         2. Call validate_fedramp_config with the code
-        3. If violations exist, FIX THEM before deploying
-        4. If passed=true, code meets FedRAMP 20x requirements
+        3. If violations exist, fix them before deploying
+        4. If passed=true, none of the checks above flagged the code (this is not an assessment)
         """
         return await validation.validate_fedramp_config_impl(code, file_type, strict_mode)
     
@@ -499,7 +516,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         Check if a specific KSI has analyzer coverage and what the limitations are.
         
         Args:
-            ksi_id: The KSI identifier (e.g., "KSI-MLA-05")
+            ksi_id: The KSI identifier (e.g., "KSI-MLA-EVC")
         
         Returns detailed coverage information including which analyzers support this KSI,
         whether it's process-based or technical, and important limitations of the coverage.
@@ -536,8 +553,8 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
             check_package_vulnerabilities("lodash", "npm")
         
         Maps to FedRAMP 20x requirements:
-        - KSI-SVC-08: Secure Dependencies - vulnerability management
-        - KSI-TPR-03: Supply Chain Security - third-party risk assessment
+        - KSI-SVC-PRR: Secure Dependencies - vulnerability management
+        - KSI-SCR-MIT: Supply Chain Security - third-party risk assessment
         """
         return await security.check_package_vulnerabilities_impl(package_name, ecosystem, version, github_token)
     
@@ -573,9 +590,9 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
             scan_dependency_file(requirements_txt, "requirements.txt")
         
         Maps to FedRAMP 20x requirements:
-        - KSI-SVC-08: Secure Dependencies
-        - KSI-TPR-03: Supply Chain Security
-        - KSI-CMT-01: Continuous Monitoring (automated vulnerability scanning)
+        - KSI-SVC-PRR: Secure Dependencies
+        - KSI-SCR-MIT: Supply Chain Security
+        - KSI-CMT-LMC: Continuous Monitoring (automated vulnerability scanning)
         """
         return await security.scan_dependency_file_impl(file_content, file_type, github_token)
     
@@ -585,9 +602,9 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """
         Get comprehensive implementation status of all KSI analyzers.
         
-        Dynamically queries each KSI analyzer to report:
+        Reports status for every KSI in the loaded CR26 rules, joined with pattern coverage:
         - Total KSIs, active vs retired
-        - Implementation status (IMPLEMENTED, PARTIAL, NOT_IMPLEMENTED)
+        - Implementation status (IMPLEMENTED when code patterns exist, else NOT_IMPLEMENTED)
         - Code detectability (CODE_DETECTABLE vs PROCESS_BASED)
         - Status organized by family
         - Implementation percentages
@@ -599,18 +616,16 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
             - Individual KSI details with metadata
             - Implementation and code detectability percentages
         
-        This tool eliminates the need to maintain separate tracking documents by
-        querying each KSI analyzer's CODE_DETECTABLE and IMPLEMENTATION_STATUS properties.
-        
-        Example output:
+        Counts are derived at runtime from the loaded rules (CR26 has 10 KSI families
+        and 46 KSIs), so no tracking document needs maintaining.
+
+        Example output shape:
         {
-            "total_ksis": 72,
-            "active_ksis": 65,
-            "retired_ksis": 7,
-            "implemented_ksis": 38,
-            "code_detectable_ksis": 38,
-            "process_based_ksis": 27,
-            "implementation_percentage": 58.5,
+            "rules_version": "2026.10.13.01",
+            "total_ksis": 46,
+            "active_ksis": 46,
+            "implemented_ksis": "<count>",
+            "implementation_percentage": "<percent>",
             "families": {...}
         }
         """
@@ -623,7 +638,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         Get implementation status for a specific KSI family.
         
         Args:
-            family: Family code (e.g., "IAM", "SVC", "CNA", "AFR", "MLA")
+            family: KSI family code (e.g., "IAM", "SVC", "CNA", "SCR", "MLA")
         
         Returns:
             JSON with family-specific status:
@@ -634,17 +649,16 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
             - List of all KSIs with their properties
         
         Supported families:
-        - IAM: Identity and Access Management
-        - SVC: Service Configuration
-        - MLA: Monitoring, Logging, and Alerting
-        - CNA: Cloud and Network Architecture
-        - AFR: Authorization by FedRAMP
-        - TPR: Third-Party Risk
-        - CMT: Change Management and Testing
-        - RPL: Resiliency and Performance Limits
-        - INR: Incident Response
-        - PIY: Privacy
         - CED: Cybersecurity Education
+        - CMT: Change Management
+        - CNA: Cloud Native Architecture
+        - IAM: Identity and Access Management
+        - INR: Incident Response
+        - MLA: Monitoring, Logging, and Auditing
+        - PIY: Policy and Inventory
+        - RPL: Recovery Planning
+        - SCR: Supply Chain Risk
+        - SVC: Service Configuration
         
         Example:
             get_ksi_family_status("IAM")
@@ -667,8 +681,8 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         
         Args:
             code: The code or template to enrich
-            ksi_ids: Comma-separated KSI IDs (e.g., "KSI-IAM-01,KSI-MLA-01")
-            frr_ids: Comma-separated FRR IDs (e.g., "FRR-VDR-01,FRR-ADS-01")
+            ksi_ids: Comma-separated KSI IDs (e.g., "KSI-IAM-APM,KSI-MLA-OSM")
+            frr_ids: Comma-separated FRR IDs (e.g., "VDR-CSO-DET,CDS-CSO-PUB")
             language: Programming language for comment syntax
                 Options: bicep, terraform, python, csharp, java, typescript, powershell
         
@@ -682,28 +696,28 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
               name: 'mykeyvault'
             }
             
-            // After enrichment with add_requirement_comments(code, "KSI-SVC-06", "FRR-RSC-01", "bicep"):
+            // After enrichment with add_requirement_comments(code, "KSI-SVC-ASM", "SCG-CSO-RSC", "bicep"):
             // ==========================================
             // FedRAMP 20x Compliance Requirements
             // ==========================================
             //
             // Key Security Indicators (KSI):
             //
-            // KSI-SVC-06: Secret Management
-            //   Automate management, protection, and regular rotation of
-            //   digital keys, certificates, and other secrets.
+            // KSI-SVC-ASM: Automating Secret Management
+            //   Management, protection, and regular rotation of digital keys,
+            //   certificates, and other secrets is automated and persistently reviewed.
             //
             // FedRAMP Requirements (FRR):
             //
-            // FRR-RSC-01: Recommended Secure Configuration
-            //   Apply security baselines and hardening standards.
+            // SCG-CSO-RSC: Recommended Secure Configuration
+            //   Providers MUST create, maintain, and make available recommendations for securely configuring their cloud services (the Secure Configuration Guide).
             // ==========================================
             
             resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
               name: 'mykeyvault'
               tags: {
                 Compliance: 'FedRAMP 20x'
-                Requirements: 'KSI-SVC-06, FRR-RSC-01'
+                Requirements: 'KSI-SVC-ASM, SCG-CSO-RSC'
               }
             }
             ```
@@ -739,4 +753,8 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         
         return enriched
     
-    logger.info("Registered 48 tools across 13 modules")
+    try:
+        tool_count = len(mcp._tool_manager.list_tools())
+    except Exception:
+        tool_count = -1
+    logger.info(f"Registered {tool_count} tools")

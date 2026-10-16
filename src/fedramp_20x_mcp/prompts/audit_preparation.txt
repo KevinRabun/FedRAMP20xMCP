@@ -1,562 +1,335 @@
-I'll help you prepare for your FedRAMP 20x assessment and audit.
+I'll help you prepare for your FedRAMP independent assessment and ongoing certification review under the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01).
 
-# FedRAMP 20x Audit Preparation Guide
+# FedRAMP Independent Assessment Preparation Guide
 
-## Pre-Assessment Preparation (8-12 Weeks Before)
+**Scope note**: The week-by-week timeline below is an illustrative planning aid, not a CR26 requirement. Every concrete requirement quoted here cites a CR26 rule ID. CR26 has no requirement for a Plan of Action and Milestones (POA&M), a Security Assessment Report (SAR), or an OSCAL System Security Plan. Assessments are FedRAMP independent assessments (IVV family) performed by FedRAMP Recognized assessors (REC family).
 
-### Week -12 to -8: Documentation Review
+## Pre-Assessment Preparation
 
-**Complete Documentation Checklist:**
+### Documentation Review
 
-**Required Core Documents:**
-- [ ] System Security Plan (machine-readable format: JSON/XML)
-- [ ] FRR-ADS: Authorization Data Sharing API Documentation
-- [ ] FRR-VDR: Vulnerability Disclosure & Remediation Procedures
-- [ ] FRR-ICP: Incident Communication Plan
-- [ ] FRR-SCN: Significant Change Notification Procedures
-- [ ] FRR-CCM: Continuous Compliance Monitoring Plan
-- [ ] FRR-CCM-QR: Quarterly Review Procedures
-- [ ] FRR-PVA: Persistent Validation Procedures
-- [ ] FRR-MAS: Modernized Assessment Strategy
-- [ ] FRR-FSI: FedRAMP Security Inbox Procedures
-- [ ] FRR-RSC: Re-Authorization Service Continuity Plan
+**Required core artifacts (FedRAMP Certification Package, FRC-CSO-PKG):**
+- [ ] Certification Package Overview (CPO-CSO-OVR, CPO-CSO-MTD)
+- [ ] Security Decision Record, human-readable and JSON (SDR-CSO-FRR, SDR-CSO-MTD, SDR-CSX-KSI for 20x, SDR-CSF-CTF for Rev5)
+- [ ] A real or example Ongoing Certification Report (CCM-OCR-AVL)
+- [ ] CDS: Certification Data Sharing and trust center documentation (CDS-CSO-UTC, CDS-TRC-PAC)
+- [ ] VDR and VER: Vulnerability Detection, Response, Evaluation and Reporting procedures
+- [ ] IEC: Incident Evaluation and Communication procedures (IEC-CSO-EFR, IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)
+- [ ] SCN: Significant Change Notification procedures and audit records (SCN-CSO-EVA, SCN-CSO-MAR)
+- [ ] CCM: Ongoing Certification Report and Quarterly Review procedures (CCM-OCR-*, CCM-QTR-*)
+- [ ] MAS: Minimum Assessment Scope (MAS-CSO-IIR, MAS-CSO-FLO, MAS-CSO-TPR, MAS-CSO-MDI)
+- [ ] AFC: FedRAMP Security Inbox procedures (AFC-CSO-INB, AFC-CSO-RCV, AFC-CSO-CRA, AFC-CSO-EMR)
+- [ ] SCG: Secure Configuration Guide (SCG-CSO-RSC, SCG-CSO-AUP)
+- [ ] CMU: Cryptographic module documentation (CMU-CSO-CMD)
 
 **FRR Evidence Collection:**
 Use FRR analysis tools to collect and validate evidence:
-- `analyze_frr_code` - Analyze code against specific FRR requirement
-- `get_frr_evidence_automation` - Get evidence automation recommendations for FRR
-- `analyze_frr_family` - Analyze entire FRR family for compliance
+- `analyze_frr_code` - Analyze code against a specific FRR
+- `get_frr_evidence_automation` - Get evidence automation recommendations for an FRR
+- `analyze_frr_family` - Analyze an entire FRR family for compliance
 - `get_frr_implementation_status` - Get implementation status summary
 
-**KSI Implementation Documents (72 total):**
-- [ ] All 72 KSI implementation procedures
+**KSI Implementation Documents (46 KSIs in 10 families):**
+- [ ] Implementation explanation for each KSI (default artifacts in the CR26 rules data, info.default_artifacts.KSI)
 - [ ] Evidence collection methods for each KSI
-- [ ] Metrics and target values
-- [ ] Validation procedures
+- [ ] Metrics and target values (SDR-CSX-KMT for 20x Class B, C and D)
+- [ ] Verification and validation procedures (FRC-CSX-VVK: automated methods per KSI, strength and method count vary by class)
 
 **Supporting Documents:**
 - [ ] System architecture diagrams
-- [ ] Data flow diagrams
+- [ ] Data flow diagrams (MAS-CSO-FLO)
 - [ ] Network diagrams
-- [ ] Authorization boundary documentation
-- [ ] Interconnection agreements
-- [ ] POA&M (current)
+- [ ] Third-party information resource documentation (MAS-CSO-TPR)
 - [ ] Incident response plan
-- [ ] Business continuity/disaster recovery plans
+- [ ] Business continuity and disaster recovery plans (KSI-RPL family)
 - [ ] Configuration management plan
 - [ ] Change management procedures
 - [ ] User guide / admin guide
 
 **Use documentation_generator prompt for templates.**
 
-### Week -8 to -6: Evidence Gathering
+### Evidence Gathering
 
-**Organize Evidence by KSI Family:**
+**Organize evidence by KSI family:**
 
-**KSI-IAM (Identity & Access Management):**
-- [ ] MFA enrollment reports (phishing-resistant)
-- [ ] Access review logs (quarterly minimum)
-- [ ] Privileged access audit logs
-- [ ] Account lifecycle documentation
-- [ ] Screenshots of IAM configuration
+**KSI-IAM (Identity and Access Management):**
+- [ ] Passwordless and phishing-resistant MFA coverage (KSI-IAM-APM)
+- [ ] Automated account lifecycle management (KSI-IAM-AAM)
+- [ ] Least privilege and just-in-time authorization (KSI-IAM-ELP, KSI-IAM-JIT)
+- [ ] Non-user authentication (KSI-IAM-SNU)
+- [ ] Response to suspicious activity (KSI-IAM-SUS)
 
-**KSI-MLA (Monitoring, Logging & Analysis):**
-- [ ] SIEM configuration screenshots
-- [ ] Sample log entries (system, application, security)
-- [ ] Log retention configuration
-- [ ] Automated alerting rules
-- [ ] Log analysis procedures
+**KSI-MLA (Monitoring, Logging, and Auditing):**
+- [ ] SIEM configuration (KSI-MLA-OSM)
+- [ ] Log review and audit evidence (KSI-MLA-RVL)
+- [ ] Infrastructure as code configuration evaluation (KSI-MLA-EVC)
+- [ ] List of logged event types and resources (KSI-MLA-LET)
+- [ ] Log access authorization (KSI-MLA-ALA)
 
-**KSI-AFR (Automated Findings & Remediation):**
-- [ ] Vulnerability scan results (last 3 months)
-- [ ] Remediation tracking reports
-- [ ] Patch management logs
-- [ ] Evidence of automated scanning
+**VDR and VER (Vulnerability Detection, Response, Evaluation and Reporting):**
+- [ ] Detection and response evidence (VDR-CSO-DET, VDR-CSO-RES)
+- [ ] Reports matching VER-RPT-VDT fields and accepted vulnerabilities per VER-RPT-AVI
+- [ ] Evidence of automated detection (VDR-CSO-ADT) and detection after changes (VDR-CSO-DAC)
 
-**KSI-CMT (Change Management & Testing):**
-- [ ] Change tickets (last 3 months)
-- [ ] CI/CD pipeline configuration
-- [ ] Automated testing results
-- [ ] Rollback procedures documentation
+**KSI-CMT (Change Management):**
+- [ ] Change logging and monitoring (KSI-CMT-LMC)
+- [ ] Redeployment of version-controlled resources (KSI-CMT-RMV)
+- [ ] Automated testing and validation throughout deployment (KSI-CMT-VTD)
+- [ ] Review of change procedures (KSI-CMT-RVP)
 
-**KSI-INR (Incident Notification & Response):**
-- [ ] Incident logs (last 12 months)
-- [ ] Incident response test results
-- [ ] Notification procedures
-- [ ] Post-incident reviews
+**KSI-INR (Incident Response):**
+- [ ] Incident procedure reviews (KSI-INR-RIR)
+- [ ] Review of past incidents (KSI-INR-RPI)
+- [ ] After action reports (KSI-INR-AAR)
+- [ ] Reportability evaluation log (IEC-CSO-EFR)
 
 **KSI-RPL (Recovery Planning):**
-- [ ] Backup configuration
-- [ ] Backup test results (last 6 months)
-- [ ] Disaster recovery plan
-- [ ] DR test results (annual)
+- [ ] Recovery objectives (KSI-RPL-RRO)
+- [ ] Backup alignment with objectives (KSI-RPL-ABO)
+- [ ] Recovery plan alignment (KSI-RPL-ARP)
+- [ ] Recovery capability testing (KSI-RPL-TRC)
 
-**KSI-CNA (Cloud-Native Architecture):**
-- [ ] Infrastructure as Code (IaC) templates
-- [ ] Container scanning results
-- [ ] Immutable infrastructure evidence
-- [ ] Auto-scaling configurations
+**KSI-CNA (Cloud Native Architecture):**
+- [ ] Infrastructure as code templates and enforced intended state (KSI-CNA-EIS)
+- [ ] Network restrictions and logical networking (KSI-CNA-RNT, KSI-CNA-ULN)
+- [ ] Defined functionality and privileges (KSI-CNA-DFP)
+- [ ] Minimized attack surface and availability optimization (KSI-CNA-MAT, KSI-CNA-OFA)
 
-**KSI-SVC (Service Management & Delivery):**
-- [ ] Service-level agreements
-- [ ] Uptime reports
-- [ ] Performance monitoring dashboards
-- [ ] Capacity management reports
+**KSI-SVC (Service Configuration):**
+- [ ] Automated configuration management (KSI-SVC-ACM)
+- [ ] Automated secret management (KSI-SVC-ASM)
+- [ ] Encryption of information (KSI-SVC-SIN)
+- [ ] Resource integrity validation (KSI-SVC-VRI)
+
+**KSI-SCR (Supply Chain Risk):**
+- [ ] Supply chain risk mitigation and monitoring (KSI-SCR-MIT, KSI-SCR-MON)
+
+**KSI-PIY, KSI-CED (Policy, Inventory and Education):**
+- [ ] Automatically generated inventories (KSI-PIY-GIV)
+- [ ] Training effectiveness review (KSI-CED-RAT)
 
 **Use get_implementation_examples tool for specific KSI evidence examples.**
 
-### Week -6 to -4: Technical Testing
+### Technical Testing
 
-**Authorization Data Sharing API Testing:**
+**Certification Data Sharing and Trust Center Testing:**
 
 **Functionality Tests:**
-- [ ] All 6 required endpoints operational
-- [ ] Machine-readable format validates
-- [ ] Authentication working (OAuth 2.0 or mTLS)
-- [ ] Rate limiting configured properly
-- [ ] Error handling returns proper codes
-
-**Performance Tests:**
-- [ ] Response times < 2 seconds
-- [ ] Can handle concurrent requests
-- [ ] No timeout errors
+- [ ] Public information available in human-readable and JSON formats (CDS-CSO-PUB)
+- [ ] Programmatic access documented and working (CDS-TRC-PAC)
+- [ ] Machine-readable data validates against FedRAMP JSON schemas where defined (FRC-CSO-JSN)
+- [ ] Human-readable and machine-readable data stay consistent via automation (CDS-CSO-CBF)
+- [ ] Access without interruption (CDS-TRC-USH)
 
 **Security Tests:**
-- [ ] Authentication required on all endpoints
-- [ ] Authorization validates properly
-- [ ] No sensitive data leakage
-- [ ] TLS 1.2+ required
-- [ ] API keys/tokens properly secured
+- [ ] Authentication required for non-public data
+- [ ] No sensitive data leakage (CDS-CSO-RIS)
+- [ ] Access logging with summaries retained for at least six months (CDS-TRC-ACL)
+- [ ] Agency access inventory available (CDS-TRC-AAI)
 
 **Data Accuracy Tests:**
-- [ ] System info matches SSP
-- [ ] Vulnerability data current (< 24 hours old)
+- [ ] Service list matches the Minimum Assessment Scope (CDS-CSO-SVC)
+- [ ] Vulnerability reports current per your reporting cycle (VER-RPT-PER, VER-TFR-MHR at least monthly)
 - [ ] KSI metrics accurate
-- [ ] Incident data complete
-- [ ] Change data accurate
+- [ ] Incident and significant change data complete
 
-**Use validate_architecture tool to check your API implementation.**
+**Use validate_architecture tool to check your implementation.**
 
-**KSI Validation Testing:**
-
-**For Each of 72 KSIs:**
-- [ ] Evidence collection automated (where applicable)
+**KSI Validation Testing (all 46 KSIs):**
+- [ ] Evidence collection automated where applicable
 - [ ] Metrics accurate and current
 - [ ] Target values being met
-- [ ] Alerting working for out-of-compliance
+- [ ] Alerting working for out-of-compliance conditions
 
-**Priority KSIs to Test Thoroughly:**
-- KSI-IAM-01: MFA phishing-resistant
-- KSI-MLA-01: Centralized logging
-- KSI-MLA-05: Infrastructure as Code
-- KSI-AFR-01: Vulnerability scanning
-- KSI-CMT-03: Automated testing
-- KSI-CNA-04: Immutable infrastructure
+**Priority KSIs to test thoroughly:**
+- KSI-IAM-APM: passwordless / phishing-resistant authentication
+- KSI-MLA-OSM: SIEM
+- KSI-MLA-EVC: infrastructure as code evaluation
+- VDR-CSO-DET: vulnerability detection
+- KSI-CMT-VTD: automated testing
+- KSI-CNA-DFP: defined functionality and privileges
 
-### Week -4 to -2: Process Validation
+### Process Validation
 
-**Continuous Monitoring Procedures:**
-- [ ] Run full monthly continuous monitoring cycle
+**Ongoing Certification procedures:**
+- [ ] Produce an Ongoing Certification Report covering the full period since the previous one (CCM-OCR-AVL, every 3 months)
 - [ ] Verify all data collected automatically
-- [ ] Validate Authorization Data Sharing API updated
-- [ ] Test quarterly review process
+- [ ] Test the Quarterly Review process (CCM-QTR-MTG, strength varies by class)
 
-**Vulnerability Management:**
-- [ ] Test vulnerability discovery process
-- [ ] Verify remediation tracking
-- [ ] Validate timeframe compliance
-- [ ] Test exception process (if applicable)
+**Vulnerability management:**
+- [ ] Test vulnerability discovery process (VDR-CSO-DET)
+- [ ] Verify tracking against VDR-TFR-PVR timeframes (by Certification Class, N-rating and reachability)
+- [ ] Verify accepted vulnerability handling (VER-TFR-MAV, VER-RPT-AVI)
 
-**Incident Response:**
+**Incident response:**
 - [ ] Conduct tabletop exercise
-- [ ] Test notification procedures
-- [ ] Validate logging and documentation
-- [ ] Verify agency notification process
+- [ ] Test reporting procedures (IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)
+- [ ] Validate logging and documentation (IEC-CSO-EFR)
 
-**Change Management:**
+**Change management:**
 - [ ] Review recent changes
-- [ ] Validate categorization (FRR-SCN)
-- [ ] Verify approval process
-- [ ] Test rollback procedures
+- [ ] Validate categorization (SCN-CSO-EVA)
+- [ ] Verify approval process and notification content (SCN-CSO-INF)
 
-### Week -2 to Assessment: Final Preparation
+### Final Preparation
 
-**Team Readiness:**
+**Team readiness:**
 - [ ] Identify key personnel for interviews
 - [ ] Prepare staff for questions
 - [ ] Schedule availability for assessment period
-- [ ] Create contact list for 3PAO
+- [ ] Create contact list for the assessor
 
-**Technical Access:**
-- [ ] Provide 3PAO read-only access to systems
-- [ ] Provide API test credentials
-- [ ] Set up screen-sharing capabilities
-- [ ] Prepare demo environment (if needed)
+**Technical access:**
+- [ ] Provide the assessor read-only access to evidence and systems
+- [ ] Supply evidence of implementation and effectiveness (IVV-CSO-SEI, IVV-CSO-SEE)
+- [ ] Prepare technical explanations and demonstrations (IVV-CSO-STE)
+- [ ] Document any use of representative samples (IVV-CSO-DUS)
 
-**Documentation Finalization:**
-- [ ] All documents version-controlled
-- [ ] All documents dated properly
+**Documentation finalization:**
+- [ ] All documents version-controlled and dated
 - [ ] All references consistent
 - [ ] All diagrams current
 
-## During Assessment (2-4 Weeks)
+## During Assessment
 
-### Week 1: Kickoff & Documentation Review
+Assessors verify implementation (IVV-IAS-VIM) and validate effectiveness (IVV-IAS-VEF), then supply the provider with a summary of the assessment and an overall summary (IVV-IAS-SUM, IVV-IAS-OSA).
 
-**Day 1: Kickoff Meeting**
-- System overview presentation
-- Tour of Authorization Data Sharing API
+### Kickoff and Documentation Review
+- System overview and trust center walkthrough
 - Review assessment schedule
-- Address 3PAO questions
+- Answer clarifying questions promptly and track all requests
+- Assign one person as the assessor liaison
 
-**Days 2-5: Documentation Review**
-- 3PAO reviews all documentation
-- Answer clarifying questions promptly
-- Provide additional evidence as requested
-- Track all requests in spreadsheet
-
-**Tips:**
-- Respond to requests within 24 hours
-- Keep communications professional
-- Document all conversations
-- Assign one person as 3PAO liaison
-
-### Week 2: Technical Testing
-
-**Authorization Data Sharing API Testing:**
-- 3PAO will query all endpoints
-- Validate OSCAL format
-- Test authentication/authorization
-- Verify data accuracy
-
-**Infrastructure Testing:**
-- Network scans
-- Configuration reviews
+### Technical Testing
+- Trust center and JSON schema validation
+- Infrastructure and configuration reviews
 - Access control testing
 - Log analysis
 
-**Application Testing:**
-- Authentication testing
-- Authorization testing
-- Input validation
-- Session management
+### Interviews and Validation
 
-**Be Prepared For:**
-- Requests to demonstrate functionality
-- Questions about configurations
-- Requests for additional evidence
-- Clarifications on procedures
+**Common interview topics:**
+- System owner/ISSO: architecture, KSI implementation, Ongoing Certification approach, incident procedures
+- Development team: secure development, CI/CD, code review, testing
+- Operations team: configuration management, patching, backup and recovery, monitoring
+- Security team: vulnerability management, log analysis, incident response
 
-### Week 3-4: Interviews & Validation
-
-**Common Interview Topics:**
-
-**System Owner/ISSO:**
-- Overall system architecture
-- Security controls implementation
-- Continuous monitoring approach
-- Incident response procedures
-
-**Development Team:**
-- Secure development practices
-- CI/CD pipeline security
-- Code review processes
-- Testing procedures
-
-**Operations Team:**
-- Configuration management
-- Patch management
-- Backup/recovery procedures
-- Monitoring and alerting
-
-**Security Team:**
-- Vulnerability management
-- Log analysis procedures
-- Incident response
-- Security testing
-
-**Tips for Interviews:**
-- Answer questions honestly
-- Say "I don't know" if unsure (don't guess)
+**Tips:**
+- Answer honestly; say "I don't know" if unsure
 - Provide evidence when possible
 - Keep answers concise
 
 ### Handling Findings
 
-**If 3PAO Identifies Issues:**
+CR26 does not define critical/high/moderate/low finding buckets or a POA&M process. Provider obligations come from the rules:
+- Vulnerabilities found are handled under VDR-CSO-RES, evaluated under VER-EVA-*, and mitigated or remediated on the VDR-TFR-PVR timeframes; anything not fully mitigated or remediated within 192 days of evaluation is an accepted vulnerability (VER-TFR-MAV)
+- Problems or failures in your detection and response processes are themselves vulnerabilities (VDR-CSO-FAV)
+- Rev5 controls with negative findings from the previous assessment must be included in the next assessment (IVV-CSF-ACF)
 
-**During Assessment:**
-- Acknowledge the finding
-- Don't be defensive
-- Ask clarifying questions
-- Determine severity
-
-**Types of Findings:**
-
-**Critical Findings:**
-- Must remediate before authorization
-- Examples: No MFA, unpatched critical vulns, no logging
-
-**High Findings:**
-- Should remediate quickly
-- May require POA&M
-- Examples: Delayed patching, incomplete procedures
-
-**Moderate/Low Findings:**
-- Document in POA&M
-- Plan remediation
-- Examples: Documentation gaps, process improvements
-
-**Response Strategy:**
-- Quick fixes: Remediate immediately
-- Longer fixes: Document in POA&M with timeline
-- Process issues: Update procedures, retrain staff
+**Response strategy:**
+- Quick fixes: remediate immediately and record the evidence
+- Longer fixes: track through your vulnerability response process and report per VER-RPT-PER
+- Process issues: update procedures, retrain staff, and update the Security Decision Record
 
 ## Post-Assessment Activities
 
-### Immediate Actions (Week After Assessment)
+### Immediate actions
+- Debrief and review all assessor findings
+- Prioritize remediation and assign owners
 
-**Debrief Meeting:**
-- Review all findings
-- Understand 3PAO recommendations
-- Prioritize remediation
+### Assessment results
+- [ ] Review the assessor's summaries for accuracy
+- [ ] Include the independent assessment results in the Certification Package (IVV-CSO-ICP)
+- [ ] Keep Certification Data current (CPO-CSX-CPM for 20x, CPO-CSF-CPM for Rev5; frequency varies by class)
+- [ ] Plan the next annual independent assessment (IVV-CSO-FIA; KSIs for 20x per IVV-CSX-AIA, Rev5 controls per IVV-CSF-AIA)
 
-**Remediation Planning:**
-- Create action plan for critical/high findings
-- Assign owners for each finding
-- Set deadlines
-- Allocate resources
+### Certification Package submission
+- [ ] Certification Package per FRC-CSO-PKG
+- [ ] FedRAMP JSON schema validation (FRC-CSO-JSN)
+- [ ] Certification Data published through your trust center (CDS-CSO-UTC)
+- [ ] Responsibility for accuracy retained, even when third parties supply data (FRC-CSO-MRA)
 
-### Security Assessment Report (SAR) Review
+## Common Findings
 
-**When 3PAO Delivers SAR:**
-- [ ] Review for accuracy
-- [ ] Verify all findings documented correctly
-- [ ] Check that evidence referenced properly
-- [ ] Validate recommendations
+### Frequent gaps
 
-**Respond to SAR:**
-- [ ] Create POA&M for all findings
-- [ ] Provide remediation timelines
-- [ ] Document compensating controls (if applicable)
-- [ ] Submit POA&M to 3PAO and FedRAMP
+**1. Certification Data Sharing issues**
+- Trust center programmatic access missing or undocumented (CDS-TRC-PAC)
+- JSON fails schema validation (FRC-CSO-JSN)
+- Human and machine-readable data inconsistent (CDS-CSO-CBF)
+- Prevention: test thoroughly, validate against schemas, automate data refresh
 
-### Authorization Package Submission
+**2. KSI evidence not automated**
+- Manual evidence collection, evidence not current, no automated metrics
+- Prevention: see FRC-CSX-VVK for the automated method expectations by class; build dashboards for all KSIs
 
-**Package Contents:**
-- [ ] Security Assessment Report (SAR)
-- [ ] Plan of Action & Milestones (POA&M)
-- [ ] System Security Plan (OSCAL)
-- [ ] All 11 FedRAMP 20x standard documents
-- [ ] All 72 KSI implementation documents
-- [ ] Authorization Data Sharing API documentation
-- [ ] Any additional evidence requested
+**3. Authentication not phishing-resistant (KSI-IAM-APM)**
+- SMS or TOTP only, incomplete coverage
+- Prevention: passwordless or phishing-resistant MFA (for example FIDO2/WebAuthn or PIV/CAC) for all users
 
-**Submission Process:**
-- [ ] Upload to FedRAMP portal
-- [ ] Notify authorizing agency
-- [ ] Provide API test credentials to FedRAMP
-- [ ] Address any FedRAMP questions
+**4. Incomplete logging (KSI-MLA-OSM, KSI-MLA-LET)**
+- Not all log sources captured, logs not centralized
+- Prevention: inventory all log sources and maintain the list of logged event types (KSI-MLA-LET). CR26 does not set a numeric log retention period; set retention from your own risk analysis and any applicable control parameters (CTL data in the rules JSON)
 
-## Common Audit Findings (FedRAMP 20x)
+**5. Vulnerability response gaps (VDR, VER)**
+- Vulnerabilities not evaluated or not mitigated within VDR-TFR-PVR timeframes; no tracking process; missing evidence
+- Prevention: automated detection and tracking (VDR-CSO-ADT), alerts for overdue vulnerabilities, report monthly or more often (VER-TFR-MHR)
 
-### Top 10 Most Common Findings
+**6. Infrastructure not managed as code (KSI-MLA-EVC, KSI-CNA-EIS)**
+- Manual provisioning, configuration drift
+- Prevention: Bicep/Terraform/ARM in version control
 
-**1. Authorization Data Sharing API Issues**
-- API not fully operational
-- OSCAL format validation errors
-- Stale data (> 24 hours old)
-- Missing required endpoints
-- Authentication issues
+**7. Inadequate validation in deployment (KSI-CMT-VTD)**
+- No automated testing in CI/CD; security tests not automated
 
-**Prevention:**
-- Test API thoroughly before assessment
-- Use OSCAL validators
-- Set up automated data refresh
-- Test all 6 required endpoints
+**8. Incomplete Minimum Assessment Scope (MAS)**
+- Missing information resources or third-party resources (MAS-CSO-IIR, MAS-CSO-TPR)
+- Inaccurate information flows (MAS-CSO-FLO)
 
-**2. KSI Evidence Not Automated**
-- Manual evidence collection
-- Evidence not current
-- No automated metrics
+**9. Inadequate Ongoing Certification (CCM)**
+- Reports late or incomplete (CCM-OCR-AVL), no feedback mechanism (CCM-OCR-FBM), next report date not published (CCM-OCR-NRD)
 
-**Prevention:**
-- Automate top 20 KSIs minimum
-- Set up dashboards for all KSIs
-- Test evidence collection process
+**10. Incomplete documentation**
+- Procedures not documented, documentation out of date
+- Prevention: use the documentation_generator prompt, keep docs in version control
 
-**3. MFA Not Phishing-Resistant (KSI-IAM-01)**
-- Using SMS or TOTP (not acceptable)
-- No FIDO2/WebAuthn implementation
-- Incomplete MFA coverage
+### KSI-specific common findings
 
-**Prevention:**
-- Implement FIDO2/WebAuthn or PIV/CAC
-- Enforce for all users (no exceptions)
-- Document implementation thoroughly
-
-**4. Incomplete Logging (KSI-MLA-01)**
-- Not all log sources captured
-- Logs not centralized
-- Log retention insufficient
-
-**Prevention:**
-- Inventory all log sources
-- Implement centralized SIEM
-- Configure 1-year retention minimum
-
-**5. Vulnerability Remediation Delays (FRR-VDR)**
-- Critical/High vulns not remediated in timeframe
-- No tracking process
-- Missing evidence
-
-**Prevention:**
-- Implement automated vulnerability management
-- Set up alerts for overdue vulns
-- Document remediation timelines
-
-**6. Infrastructure Not as Code (KSI-MLA-05)**
-- Manual infrastructure provisioning
-- No IaC templates
-- Configuration drift
-
-**Prevention:**
-- Migrate to Bicep/Terraform/ARM templates
-- Store IaC in version control
-- Use IaC for all infrastructure changes
-
-**7. Inadequate Testing (KSI-CMT-03)**
-- No automated testing in CI/CD
-- Security tests not automated
-- Test coverage insufficient
-
-**Prevention:**
-- Implement automated unit/integration tests
-- Add security tests (SAST/DAST)
-- Measure and improve coverage
-
-**8. Incomplete System Boundary (SSP)**
-- Boundary not clearly defined
-- Missing interconnections
-- Inaccurate architecture diagrams
-
-**Prevention:**
-- Document all system components
-- List all interconnections
-- Keep diagrams current
-
-**9. Inadequate Continuous Monitoring (FRR-CCM)**
-- Not truly continuous
-- Manual processes dominate
-- Data not real-time
-
-**Prevention:**
-- Automate as much as possible
-- Implement real-time monitoring
-- Update Authorization Data Sharing API daily
-
-**10. Incomplete Documentation (General)**
-- Procedures not documented
-- Documentation out of date
-- Missing required documents
-
-**Prevention:**
-- Use documentation_generator prompt for templates
-- Keep docs in version control
-- Review quarterly
-
-### KSI-Specific Common Findings
-
-**KSI-IAM (Identity & Access):**
-- Access reviews not quarterly
-- Privileged access not monitored
-- Service accounts not inventoried
-
-**KSI-MLA (Monitoring & Logging):**
-- Alert rules not tuned
-- No log analysis procedures
-- SIEM not configured properly
-
-**KSI-AFR (Findings & Remediation):**
-- Scan coverage incomplete
-- False positives not managed
-- No continuous scanning
-
-**KSI-CMT (Change & Testing):**
-- Changes not approved properly
-- No rollback procedures
-- Testing not adequate
-
-**KSI-INR (Incident Response):**
-- No incident response tests
-- Notification procedures unclear
-- Post-incident reviews not conducted
-
-**KSI-RPL (Recovery Planning):**
-- Backup tests not regular
-- DR plan not tested
-- Recovery objectives not met
-
-**KSI-CNA (Cloud-Native):**
-- Not using cloud-native services
-- No immutable infrastructure
-- Container security inadequate
-
-**KSI-SVC (Service Management):**
-- SLAs not defined
-- Uptime not measured
-- Capacity planning inadequate
+- KSI-IAM: privileged access not monitored; non-user accounts not inventoried
+- KSI-MLA: alert rules not tuned; SIEM not configured properly
+- KSI-CMT: changes not logged; no redeployment practice
+- KSI-INR: no incident response review; after action reports not produced
+- KSI-RPL: backups not aligned with recovery objectives; recovery not tested
+- KSI-CNA: no network restriction review; privileges not strictly defined
+- KSI-SVC: secrets not rotated automatically; configuration not automated
+- KSI-SCR: third-party software not monitored for upstream vulnerabilities
 
 ## Audit Preparation Checklist
 
-### 12 Weeks Before Assessment
-
-- [ ] Review all FedRAMP 20x requirements
+### Early
+- [ ] Review all applicable CR26 rules for your Certification Class and type
 - [ ] Identify gaps in current implementation
 - [ ] Create remediation plan
 - [ ] Begin documentation updates
 
-### 8 Weeks Before Assessment
-
+### Mid
 - [ ] Complete all required documentation
 - [ ] Implement missing KSIs
-- [ ] Set up Authorization Data Sharing API
+- [ ] Set up your trust center and Certification Data feeds
 - [ ] Begin evidence collection
 
-### 6 Weeks Before Assessment
-
+### Late
 - [ ] Complete all KSI implementations
-- [ ] Finalize Authorization Data Sharing API
 - [ ] Test all procedures
 - [ ] Conduct internal audit
-
-### 4 Weeks Before Assessment
-
-- [ ] Address internal audit findings
-- [ ] Complete evidence gathering
-- [ ] Test Authorization Data Sharing API
 - [ ] Prepare team for interviews
-
-### 2 Weeks Before Assessment
-
-- [ ] Final documentation review
-- [ ] Provide 3PAO access
-- [ ] Confirm team availability
-- [ ] Prepare demo environment
-
-### Week of Assessment
-
-- [ ] Daily check-ins with 3PAO
-- [ ] Respond to requests promptly
-- [ ] Document all conversations
-- [ ] Address issues immediately
+- [ ] Provide assessor access and confirm availability
 
 ### After Assessment
-
 - [ ] Debrief with team
-- [ ] Review SAR for accuracy
+- [ ] Review assessor summaries for accuracy
 - [ ] Create remediation plan
-- [ ] Submit authorization package
+- [ ] Update Certification Package
 
 ## Resources and Tools
 
@@ -571,29 +344,29 @@ Use FRR analysis tools to collect and validate evidence:
 
 **Use These MCP Prompts:**
 - `initial_assessment_roadmap` - Overall project planning
-- `quarterly_review_checklist` - Continuous monitoring procedures
-- `api_design_guide` - Authorization Data Sharing API design
+- `quarterly_review_checklist` - Ongoing Certification procedures
+- `api_design_guide` - Certification Data Sharing API design
 - `ksi_implementation_priorities` - KSI implementation order
 - `documentation_generator` - Documentation templates
-- `migration_from_rev5` - If transitioning from Rev 5
+- `migration_from_rev5` - If transitioning from Rev5
 
 ## Success Factors
 
-**What Makes a Successful Assessment:**
-✓ Complete, accurate documentation
-✓ Fully operational Authorization Data Sharing API
-✓ Automated evidence collection for KSIs
-✓ Well-prepared, knowledgeable team
-✓ Responsive to 3PAO requests
-✓ Honest communication about any gaps
-✓ Quick remediation of identified issues
+**What makes a successful assessment:**
+- Complete, accurate documentation
+- Working trust center and programmatic access
+- Automated evidence collection for KSIs
+- Well-prepared, knowledgeable team
+- Responsive to assessor requests
+- Honest communication about any gaps
+- Quick remediation of identified issues
 
-**Red Flags to Avoid:**
-✗ Incomplete documentation
-✗ API not working during assessment
-✗ Team unfamiliar with procedures
-✗ Evidence not available
-✗ Defensive attitude toward findings
-✗ Lack of preparation
+**Red flags to avoid:**
+- Incomplete documentation
+- Trust center or data feeds not working during assessment
+- Team unfamiliar with procedures
+- Evidence not available
+- Defensive attitude toward findings
+- Lack of preparation
 
-Remember: The 3PAO is not your adversary. They want you to succeed. Be honest, prepared, and responsive, and you'll have a successful assessment.
+Remember: the assessor is not your adversary. Be honest, prepared, and responsive, and you'll have a successful assessment.

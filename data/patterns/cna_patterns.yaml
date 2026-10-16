@@ -5,7 +5,7 @@ severity: high
 description: 'Detects Network Security Group (NSG) configuration for network traffic
   restriction.
 
-  Aligns with KSI-CNA-01: Restrict Network Traffic.
+  Aligns with KSI-CNA-RNT: Restrict Network Traffic.
 
   '
 pattern_type: resource
@@ -23,9 +23,11 @@ languages:
 finding:
   title: Network Security Group configured
   description: IaC provisions NSG for network traffic restriction
-  recommendation: Ensure default deny rules and explicit allow rules per KSI-CNA-01
+  recommendation: Ensure default deny rules and explicit allow rules per KSI-CNA-RNT
   references:
-  - KSI-CNA-01
+  - KSI-CNA-RNT
+related_ksis:
+- KSI-CNA-RNT
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -176,7 +178,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-01
+    requirement_id: KSI-CNA-RNT
     requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
@@ -221,7 +223,9 @@ finding:
   description: IaC provisions Azure Firewall for traffic filtering
   recommendation: Configure application and network rules with least privilege
   references:
-  - KSI-CNA-01
+  - KSI-CNA-RNT
+related_ksis:
+- KSI-CNA-RNT
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -372,7 +376,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-01
+    requirement_id: KSI-CNA-RNT
     requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
@@ -401,7 +405,7 @@ family: CNA
 severity: medium
 description: 'Detects minimal dependency usage to reduce attack surface.
 
-  Aligns with KSI-CNA-02: Minimize the Attack Surface.
+  Aligns with KSI-CNA-MAT: Minimize the Attack Surface.
 
   '
 pattern_type: import
@@ -417,9 +421,11 @@ languages:
 finding:
   title: Dependency analysis for attack surface
   description: Code imports dependencies (should be minimal)
-  recommendation: Review and remove unused dependencies per KSI-CNA-02
+  recommendation: Review and remove unused dependencies per KSI-CNA-MAT
   references:
-  - KSI-CNA-02
+  - KSI-CNA-MAT
+related_ksis:
+- KSI-CNA-MAT
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -570,7 +576,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-02
+    requirement_id: KSI-CNA-MAT
     requirement_name: Minimize the Attack Surface
     impact_levels:
     - Low
@@ -599,7 +605,7 @@ family: CNA
 severity: high
 description: 'Detects use of container images for immutable infrastructure.
 
-  Aligns with KSI-CNA-04: Immutable Infrastructure.
+  Aligns with KSI-CNA-DFP: Immutable Infrastructure.
 
   '
 pattern_type: configuration
@@ -611,9 +617,11 @@ languages:
 finding:
   title: Immutable container image configuration
   description: Uses minimal, immutable base images
-  recommendation: Pin image versions with SHA256 digest per KSI-CNA-04
+  recommendation: Pin image versions with SHA256 digest per KSI-CNA-DFP
   references:
-  - KSI-CNA-04
+  - KSI-CNA-DFP
+related_ksis:
+- KSI-CNA-DFP
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -764,7 +772,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-04
+    requirement_id: KSI-CNA-DFP
     requirement_name: Immutable Infrastructure
     impact_levels:
     - Low
@@ -809,8 +817,11 @@ finding:
   description: IaC provisions AKS cluster for containerized workloads
   recommendation: Enable network policy (Calico/Azure) and Azure Policy add-on
   references:
-  - KSI-CNA-01
-  - KSI-CNA-04
+  - KSI-CNA-RNT
+  - KSI-CNA-DFP
+related_ksis:
+- KSI-CNA-RNT
+- KSI-CNA-DFP
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -961,8 +972,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-07
-    requirement_name: Best Practices
+    requirement_id: KSI-CNA-RNT
+    requirement_name: Restricting Network Traffic
     impact_levels:
     - Low
     - Moderate
@@ -1004,10 +1015,14 @@ languages:
 finding:
   title: Azure Container Registry configured
   description: IaC provisions ACR for container image storage
-  recommendation: Enable vulnerability scanning and image signing per KSI-VDR-01
+  recommendation: Enable vulnerability scanning and image signing per VDR-CSO-DET
   references:
-  - KSI-CNA-04
-  - KSI-VDR-01
+  - KSI-CNA-DFP
+  - VDR-CSO-DET
+related_ksis:
+- KSI-CNA-DFP
+related_frrs:
+- VDR-CSO-DET
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -1158,7 +1173,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-04
+    requirement_id: KSI-CNA-DFP
     requirement_name: Immutable Infrastructure
     impact_levels:
     - Low
@@ -1187,7 +1202,7 @@ family: CNA
 severity: high
 description: 'Detects monitoring integration for cloud-native observability.
 
-  Aligns with KSI-CNA-08: Monitoring and Observability.
+  Aligns with KSI-CNA-EIS: Monitoring and Observability.
 
   '
 pattern_type: import
@@ -1219,8 +1234,11 @@ finding:
   description: Code integrates monitoring for observability
   recommendation: Ensure metrics, logs, and traces are exported to centralized system
   references:
-  - KSI-CNA-08
-  - KSI-MLA-01
+  - KSI-CNA-EIS
+  - KSI-MLA-OSM
+related_ksis:
+- KSI-CNA-EIS
+- KSI-MLA-OSM
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -1371,7 +1389,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-08
+    requirement_id: KSI-CNA-EIS
     requirement_name: Persistent Assessment and Automated Enforcement
     impact_levels:
     - Moderate
@@ -1415,7 +1433,9 @@ finding:
   description: IaC provisions API Management for service exposure
   recommendation: Configure policies for rate limiting, authentication, and logging
   references:
-  - KSI-CNA-01
+  - KSI-CNA-RNT
+related_ksis:
+- KSI-CNA-RNT
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -1566,7 +1586,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-01
+    requirement_id: KSI-CNA-RNT
     requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
@@ -1603,8 +1623,11 @@ finding:
   description: Configuration includes service mesh for secure service-to-service communication
   recommendation: Enable mTLS and configure authorization policies
   references:
-  - KSI-CNA-01
-  - KSI-IAM-05
+  - KSI-CNA-RNT
+  - KSI-IAM-ELP
+related_ksis:
+- KSI-CNA-RNT
+- KSI-IAM-ELP
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -1755,7 +1778,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-01
+    requirement_id: KSI-CNA-RNT
     requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
@@ -1794,10 +1817,14 @@ languages:
 finding:
   title: Container build in CI/CD pipeline
   description: Pipeline builds container images for cloud-native deployment
-  recommendation: Scan images for vulnerabilities before pushing per KSI-VDR-01
+  recommendation: Scan images for vulnerabilities before pushing per VDR-CSO-DET
   references:
-  - KSI-CNA-04
-  - KSI-VDR-01
+  - KSI-CNA-DFP
+  - VDR-CSO-DET
+related_ksis:
+- KSI-CNA-DFP
+related_frrs:
+- VDR-CSO-DET
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -1948,7 +1975,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-04
+    requirement_id: KSI-CNA-DFP
     requirement_name: Immutable Infrastructure
     impact_levels:
     - Low
@@ -1987,9 +2014,11 @@ languages:
 finding:
   title: Infrastructure validation in CI/CD
   description: Pipeline validates IaC before deployment
-  recommendation: Include security policy checks (Azure Policy, Checkov) per KSI-CNA-07
+  recommendation: Include security policy checks (Azure Policy, Checkov) per KSI-CNA-IBP
   references:
-  - KSI-CNA-07
+  - KSI-CNA-IBP
+related_ksis:
+- KSI-CNA-IBP
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -2140,7 +2169,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-07
+    requirement_id: KSI-CNA-IBP
     requirement_name: Best Practices
     impact_levels:
     - Low
@@ -2165,7 +2194,7 @@ testing:
 ---
 pattern_id: cna.compliance.ksi_cna_02
 name: Minimize the Attack Surface Detection
-description: Detects compliance indicators for KSI-CNA-02 - Minimize the Attack Surface
+description: Detects compliance indicators for KSI-CNA-MAT - Minimize the Attack Surface
 family: CNA
 severity: MEDIUM
 pattern_type: configuration
@@ -2176,8 +2205,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Minimize the Attack Surface compliance check
-  description_template: Configuration may not fully implement KSI-CNA-02 - Minimize the Attack Surface
-  remediation_template: Review and implement KSI-CNA-02 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CNA-MAT - Minimize the Attack Surface
+  remediation_template: Review and implement KSI-CNA-MAT requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -2192,27 +2221,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CNA-02
+- KSI-CNA-MAT
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CNA-02 compliance configuration
+  name: KSI-CNA-MAT compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CNA-02 compliance report
+  name: KSI-CNA-MAT compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CNA-02 compliance enforcement
+    description: Azure Policy for KSI-CNA-MAT compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CNA-02 compliance
+      # Azure Policy for KSI-CNA-MAT compliance
       # GitHub Actions
-      - name: KSI-CNA-02 Compliance Check
+      - name: KSI-CNA-MAT Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern cna.compliance.ksi_cna_02 \
@@ -2220,23 +2249,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CNA-02 Validation'
+        displayName: 'KSI-CNA-MAT Validation'
         inputs:
           script: |
-            # Validate KSI-CNA-02 compliance
+            # Validate KSI-CNA-MAT compliance
             python validate.py --pattern cna.compliance.ksi_cna_02
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CNA-02
+    description: Continuous monitoring for KSI-CNA-MAT
     implementation: |
-      # Azure Monitor for KSI-CNA-02 continuous monitoring
+      # Azure Monitor for KSI-CNA-MAT continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CNA-02"
+      | where OperationNameValue contains "KSI-CNA-MAT"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -2245,7 +2274,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: cna.compliance.ksi_cna_03
 name: Enforce Traffic Flow Detection
-description: Detects compliance indicators for KSI-CNA-03 - Enforce Traffic Flow
+description: Detects compliance indicators for KSI-CNA-ULN - Enforce Traffic Flow
 family: CNA
 severity: MEDIUM
 pattern_type: configuration
@@ -2256,8 +2285,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Enforce Traffic Flow compliance check
-  description_template: Configuration may not fully implement KSI-CNA-03 - Enforce Traffic Flow
-  remediation_template: Review and implement KSI-CNA-03 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CNA-ULN - Enforce Traffic Flow
+  remediation_template: Review and implement KSI-CNA-ULN requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -2272,27 +2301,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CNA-03
+- KSI-CNA-ULN
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CNA-03 compliance configuration
+  name: KSI-CNA-ULN compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CNA-03 compliance report
+  name: KSI-CNA-ULN compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CNA-03 compliance enforcement
+    description: Azure Policy for KSI-CNA-ULN compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CNA-03 compliance
+      # Azure Policy for KSI-CNA-ULN compliance
       # GitHub Actions
-      - name: KSI-CNA-03 Compliance Check
+      - name: KSI-CNA-ULN Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern cna.compliance.ksi_cna_03 \
@@ -2300,23 +2329,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CNA-03 Validation'
+        displayName: 'KSI-CNA-ULN Validation'
         inputs:
           script: |
-            # Validate KSI-CNA-03 compliance
+            # Validate KSI-CNA-ULN compliance
             python validate.py --pattern cna.compliance.ksi_cna_03
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CNA-03
+    description: Continuous monitoring for KSI-CNA-ULN
     implementation: |
-      # Azure Monitor for KSI-CNA-03 continuous monitoring
+      # Azure Monitor for KSI-CNA-ULN continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CNA-03"
+      | where OperationNameValue contains "KSI-CNA-ULN"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -2325,7 +2354,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: cna.compliance.ksi_cna_04
 name: Immutable Infrastructure Detection
-description: Detects compliance indicators for KSI-CNA-04 - Immutable Infrastructure
+description: Detects compliance indicators for KSI-CNA-DFP - Immutable Infrastructure
 family: CNA
 severity: MEDIUM
 pattern_type: configuration
@@ -2336,8 +2365,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Immutable Infrastructure compliance check
-  description_template: Configuration may not fully implement KSI-CNA-04 - Immutable Infrastructure
-  remediation_template: Review and implement KSI-CNA-04 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CNA-DFP - Immutable Infrastructure
+  remediation_template: Review and implement KSI-CNA-DFP requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -2352,27 +2381,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CNA-04
+- KSI-CNA-DFP
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CNA-04 compliance configuration
+  name: KSI-CNA-DFP compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CNA-04 compliance report
+  name: KSI-CNA-DFP compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CNA-04 compliance enforcement
+    description: Azure Policy for KSI-CNA-DFP compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CNA-04 compliance
+      # Azure Policy for KSI-CNA-DFP compliance
       # GitHub Actions
-      - name: KSI-CNA-04 Compliance Check
+      - name: KSI-CNA-DFP Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern cna.compliance.ksi_cna_04 \
@@ -2380,23 +2409,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CNA-04 Validation'
+        displayName: 'KSI-CNA-DFP Validation'
         inputs:
           script: |
-            # Validate KSI-CNA-04 compliance
+            # Validate KSI-CNA-DFP compliance
             python validate.py --pattern cna.compliance.ksi_cna_04
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CNA-04
+    description: Continuous monitoring for KSI-CNA-DFP
     implementation: |
-      # Azure Monitor for KSI-CNA-04 continuous monitoring
+      # Azure Monitor for KSI-CNA-DFP continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CNA-04"
+      | where OperationNameValue contains "KSI-CNA-DFP"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -2405,7 +2434,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: cna.compliance.ksi_cna_05
 name: Unwanted Activity Detection
-description: Detects compliance indicators for KSI-CNA-05 - Unwanted Activity
+description: Detects compliance indicators for KSI-CNA-RVP - Unwanted Activity
 family: CNA
 severity: MEDIUM
 pattern_type: configuration
@@ -2416,8 +2445,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Unwanted Activity compliance check
-  description_template: Configuration may not fully implement KSI-CNA-05 - Unwanted Activity
-  remediation_template: Review and implement KSI-CNA-05 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CNA-RVP - Unwanted Activity
+  remediation_template: Review and implement KSI-CNA-RVP requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -2432,27 +2461,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CNA-05
+- KSI-CNA-RVP
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CNA-05 compliance configuration
+  name: KSI-CNA-RVP compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CNA-05 compliance report
+  name: KSI-CNA-RVP compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CNA-05 compliance enforcement
+    description: Azure Policy for KSI-CNA-RVP compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CNA-05 compliance
+      # Azure Policy for KSI-CNA-RVP compliance
       # GitHub Actions
-      - name: KSI-CNA-05 Compliance Check
+      - name: KSI-CNA-RVP Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern cna.compliance.ksi_cna_05 \
@@ -2460,23 +2489,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CNA-05 Validation'
+        displayName: 'KSI-CNA-RVP Validation'
         inputs:
           script: |
-            # Validate KSI-CNA-05 compliance
+            # Validate KSI-CNA-RVP compliance
             python validate.py --pattern cna.compliance.ksi_cna_05
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CNA-05
+    description: Continuous monitoring for KSI-CNA-RVP
     implementation: |
-      # Azure Monitor for KSI-CNA-05 continuous monitoring
+      # Azure Monitor for KSI-CNA-RVP continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CNA-05"
+      | where OperationNameValue contains "KSI-CNA-RVP"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -2485,7 +2514,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: cna.compliance.ksi_cna_06
 name: High Availability Detection
-description: Detects compliance indicators for KSI-CNA-06 - High Availability
+description: Detects compliance indicators for KSI-CNA-OFA - High Availability
 family: CNA
 severity: MEDIUM
 pattern_type: configuration
@@ -2496,8 +2525,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: High Availability compliance check
-  description_template: Configuration may not fully implement KSI-CNA-06 - High Availability
-  remediation_template: Review and implement KSI-CNA-06 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CNA-OFA - High Availability
+  remediation_template: Review and implement KSI-CNA-OFA requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -2512,27 +2541,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CNA-06
+- KSI-CNA-OFA
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CNA-06 compliance configuration
+  name: KSI-CNA-OFA compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CNA-06 compliance report
+  name: KSI-CNA-OFA compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CNA-06 compliance enforcement
+    description: Azure Policy for KSI-CNA-OFA compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CNA-06 compliance
+      # Azure Policy for KSI-CNA-OFA compliance
       # GitHub Actions
-      - name: KSI-CNA-06 Compliance Check
+      - name: KSI-CNA-OFA Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern cna.compliance.ksi_cna_06 \
@@ -2540,23 +2569,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CNA-06 Validation'
+        displayName: 'KSI-CNA-OFA Validation'
         inputs:
           script: |
-            # Validate KSI-CNA-06 compliance
+            # Validate KSI-CNA-OFA compliance
             python validate.py --pattern cna.compliance.ksi_cna_06
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CNA-06
+    description: Continuous monitoring for KSI-CNA-OFA
     implementation: |
-      # Azure Monitor for KSI-CNA-06 continuous monitoring
+      # Azure Monitor for KSI-CNA-OFA continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CNA-06"
+      | where OperationNameValue contains "KSI-CNA-OFA"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -2565,7 +2594,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: cna.compliance.ksi_cna_07
 name: Best Practices Detection
-description: Detects compliance indicators for KSI-CNA-07 - Best Practices
+description: Detects compliance indicators for KSI-CNA-IBP - Best Practices
 family: CNA
 severity: MEDIUM
 pattern_type: configuration
@@ -2576,8 +2605,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Best Practices compliance check
-  description_template: Configuration may not fully implement KSI-CNA-07 - Best Practices
-  remediation_template: Review and implement KSI-CNA-07 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CNA-IBP - Best Practices
+  remediation_template: Review and implement KSI-CNA-IBP requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -2592,27 +2621,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CNA-07
+- KSI-CNA-IBP
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CNA-07 compliance configuration
+  name: KSI-CNA-IBP compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CNA-07 compliance report
+  name: KSI-CNA-IBP compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CNA-07 compliance enforcement
+    description: Azure Policy for KSI-CNA-IBP compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CNA-07 compliance
+      # Azure Policy for KSI-CNA-IBP compliance
       # GitHub Actions
-      - name: KSI-CNA-07 Compliance Check
+      - name: KSI-CNA-IBP Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern cna.compliance.ksi_cna_07 \
@@ -2620,23 +2649,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CNA-07 Validation'
+        displayName: 'KSI-CNA-IBP Validation'
         inputs:
           script: |
-            # Validate KSI-CNA-07 compliance
+            # Validate KSI-CNA-IBP compliance
             python validate.py --pattern cna.compliance.ksi_cna_07
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CNA-07
+    description: Continuous monitoring for KSI-CNA-IBP
     implementation: |
-      # Azure Monitor for KSI-CNA-07 continuous monitoring
+      # Azure Monitor for KSI-CNA-IBP continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CNA-07"
+      | where OperationNameValue contains "KSI-CNA-IBP"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -2645,7 +2674,7 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: cna.compliance.ksi_cna_08
 name: Persistent Assessment and Automated Enforcement Detection
-description: Detects compliance indicators for KSI-CNA-08 - Persistent Assessment and Automated Enforcement
+description: Detects compliance indicators for KSI-CNA-EIS - Persistent Assessment and Automated Enforcement
 family: CNA
 severity: MEDIUM
 pattern_type: configuration
@@ -2656,8 +2685,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Persistent Assessment and Automated Enforcement compliance check
-  description_template: Configuration may not fully implement KSI-CNA-08 - Persistent Assessment and Automated Enforcement
-  remediation_template: Review and implement KSI-CNA-08 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CNA-EIS - Persistent Assessment and Automated Enforcement
+  remediation_template: Review and implement KSI-CNA-EIS requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -2672,27 +2701,27 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CNA-08
+- KSI-CNA-EIS
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CNA-08 compliance configuration
+  name: KSI-CNA-EIS compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CNA-08 compliance report
+  name: KSI-CNA-EIS compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CNA-08 compliance enforcement
+    description: Azure Policy for KSI-CNA-EIS compliance enforcement
     implementation: |
-      # Azure Policy for KSI-CNA-08 compliance
+      # Azure Policy for KSI-CNA-EIS compliance
       # GitHub Actions
-      - name: KSI-CNA-08 Compliance Check
+      - name: KSI-CNA-EIS Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern cna.compliance.ksi_cna_08 \
@@ -2700,23 +2729,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-CNA-08 Validation'
+        displayName: 'KSI-CNA-EIS Validation'
         inputs:
           script: |
-            # Validate KSI-CNA-08 compliance
+            # Validate KSI-CNA-EIS compliance
             python validate.py --pattern cna.compliance.ksi_cna_08
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CNA-08
+    description: Continuous monitoring for KSI-CNA-EIS
     implementation: |
-      # Azure Monitor for KSI-CNA-08 continuous monitoring
+      # Azure Monitor for KSI-CNA-EIS continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-CNA-08"
+      | where OperationNameValue contains "KSI-CNA-EIS"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -2739,13 +2768,13 @@ languages:
     - capabilities
 finding:
   title_template: Secure Container Configuration Detected
-  description_template: "Kubernetes container deployed with security context: non-root user, no privilege escalation, read-only filesystem, compliant with KSI-CNA-03"
+  description_template: "Kubernetes container deployed with security context: non-root user, no privilege escalation, read-only filesystem, compliant with KSI-CNA-ULN"
   remediation_template: "N/A - Positive finding"
 tags:
 - container_security
 - positive
 related_ksis:
-- KSI-CNA-03
+- KSI-CNA-ULN
 ---
 pattern_id: cna.container.privileged
 name: Privileged Container
@@ -2769,7 +2798,7 @@ tags:
 - container_security
 - negative
 related_ksis:
-- KSI-CNA-03
+- KSI-CNA-ULN
 ---
 pattern_id: cna.service_mesh.mtls_strict
 name: Service Mesh with Strict mTLS
@@ -2787,13 +2816,13 @@ languages:
     - ISTIO_MUTUAL
 finding:
   title_template: Service Mesh with Strict mTLS Detected
-  description_template: "Istio service mesh configured with strict mutual TLS enforcement for all services, compliant with KSI-CNA-04"
+  description_template: "Istio service mesh configured with strict mutual TLS enforcement for all services, compliant with KSI-CNA-DFP"
   remediation_template: "N/A - Positive finding"
 tags:
 - service_mesh
 - positive
 related_ksis:
-- KSI-CNA-04
+- KSI-CNA-DFP
 ---
 pattern_id: cna.service_mesh.permissive_mode
 name: Service Mesh Permissive Mode
@@ -2816,7 +2845,7 @@ tags:
 - service_mesh
 - negative
 related_ksis:
-- KSI-CNA-04
+- KSI-CNA-DFP
 ---
 pattern_id: cna.immutable.infrastructure_as_code
 name: Immutable Infrastructure via IaC
@@ -2834,13 +2863,13 @@ languages:
     - All changes through
 finding:
   title_template: Immutable Infrastructure Deployment Detected
-  description_template: "Infrastructure deployed through version-controlled IaC with immutable deployment pattern, compliant with KSI-CNA-06"
+  description_template: "Infrastructure deployed through version-controlled IaC with immutable deployment pattern, compliant with KSI-CNA-OFA"
   remediation_template: "N/A - Positive finding"
 tags:
 - immutable_infrastructure
 - positive
 related_ksis:
-- KSI-CNA-06
+- KSI-CNA-OFA
 ---
 pattern_id: cna.immutable.manual_modification
 name: Manual Infrastructure Modification
@@ -2864,4 +2893,1748 @@ tags:
 - immutable_infrastructure
 - negative
 related_ksis:
-- KSI-CNA-06
+- KSI-CNA-OFA
+---
+pattern_id: rsc.allocation.resource_limits
+name: Resource Limits Configuration
+family: CNA
+severity: high
+description: 'Detects resource limit configuration (CPU, memory) for workloads.
+
+  Resource limits support a minimal attack surface and availability (KSI-CNA-MAT, KSI-CNA-OFA).
+
+  '
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  python:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  csharp:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  java:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  typescript:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+finding:
+  title: Resource limits configured
+  description: Configuration specifies resource limits for workloads
+  recommendation: Ensure limits prevent resource exhaustion per KSI-CNA-OFA
+  references:
+  - KSI-CNA-OFA
+related_ksis:
+- KSI-CNA-OFA
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.allocation.resource_limits-policy'\n  properties: {\n  \
+      \  policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n\
+      \    description: 'Enforces CNA compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.allocation.resource_limits-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CNA compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CNA-OFA
+    requirement_name: Optimizing for Availability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_allocation_resource_limits
+---
+pattern_id: rsc.monitoring.resource_metrics
+name: Resource Metrics Monitoring
+family: CNA
+severity: high
+description: Detects resource metrics collection and monitoring
+pattern_type: function_call
+languages:
+  python:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  csharp:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  java:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  typescript:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+finding:
+  title: Resource metrics monitoring detected
+  description: Code monitors CPU, memory, or disk usage
+  recommendation: Export metrics to centralized monitoring per KSI-MLA-OSM
+  references:
+  - KSI-MLA-OSM
+related_ksis:
+- KSI-MLA-OSM
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.monitoring.resource_metrics-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance\
+      \ Policy'\n    description: 'Enforces CNA compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.monitoring.resource_metrics-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CNA compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-OSM
+    requirement_name: Operating SIEM Capability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_monitoring_resource_metrics
+---
+pattern_id: rsc.scaling.autoscaling
+name: Autoscaling Configuration
+family: CNA
+severity: medium
+description: Detects autoscaling configuration for dynamic resource allocation
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (kind:.*HorizontalPodAutoscaler|apiVersion:.*autoscaling)|(minReplicas|maxReplicas|targetCPUUtilizationPercentage)|(autoscale|auto_scale|autoScaling)
+finding:
+  title: Autoscaling configured
+  description: Configuration includes autoscaling for dynamic resource allocation
+  recommendation: Set appropriate min/max replicas and thresholds per KSI-CNA-OFA
+  references:
+  - KSI-CNA-OFA
+related_ksis:
+- KSI-CNA-OFA
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.scaling.autoscaling-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.scaling.autoscaling-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CNA compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CNA-OFA
+    requirement_name: Optimizing for Availability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_scaling_autoscaling
+---
+pattern_id: rsc.quota.namespace_quota
+name: Namespace Resource Quota
+family: CNA
+severity: high
+description: Detects resource quota configuration at namespace level
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (kind:.*ResourceQuota)|(hard:.*requests\.cpu|hard:.*limits\.memory)
+finding:
+  title: Namespace resource quota configured
+  description: Configuration sets resource quotas for namespace
+  recommendation: Enforce quotas per team/project per KSI-CNA-OFA
+  references:
+  - KSI-CNA-OFA
+related_ksis:
+- KSI-CNA-OFA
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.quota.namespace_quota-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.quota.namespace_quota-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CNA compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CNA-OFA
+    requirement_name: Optimizing for Availability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_quota_namespace_quota
+---
+pattern_id: rsc.allocation.priority_class
+name: Priority Class for Resource Allocation
+family: CNA
+severity: medium
+description: Detects priority class usage for workload prioritization
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (priorityClassName|priority_class_name)|(kind:.*PriorityClass)
+finding:
+  title: Priority class for resource allocation
+  description: Configuration uses priority classes for workload scheduling
+  recommendation: Define priority classes for critical vs non-critical workloads
+  references:
+  - KSI-CNA-OFA
+related_ksis:
+- KSI-CNA-OFA
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.allocation.priority_class-policy'\n  properties: {\n   \
+      \ policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n\
+      \    description: 'Enforces CNA compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.allocation.priority_class-alert'\n  location: 'global'\n \
+      \ properties: {\n    description: 'Alert on CNA compliance violations'\n   \
+      \ severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CNA-OFA
+    requirement_name: Optimizing for Availability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_allocation_priority_class
+---
+pattern_id: rsc.iac.app_service_plan
+name: Azure App Service Plan Configuration
+family: CNA
+severity: high
+description: Detects App Service Plan configuration for resource allocation
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.Web/serverfarms
+    - query_type: resource_type
+      target: azurerm_app_service_plan
+    regex_fallback: (Microsoft\.Web/serverfarms)|(resource.*azurerm_app_service_plan|resource.*azurerm_service_plan)|(sku.*name.*P1V3|tier.*PremiumV3)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.Web/serverfarms)|(resource.*azurerm_app_service_plan|resource.*azurerm_service_plan)|(sku.*name.*P1V3|tier.*PremiumV3)
+finding:
+  title: App Service Plan configured
+  description: IaC provisions App Service Plan with defined SKU
+  recommendation: Choose appropriate SKU based on workload requirements per KSI-CNA-OFA
+  references:
+  - KSI-CNA-OFA
+related_ksis:
+- KSI-CNA-OFA
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.iac.app_service_plan-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.iac.app_service_plan-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CNA compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CNA-OFA
+    requirement_name: Optimizing for Availability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_iac_app_service_plan
+---
+pattern_id: rsc.iac.vm_size
+name: Virtual Machine Size Configuration
+family: CNA
+severity: high
+description: Detects VM size configuration for resource allocation
+pattern_type: resource
+languages:
+  bicep:
+    regex_fallback: (vmSize|vm_size)|(Standard_D|Standard_E|Standard_F)
+  terraform:
+    regex_fallback: (vmSize|vm_size)|(Standard_D|Standard_E|Standard_F)
+finding:
+  title: VM size configured
+  description: IaC specifies VM size for resource allocation
+  recommendation: Right-size VMs based on actual usage metrics per KSI-CNA-OFA
+  references:
+  - KSI-CNA-OFA
+related_ksis:
+- KSI-CNA-OFA
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.iac.vm_size-policy'\n  properties: {\n    policyType: 'Custom'\n\
+      \    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.iac.vm_size-alert'\n  location: 'global'\n  properties: {\n\
+      \    description: 'Alert on CNA compliance violations'\n    severity: 2\n  \
+      \  enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CNA-OFA
+    requirement_name: Optimizing for Availability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_iac_vm_size
+---
+pattern_id: rsc.cicd.resource_validation
+name: Resource Configuration Validation
+family: CNA
+severity: high
+description: Detects resource configuration validation in CI/CD
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+  azure_pipelines:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+  gitlab_ci:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+finding:
+  title: Resource configuration validation in CI/CD
+  description: Pipeline validates resource configurations before deployment
+  recommendation: Include checks for resource limits and quotas per KSI-MLA-EVC
+  references:
+  - KSI-MLA-EVC
+related_ksis:
+- KSI-MLA-EVC
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.cicd.resource_validation-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.cicd.resource_validation-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CNA compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-EVC
+    requirement_name: Evaluating Configurations
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_cicd_resource_validation
+---
+pattern_id: rsc.missing_resource_limits
+name: Missing Resource Limits
+family: CNA
+severity: critical
+description: Detects absence of resource limit configuration
+pattern_type: configuration
+languages:
+  yaml: {}
+requires_absence:
+- rsc.allocation.resource_limits
+finding:
+  title: No resource limits configured
+  description: Configuration lacks resource limits (CPU, memory)
+  severity: critical
+  recommendation: Add resource limits to prevent resource exhaustion per KSI-CNA-OFA
+  references:
+  - KSI-CNA-OFA
+related_ksis:
+- KSI-CNA-OFA
+evidence_artifacts:
+- artifact_type: logs
+  name: CNA operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CNA configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CNA compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "cna"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CNA related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
+    output_format: json
+  powershell:
+  - script: '# Query CNA configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get CNA resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.missing_resource_limits-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CNA violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.missing_resource_limits-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CNA compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CNA requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CNA FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CNA implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CNA controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CNA
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CNA - CNA
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CNA compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CNA requirements.
+    evidence_references:
+    - CNA configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CNA compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CNA implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CNA controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CNA-OFA
+    requirement_name: Optimizing for Availability
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_missing_resource_limits

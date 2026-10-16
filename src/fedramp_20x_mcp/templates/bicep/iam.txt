@@ -3,6 +3,8 @@
 param location string = resourceGroup().location
 param environmentName string = 'prod'
 param workloadName string = 'fedramp'
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period.')
+param logRetentionDays int
 
 // CAF recommended tags for governance
 param tags object = {
@@ -22,7 +24,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 730  // 2 years retention for FedRAMP
+    retentionInDays: logRetentionDays  // organization-defined (KSI-MLA-RVL); CR26 sets no numeric value
     features: {
       immediatePurgeDataOn30Days: false  // Prevent accidental data loss
     }

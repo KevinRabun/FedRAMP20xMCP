@@ -1,202 +1,169 @@
-I'll provide a comprehensive roadmap for starting your FedRAMP 20x authorization from scratch.
+I'll provide a roadmap for starting your FedRAMP 20x certification from scratch under the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01).
 
 # FedRAMP 20x Initial Assessment Roadmap
 
-**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing (FRR-ADS). **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's a NIST standard that can be used as one implementation approach. When you see "OSCAL" mentioned below, understand it's one option among custom JSON/XML formats. Choose based on your implementation needs.
+**Important Notes:**
+- CR26 uses FedRAMP Certification (Classes A, B, C, D; types 20x and Rev5), not Authorization to Operate by impact level. Many rules vary by Class (see FRD-CCL).
+- Certification Data is shared through a trust center in human-readable and JSON formats (CDS-CSO-UTC, CDS-CSO-PUB). OSCAL is not required.
+- CR26 has no POA&M, SAR, or OSCAL SSP requirement. Documentation is the Certification Package (FRC-CSO-PKG) with its Certification Package Overview (CPO-CSO-OVR) and Security Decision Record (SDR-CSO-FRR).
+- Providers must be listed in the FedRAMP Marketplace before applying (FRC-APP-MLF).
 
 ## Phase 1: Foundation
 
-**Understanding & Planning**
-- [ ] Review all FedRAMP 20x standards (use list_family_controls for each)
-- [ ] Identify your authorization level (Low, Moderate, High)
-- [ ] Determine service categorization (SaaS, PaaS, IaaS)
+**Understanding and Planning**
+- [ ] Review the CR26 rules (use list_frrs_by_family for each family; 17 families, 245 rules)
+- [ ] Choose a Certification Class and Type (FRC-CSO-FCP, FRC-CSO-POP: pick 20x or Rev5, not both)
+- [ ] Determine service model (SaaS, PaaS, IaaS)
 - [ ] Assemble core team (CISO, compliance PM, engineering lead)
-- [ ] Budget for 3PAO, tools, and staff time
+- [ ] Budget for a FedRAMP Recognized assessor, tools, and staff time (REC family)
 
-**Initial Scoping**
-- [ ] Define authorization boundary (FRR-MAS)
-- [ ] Inventory all information resources
-- [ ] Document Federal Customer Data flows
-- [ ] Identify third-party dependencies
+**Initial Scoping (MAS)**
+- [ ] Identify information resources in the cloud service offering (MAS-CSO-IIR)
+- [ ] Document federal customer data flows and security categories (MAS-CSO-FLO)
+- [ ] Identify third-party dependencies (MAS-CSO-TPR)
 - [ ] Review FRD definitions for terminology
 
-**Deliverables**: Authorization boundary diagram, resource inventory, project charter
+**Deliverables**: Scope diagram, resource inventory, project charter
 
-## Phase 2: Infrastructure & Tools
+## Phase 2: Infrastructure and Tools
 
 **Security Monitoring**
-- [ ] Select and deploy SIEM solution (KSI-MLA-01)
-- [ ] Configure log forwarding from all systems
-- [ ] Set up vulnerability scanning (FRR-VDR-01)
+- [ ] Select and deploy SIEM (KSI-MLA-OSM)
+- [ ] Configure log forwarding from all systems and maintain the list of logged event types (KSI-MLA-LET)
+- [ ] Set up vulnerability detection (VDR-CSO-DET)
 - [ ] Implement container/code scanning
 - [ ] Configure alerting and dashboards
 
-**Identity & Access**
-- [ ] Implement phishing-resistant MFA (KSI-IAM-01)
-- [ ] Configure least-privilege IAM (KSI-IAM-05)
-- [ ] Set up identity provider integration
+**Identity and Access**
+- [ ] Adopt passwordless / phishing-resistant authentication (KSI-IAM-APM)
+- [ ] Ensure least privilege (KSI-IAM-ELP)
+- [ ] Automate account management (KSI-IAM-AAM)
 - [ ] Document access procedures
 
 **Automation Foundation**
-- [ ] Implement Infrastructure as Code (KSI-MLA-05)
-- [ ] Set up CI/CD pipelines (KSI-CMT-03)
-- [ ] Configure automated testing
-- [ ] Implement secret management (KSI-SVC-06)
+- [ ] Evaluate configuration, especially infrastructure as code (KSI-MLA-EVC)
+- [ ] Set up CI/CD with automated testing and validation (KSI-CMT-VTD)
+- [ ] Implement secret management (KSI-SVC-ASM)
 
-**Deliverables**: Operational SIEM, vulnerability scanning, MFA, IaC
+**Deliverables**: Operational SIEM, vulnerability detection, strong authentication, IaC
 
 ## Phase 3: Compliance Infrastructure
 
 **KSI Tracking**
-- [ ] Review all 72 KSIs (use list_ksi)
+- [ ] Review all 46 KSIs (use list_ksi)
 - [ ] Map KSIs to your monitoring systems
-- [ ] Implement automated KSI collection
+- [ ] Implement automated KSI verification (see FRC-CSX-VVK for expected automated methods by Class)
 - [ ] Create KSI dashboards
 - [ ] Document collection procedures
 
-**Authorization Data Sharing API**
-- [ ] Design API endpoints (FRR-ADS)
-- [ ] Implement machine-readable format (custom JSON/XML or OSCAL)
-- [ ] Configure authentication (OAuth 2.0 or mTLS)
-- [ ] Integrate with data sources
-- [ ] Test with sample queries
+**Certification Data Sharing**
+- [ ] Choose a FedRAMP-compatible trust center (CDS-CSO-UTC)
+- [ ] Publish public information in human-readable and JSON (CDS-CSO-PUB, CDS-CSO-SVC)
+- [ ] Provide documented programmatic access (CDS-TRC-PAC)
+- [ ] Validate JSON against FedRAMP schemas (FRC-CSO-JSN)
+- [ ] Automate consistency between formats (CDS-CSO-CBF)
 
-**Continuous Monitoring Setup**
-- [ ] Document quarterly review process (FRR-CCM-QR)
-- [ ] Set up continuous vulnerability scanning
-- [ ] Configure persistent validation (FRR-PVA)
-- [ ] Establish agency collaboration procedures
+**Ongoing Certification Setup (CCM)**
+- [ ] Plan the Ongoing Certification Report every 3 months (CCM-OCR-AVL)
+- [ ] Plan Quarterly Reviews (CCM-QTR-MTG; strength varies by Class)
+- [ ] Set up persistent verification and validation (VDR-TFR-MVX for 20x)
+- [ ] Set up a feedback mechanism (CCM-OCR-FBM)
 
-**Deliverables**: KSI collection system, Data Sharing API, ConMon procedures
+**Deliverables**: KSI collection system, trust center, Ongoing Certification procedures
 
 ## Phase 4: Documentation
 
 **Core Documentation**
-- [ ] System Security Plan (OSCAL format)
-- [ ] Vulnerability Detection & Response procedures (FRR-VDR)
-- [ ] Incident Communications Procedures (FRR-ICP)
-- [ ] Significant Change Notification procedures (FRR-SCN)
-- [ ] All 72 KSI implementation descriptions
+- [ ] Certification Package Overview (CPO-CSO-OVR)
+- [ ] Security Decision Record (SDR-CSO-FRR, SDR-CSX-KSI)
+- [ ] Vulnerability Detection, Response, Evaluation and Reporting procedures (VDR, VER)
+- [ ] Incident Evaluation and Communication procedures (IEC)
+- [ ] Significant Change Notification procedures (SCN)
+- [ ] Secure Configuration Guide (SCG-CSO-RSC)
 
-**Policies & Procedures**
-- [ ] Security policies aligned to FedRAMP 20x
-- [ ] Change management procedures (KSI-CMT-04)
-- [ ] Incident response plan (KSI-INR-01)
-- [ ] Backup and recovery plan (KSI-RPL-02)
-- [ ] Training programs (KSI-CED)
+**Policies and Procedures**
+- [ ] Security policies, listed per CDS-CSO-IRP
+- [ ] Change management procedures (KSI-CMT-RVP)
+- [ ] Incident response procedures (KSI-INR-RIR)
+- [ ] Recovery plan (KSI-RPL-ARP)
+- [ ] Training reviews (KSI-CED-RAT)
 
 **Evidence Collection**
 - [ ] Configure automated evidence collection
-- [ ] Validate all KSI metrics are being tracked
-- [ ] Test Authorization Data Sharing API
-- [ ] Generate sample quarterly reports
+- [ ] Validate all KSI measures are tracked
+- [ ] Generate a sample Ongoing Certification Report
 - [ ] Document evidence collection procedures
 
-**Deliverables**: Complete SSP, all policies/procedures, evidence collection system
+**Deliverables**: Certification Package, policies and procedures, evidence collection system
 
 ## Phase 5: Assessment Preparation
 
 **Internal Readiness**
-- [ ] Internal security assessment
+- [ ] Internal assessment
 - [ ] Gap remediation
 - [ ] Evidence validation
 - [ ] Practice runs with team
-- [ ] Documentation review
 
-**3PAO Selection & Engagement**
-- [ ] Select 3PAO assessor
-- [ ] Kickoff meeting
-- [ ] Provide documentation
-- [ ] Schedule assessment
+**Independent Assessor Engagement (IVV, REC)**
+- [ ] Select a FedRAMP Recognized assessor (only recognized assessors count: REC-FRP-RAO)
+- [ ] Provide evidence of implementation and effectiveness (IVV-CSO-SEI, IVV-CSO-SEE)
+- [ ] Complete the independent assessment (a fresh initial assessment is expected, FRC-APP-FIA)
 
-**Assessment**
-- [ ] 3PAO conducts assessment
-- [ ] Daily standups with assessor
-- [ ] Address findings in real-time
-- [ ] Document any deviations
+**Deliverables**: Assessor results for the Certification Package (IVV-CSO-ICP)
 
-**Deliverables**: Security Assessment Report (SAR)
+## Phase 6: Certification
 
-## Phase 6: Authorization
+**Application**
+- [ ] Be listed in the FedRAMP Marketplace (FRC-APP-MLF)
+- [ ] Complete the Certification Application Form yourself, not via a third party (FRC-APP-AFC, FRC-APP-NTP)
+- [ ] Supply a fresh Certification Package (FRC-APP-FCP)
 
-**POA&M Development**
-- [ ] Document all findings
-- [ ] Create remediation plans
-- [ ] Assign ownership and timelines
-- [ ] Get executive approval
+**Review**
+- [ ] FedRAMP reviews the package
+- [ ] Respond to questions and provide additional evidence
 
-**Package Submission**
-- [ ] Compile complete ATO package
-- [ ] Submit to agency/FedRAMP
-- [ ] Respond to initial questions
+**Deliverables**: FedRAMP Certification
 
-**Authorization Review**
-- [ ] Agency/FedRAMP reviews package
-- [ ] Respond to questions
-- [ ] Provide additional evidence
-- [ ] Receive Authorization decision
+## Ongoing: Ongoing Certification
 
-**Deliverables**: Authorization to Operate (ATO)
-
-## Ongoing: Continuous Monitoring (Post-Authorization)
-
-**Daily/Automated**
-- Vulnerability scanning
-- Log collection and analysis
-- KSI metric collection
-- Change tracking
-
-**Monthly**
-- Review vulnerability findings
-- Update POA&Ms
-- Security control validation
-
-**Quarterly (FRR-CCM-QR)**
-- Formal quarterly review
-- Update authorization package
-- Share data via API
-- Agency coordination
-
-**Annual**
-- Update authorization boundary
-- Review significant changes
-- Update risk assessment
-- Plan for re-assessment
+Cadences below come from the rules; take Class-specific values from the rules data.
+- Ongoing Certification Report every 3 months (CCM-OCR-AVL)
+- Quarterly Review (CCM-QTR-MTG)
+- Vulnerability reporting at least monthly (VER-TFR-MHR)
+- Non-machine resource verification at least every 3 months (VDR-TFR-NMV)
+- Certification Package maintenance (CPO-CSX-CPM for 20x, by Class)
+- Annual independent assessment (IVV-CSO-FIA)
+- Significant Change Notifications as changes occur (SCN)
 
 ## Critical Success Factors
 
-**1. Executive Support** (KSI-PIY-08)
+**1. Executive Support** (KSI-PIY-RES)
 - Secure budget and resources
-- Get organizational buy-in
 - Ensure priority status
 
-**2. Automation First** (FRD-ALL-07: "automatically if possible")
+**2. Automation First** (see the FRD definition of "Persistently" and FRC-CSX-VVK)
 - Automate evidence collection
-- Use IaC for all infrastructure
+- Use IaC for infrastructure
 - Implement CI/CD pipelines
-- Automated compliance checking
 
 **3. Team Skills**
-- FedRAMP 20x knowledge
+- CR26 knowledge
 - Cloud-native expertise
 - Security automation skills
-- OSCAL format understanding
 
 **4. Vendor Selection**
-- Choose FedRAMP-ready tools
-- Ensure API integration capabilities
-- Verify OSCAL support
-- Check for KSI alignment
+- Choose tools with APIs for automation
+- Check KSI alignment
+- Confirm trust center compatibility
 
-## Timeline & Resource Planning
+## Timeline and Resource Planning
 
-Engineering teams should determine their own timelines based on available resources, organizational requirements, existing infrastructure maturity, and compliance readiness. Consider factors such as team size, budget constraints, existing security controls, and agency-specific requirements when planning your implementation schedule.
+Engineering teams should determine their own timelines based on available resources, organizational requirements, infrastructure maturity, and compliance readiness. Effective dates differ by family (see each family's effective block in the rules data).
 
 ## Next Steps
 
 1. Use get_implementation_examples for specific requirements
 2. Use check_requirement_dependencies to understand relationships
-3. Use check_requirement_dependencies to understand relationships
-4. Use search_requirements to find specific guidance
+3. Use search_requirements to find specific guidance
 
 Ready to start? Let me know which phase you'd like to focus on first!

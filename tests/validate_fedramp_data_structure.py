@@ -37,41 +37,51 @@ class ValidationResult:
 class FedRAMPDataValidator:
     """Validates FedRAMP data structure integrity."""
     
-    # Expected minimum counts (allows for additions, but catches major deletions)
-    EXPECTED_MIN_REQUIREMENTS = 150
-    EXPECTED_MIN_KSIS = 50
-    EXPECTED_MIN_DEFINITIONS = 30
-    EXPECTED_MIN_FAMILIES = 10
+    # Expected minimum counts for the FedRAMP Consolidated Rules for 2026 (CR26).
+    # CR26 2026.10.13.01: 245 FRRs, 46 KSIs, 80 FRDs (371 requirements in total).
+    EXPECTED_MIN_REQUIREMENTS = 371
+    EXPECTED_MIN_KSIS = 46
+    EXPECTED_MIN_DEFINITIONS = 80
+    EXPECTED_MIN_FAMILIES = 17
     
-    # Expected FRR families (based on FedRAMP 20x spec - updated Feb 2026)
+    # The 17 CR26 FRR families
     EXPECTED_FRR_FAMILIES = {
-        "FRR-VDR",  # Vulnerability Detection and Response
-        "FRR-SCG",  # Secure Configuration Guide (formerly RSC)
-        "FRR-UCM",  # Using Cryptographic Modules
-        "FRR-SCN",  # Significant Change Notifications
-        "FRR-ADS",  # Authorization Data Sharing
+        "FRR-AFC",  # Authorization Folder Contents (fka FSI)
+        "FRR-AGU",  # Agency Use
         "FRR-CCM",  # Collaborative Continuous Monitoring
+        "FRR-CDS",  # Certification Data Sharing (fka ADS)
+        "FRR-CMU",  # Cryptographic Module Use (fka UCM)
+        "FRR-CPO",  # Certification Process Overview
+        "FRR-FRC",  # FedRAMP Rules and Concepts
+        "FRR-IEC",  # Incident and Emergency Communications (fka ICP)
+        "FRR-IVV",  # Independent Verification and Validation (fka PVA)
         "FRR-MAS",  # Minimum Assessment Scope
-        "FRR-ICP",  # Incident Communications Procedures
-        "FRR-FSI",  # FedRAMP Security Inbox
-        "FRR-PVA",  # Persistent Validation and Assessment
-        "FRR-KSI",  # Key Security Indicators (meta-family)
+        "FRR-MKT",  # Marketplace
+        "FRR-REC",  # Recognition of Assessors
+        "FRR-SCG",  # Secure Configuration Guide (fka RSC)
+        "FRR-SCN",  # Significant Change Notifications
+        "FRR-SDR",  # Summaries and Data Reporting
+        "FRR-VDR",  # Vulnerability Detection and Response
+        "FRR-VER",  # Verification
     }
     
-    # Expected KSI categories (verified from FRMR.documentation.json - updated Feb 2026)
+    # Retired pre-CR26 identifiers that must not be present as families
+    RETIRED_FRR_FAMILIES = {"FRR-ADS", "FRR-FSI", "FRR-UCM", "FRR-PVA", "FRR-ICP", "FRR-RSC", "FRR-KSI"}
+    
+    # The 10 CR26 KSI families (no KSI-AFR, KSI-TPR or KSI-VDR)
     EXPECTED_KSI_PREFIXES = {
-        "KSI-IAM",  # Identity and Access Management
-        "KSI-CNA",  # Cloud Native Architecture
-        "KSI-SVC",  # Service Configuration
-        "KSI-SCR",  # Supply Chain Risk (formerly TPR)
-        "KSI-CMT",  # Change Management
-        "KSI-MLA",  # Monitoring, Logging, and Auditing
-        "KSI-INR",  # Incident Response
-        "KSI-PIY",  # Policy and Inventory
-        "KSI-AFR",  # Authorization by FedRAMP
-        "KSI-RPL",  # Recovery Planning
         "KSI-CED",  # Cybersecurity Education
+        "KSI-CMT",  # Change Management
+        "KSI-CNA",  # Cloud Native Architecture
+        "KSI-IAM",  # Identity and Access Management
+        "KSI-INR",  # Incident Response
+        "KSI-MLA",  # Monitoring, Logging, and Auditing
+        "KSI-PIY",  # Policy and Inventory
+        "KSI-RPL",  # Recovery Planning
+        "KSI-SCR",  # Supply Chain Risk (fka TPR)
+        "KSI-SVC",  # Service Configuration
     }
+    RETIRED_KSI_PREFIXES = {"KSI-AFR", "KSI-TPR", "KSI-VDR"}
     
     # Required fields in requirement objects
     REQUIRED_REQUIREMENT_FIELDS = {"id"}
@@ -165,7 +175,9 @@ class FedRAMPDataValidator:
         if not self.data:
             return
         
-        count = len(self.data.get("definitions", {}))
+        # definitions may be indexed by both term and id: count unique FRD ids
+        definitions = self.data.get("definitions", {})
+        count = len({d.get("id", k) if isinstance(d, dict) else k for k, d in definitions.items()})
         passed = count >= self.EXPECTED_MIN_DEFINITIONS
         
         self.results.append(ValidationResult(
@@ -235,6 +247,16 @@ class FedRAMPDataValidator:
                 passed=True,
                 message=f"All expected FRR families found ({len(req_prefixes)} prefixes)"
             ))
+        
+        # Retired pre-CR26 families must not appear
+        retired_found = sorted((self.RETIRED_FRR_FAMILIES & req_prefixes) | (self.RETIRED_KSI_PREFIXES & ksi_prefixes))
+        self.results.append(ValidationResult(
+            name="Retired Families Absent",
+            passed=not retired_found,
+            message=("No retired pre-CR26 families present" if not retired_found
+                     else f"Retired families still present: {retired_found}"),
+            details={"retired_found": retired_found} if retired_found else None
+        ))
         
         # Check KSI categories
         missing_ksi_categories = []
@@ -380,7 +402,7 @@ class FedRAMPDataValidator:
         # Check if any known docs are present (may be named differently)
         has_ksi = any("ksi" in d.lower() for d in found_docs)
         has_frd = any("frd" in d.lower() or "definition" in d.lower() for d in found_docs)
-        has_frr = any("frr" in d.lower() or "vdr" in d.lower() or "ads" in d.lower() for d in found_docs)
+        has_frr = any("frr" in d.lower() or "frmr" in d.lower() or "vdr" in d.lower() for d in found_docs)
         
         if has_ksi or has_frd or has_frr or len(found_docs) > 0:
             self.results.append(ValidationResult(
@@ -405,7 +427,7 @@ class FedRAMPDataValidator:
         invalid_ids = []
         
         for req_id in requirements.keys():
-            # IDs should follow pattern like FRR-XXX-NN or KSI-XXX-NN or FRD-XXX
+            # IDs follow CR26 patterns: <FAMILY>-<GROUP>-<RULE> (VDR-CSO-DET), KSI-<FAM>-<RULE>, FRD-<TERM>
             if not req_id or not isinstance(req_id, str):
                 invalid_ids.append(str(req_id))
                 continue

@@ -1,11 +1,11 @@
 pattern_id: ads.machine_readable.json_export
 name: JSON Export for Audit Data
-family: ADS
+family: CDS
 severity: high
 description: 'Detects JSON serialization of audit data for machine-readable format
   compliance.
 
-  FRR-ADS requires audit data to be available in machine-readable formats (JSON/XML).
+  CDS-CSO-PUB requires certification data to be shared in human-readable and JSON formats.
 
   '
 pattern_type: function_call
@@ -33,25 +33,28 @@ languages:
 finding:
   title: JSON export detected for audit data
   description: Code exports data in JSON format for machine-readable compliance
-  recommendation: Ensure this export includes all required audit fields per FRR-ADS
+  recommendation: Ensure this export includes all required audit fields per CDS-CSO-PUB
   references:
-  - FRR-ADS-01
-  - FRR-ADS-02
+  - CDS-CSO-PUB
+  - CDS-CSO-CBF
+related_frrs:
+- CDS-CSO-PUB
+- CDS-CSO-CBF
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -62,51 +65,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.machine_readable.json_export-policy'\n  properties: {\n\
-      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
-      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance\
+      \ Policy'\n    description: 'Enforces CDS compliance requirements'\n    policyRule:\
       \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
       \        effect: 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.machine_readable.json_export-alert'\n  location: 'global'\n\
-      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  properties: {\n    description: 'Alert on CDS compliance violations'\n  \
       \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
       \ 'PT15M'\n  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -115,23 +118,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -148,24 +151,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -173,21 +176,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
+    requirement_id: CDS-CSO-PUB
     requirement_name: Public Information
     impact_levels:
     - Low
@@ -212,7 +215,7 @@ testing:
 ---
 pattern_id: ads.machine_readable.xml_export
 name: XML Export for Audit Data
-family: ADS
+family: CDS
 severity: medium
 description: Detects XML serialization for machine-readable audit data
 pattern_type: function_call
@@ -242,22 +245,24 @@ finding:
   description: Code exports data in XML format for machine-readable compliance
   recommendation: Validate XML schema matches FedRAMP OSCAL requirements
   references:
-  - FRR-ADS-01
+  - CDS-CSO-PUB
+related_frrs:
+- CDS-CSO-PUB
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -268,51 +273,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.machine_readable.xml_export-policy'\n  properties: {\n \
-      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
-      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance\
+      \ Policy'\n    description: 'Enforces CDS compliance requirements'\n    policyRule:\
       \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
       \        effect: 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.machine_readable.xml_export-alert'\n  location: 'global'\n\
-      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  properties: {\n    description: 'Alert on CDS compliance violations'\n  \
       \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
       \ 'PT15M'\n  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -321,23 +326,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -354,24 +359,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -379,21 +384,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
+    requirement_id: CDS-CSO-PUB
     requirement_name: Public Information
     impact_levels:
     - Low
@@ -418,7 +423,7 @@ testing:
 ---
 pattern_id: ads.api_endpoint.rest
 name: REST API for Audit Data Access
-family: ADS
+family: CDS
 severity: high
 description: Detects REST API endpoints for programmatic audit data access
 pattern_type: decorator
@@ -448,22 +453,24 @@ finding:
   description: API endpoint provides programmatic access to audit data
   recommendation: Ensure endpoint requires authentication and implements rate limiting
   references:
-  - FRR-ADS-03
+  - CDS-TRC-PAC
+related_frrs:
+- CDS-TRC-PAC
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -474,51 +481,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.api_endpoint.rest-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
-      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance Policy'\n    description:\
+      \ 'Enforces CDS compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.api_endpoint.rest-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CDS compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -527,23 +534,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -560,24 +567,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -585,22 +592,22 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
-    requirement_name: Public Information
+    requirement_id: CDS-TRC-PAC
+    requirement_name: Programmatic Access
     impact_levels:
     - Low
     - Moderate
@@ -624,7 +631,7 @@ testing:
 ---
 pattern_id: ads.structured_logging.structured_format
 name: Structured Logging Format
-family: ADS
+family: CDS
 severity: high
 description: Detects use of structured logging libraries for audit trails
 pattern_type: import
@@ -654,23 +661,27 @@ finding:
   description: Code uses structured logging for machine-parseable audit trails
   recommendation: Configure structured logger to output JSON with required audit fields
   references:
-  - FRR-ADS-02
-  - KSI-MLA-01
+  - KSI-MLA-OSM
+  - CDS-CSO-CBF
+related_ksis:
+- KSI-MLA-OSM
+related_frrs:
+- CDS-CSO-CBF
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -681,51 +692,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.structured_logging.structured_format-policy'\n  properties:\
-      \ {\n    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
-      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \ {\n    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance\
+      \ Policy'\n    description: 'Enforces CDS compliance requirements'\n    policyRule:\
       \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
       \        effect: 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.structured_logging.structured_format-alert'\n  location: 'global'\n\
-      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  properties: {\n    description: 'Alert on CDS compliance violations'\n  \
       \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
       \ 'PT15M'\n  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -734,23 +745,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -767,24 +778,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -792,22 +803,22 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
-    requirement_name: Public Information
+    requirement_id: KSI-MLA-OSM
+    requirement_name: Operating SIEM Capability
     impact_levels:
     - Low
     - Moderate
@@ -831,7 +842,7 @@ testing:
 ---
 pattern_id: ads.audit_fields.required_fields
 name: Required Audit Fields
-family: ADS
+family: CDS
 severity: critical
 description: Detects presence of required audit fields (timestamp, user, action, resource)
 pattern_type: configuration
@@ -849,22 +860,24 @@ finding:
   description: Logging includes required audit fields (timestamp, user, action, resource)
   recommendation: Validate all audit events include these fields consistently
   references:
-  - FRR-ADS-02
+  - CDS-CSO-CBF
+related_frrs:
+- CDS-CSO-CBF
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -875,51 +888,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.audit_fields.required_fields-policy'\n  properties: {\n\
-      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
-      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance\
+      \ Policy'\n    description: 'Enforces CDS compliance requirements'\n    policyRule:\
       \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
       \        effect: 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.audit_fields.required_fields-alert'\n  location: 'global'\n\
-      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  properties: {\n    description: 'Alert on CDS compliance violations'\n  \
       \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
       \ 'PT15M'\n  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -928,23 +941,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -961,24 +974,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -986,22 +999,22 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
-    requirement_name: Public Information
+    requirement_id: CDS-CSO-CBF
+    requirement_name: Consistency Between Formats
     impact_levels:
     - Low
     - Moderate
@@ -1025,7 +1038,7 @@ testing:
 ---
 pattern_id: ads.query_api.filtering
 name: Audit Data Query API
-family: ADS
+family: CDS
 severity: medium
 description: Detects query/filtering capabilities for audit data retrieval
 pattern_type: function_definition
@@ -1043,22 +1056,24 @@ finding:
   description: API provides filtering/querying capabilities for audit data
   recommendation: Ensure query API supports date range, user, and action type filters
   references:
-  - FRR-ADS-03
+  - CDS-TRC-PAC
+related_frrs:
+- CDS-TRC-PAC
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -1069,51 +1084,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.query_api.filtering-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
-      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance Policy'\n    description:\
+      \ 'Enforces CDS compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.query_api.filtering-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CDS compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -1122,23 +1137,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -1155,24 +1170,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -1180,22 +1195,22 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
-    requirement_name: Public Information
+    requirement_id: CDS-TRC-PAC
+    requirement_name: Programmatic Access
     impact_levels:
     - Low
     - Moderate
@@ -1219,7 +1234,7 @@ testing:
 ---
 pattern_id: ads.missing_machine_readable
 name: Missing Machine-Readable Format
-family: ADS
+family: CDS
 severity: critical
 description: Detects absence of machine-readable export capabilities
 pattern_type: configuration
@@ -1234,25 +1249,27 @@ requires_absence:
 finding:
   title: No machine-readable audit data export detected
   description: Code lacks JSON or XML export capabilities for audit data
-  recommendation: Implement JSON/XML export per FRR-ADS-01 requirements
+  recommendation: Implement JSON/XML export per CDS-CSO-PUB requirements
   severity: critical
   references:
-  - FRR-ADS-01
+  - CDS-CSO-PUB
+related_frrs:
+- CDS-CSO-PUB
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -1263,51 +1280,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.missing_machine_readable-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
-      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance Policy'\n    description:\
+      \ 'Enforces CDS compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.missing_machine_readable-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CDS compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -1316,23 +1333,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -1349,24 +1366,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -1374,21 +1391,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
+    requirement_id: CDS-CSO-PUB
     requirement_name: Public Information
     impact_levels:
     - Low
@@ -1413,7 +1430,7 @@ testing:
 ---
 pattern_id: ads.iac.azure_monitor_export
 name: Azure Monitor Data Export
-family: ADS
+family: CDS
 severity: high
 description: Detects Azure Monitor data export configuration for audit data
 pattern_type: resource
@@ -1433,23 +1450,26 @@ finding:
   description: IaC configures Azure Monitor data export for audit data
   recommendation: Ensure export destination supports long-term retention (730 days)
   references:
-  - FRR-ADS-01
-  - FRR-ADS-04
+  - CDS-CSO-PUB
+  - CDS-TRC-USH
+related_frrs:
+- CDS-CSO-PUB
+- CDS-TRC-USH
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -1460,51 +1480,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.iac.azure_monitor_export-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
-      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance Policy'\n    description:\
+      \ 'Enforces CDS compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.iac.azure_monitor_export-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CDS compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -1513,23 +1533,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -1546,24 +1566,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -1571,21 +1591,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
+    requirement_id: CDS-CSO-PUB
     requirement_name: Public Information
     impact_levels:
     - Low
@@ -1610,7 +1630,7 @@ testing:
 ---
 pattern_id: ads.iac.log_analytics_workspace
 name: Log Analytics Workspace for Audit Data
-family: ADS
+family: CDS
 severity: high
 description: Detects Log Analytics workspace configuration for centralized audit storage
 pattern_type: resource
@@ -1630,23 +1650,27 @@ finding:
   description: IaC provisions Log Analytics for centralized audit storage
   recommendation: Verify retention is set to 730 days minimum for FedRAMP compliance
   references:
-  - FRR-ADS-04
-  - KSI-MLA-01
+  - KSI-MLA-OSM
+  - CDS-TRC-USH
+related_ksis:
+- KSI-MLA-OSM
+related_frrs:
+- CDS-TRC-USH
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -1657,51 +1681,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.iac.log_analytics_workspace-policy'\n  properties: {\n \
-      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
-      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance\
+      \ Policy'\n    description: 'Enforces CDS compliance requirements'\n    policyRule:\
       \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
       \        effect: 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.iac.log_analytics_workspace-alert'\n  location: 'global'\n\
-      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  properties: {\n    description: 'Alert on CDS compliance violations'\n  \
       \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
       \ 'PT15M'\n  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -1710,23 +1734,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -1743,24 +1767,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -1768,22 +1792,22 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
-    requirement_name: Public Information
+    requirement_id: KSI-MLA-OSM
+    requirement_name: Operating SIEM Capability
     impact_levels:
     - Low
     - Moderate
@@ -1807,7 +1831,7 @@ testing:
 ---
 pattern_id: ads.cicd.audit_export_step
 name: CI/CD Audit Data Export Step
-family: ADS
+family: CDS
 severity: medium
 description: Detects CI/CD pipeline step for automated audit data export
 pattern_type: pipeline
@@ -1826,22 +1850,24 @@ finding:
   description: CI/CD pipeline includes automated audit data export step
   recommendation: Schedule regular exports and validate format compliance
   references:
-  - FRR-ADS-01
+  - CDS-CSO-PUB
+related_frrs:
+- CDS-CSO-PUB
 evidence_artifacts:
 - artifact_type: logs
-  name: ADS operational logs
+  name: CDS operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: ADS configuration export
+  name: CDS configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: ADS compliance validation report
+  name: CDS compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -1852,51 +1878,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "ads"
+      | where Message contains "cds"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track ADS related operations over last 30 days
+    description: Track CDS related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'ads' | take 100"
-    description: Query recent ADS events
+      "AppTraces | where Message contains 'cds' | take 100"
+    description: Query recent CDS events
     output_format: json
   powershell:
-  - script: '# Query ADS configuration
+  - script: '# Query CDS configuration
 
       Get-AzADSResource | Select-Object Name, Location, Properties'
-    description: Get ADS resource configuration
+    description: Get CDS resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for ADS compliance enforcement
-    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CDS compliance enforcement
+    implementation: "# Azure Policy definition for CDS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'ads.cicd.audit_export_step-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
-      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CDS Compliance Policy'\n    description:\
+      \ 'Enforces CDS compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for ADS violations
+    description: Azure Monitor alerts for CDS violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'ads.cicd.audit_export_step-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CDS compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for ADS
-    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CDS
+    implementation: "# GitHub Actions\n- name: Validate CDS Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CDS Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
     azure_services:
     - Azure Pipelines
@@ -1905,23 +1931,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - ADS requirements documented and approved
+  - CDS requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review ADS FedRAMP requirements
+    action: Review CDS FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design ADS implementation architecture
+    action: Design CDS implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement ADS controls in code/IaC
+    action: Implement CDS controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for ADS
+    action: Configure Azure services for CDS
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/ads/main.bicep
@@ -1938,24 +1964,24 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CDS')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: ADS - ADS
+  control_family: CDS - CDS
   control_numbers:
   - AU-2
   - AU-3
   ssp_sections:
   - section: 'AU-2: Implementation'
-    description_template: The system implements ADS controls in accordance with FedRAMP
-      20x requirements. ADS Requirements is addressed through a combination of Azure
+    description_template: The system implements CDS controls in accordance with FedRAMP
+      20x requirements. CDS Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce ADS compliance
+    implementation_details: Azure services are configured to enforce CDS compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      ADS requirements.
+      CDS requirements.
     evidence_references:
-    - ADS configuration exports from Azure Portal
+    - CDS configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -1963,21 +1989,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for ADS compliance
+    purpose: Primary service for CDS compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: ADS implementation
+    design_area: CDS implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement ADS controls as part of secure baseline
+    guidance: Implement CDS controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: FRR-ADS-01
+    requirement_id: CDS-CSO-PUB
     requirement_name: Public Information
     impact_levels:
     - Low
@@ -2002,8 +2028,8 @@ testing:
 ---
 pattern_id: ads.frr.frr_ads_01
 name: Public Information Compliance
-description: Validates compliance with FRR-ADS-01 - Public Information
-family: ADS
+description: Validates compliance with CDS-CSO-PUB - Public Information
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2012,9 +2038,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-01 - Public Information compliance check
-  description_template: Configuration requires validation for FRR-ADS-01 compliance
-  remediation_template: Implement FRR-ADS-01 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-PUB - Public Information compliance check
+  description_template: Configuration requires validation for CDS-CSO-PUB compliance
+  remediation_template: Implement CDS-CSO-PUB requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2023,33 +2049,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-01
+- CDS-CSO-PUB
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-01 policy documentation
+  name: CDS-CSO-PUB policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-01 configuration evidence
+  name: CDS-CSO-PUB configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-01 compliance validation
+    description: Automated CDS-CSO-PUB compliance validation
     implementation: |
-      # FRR-ADS-01 compliance automation
+      # CDS-CSO-PUB compliance automation
       # GitHub Actions
-      - name: FRR-ADS-01 Validation
+      - name: CDS-CSO-PUB Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_01 \
@@ -2057,30 +2083,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-01 Check'
+        displayName: 'CDS-CSO-PUB Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-01'"
+            # Validate CDS-CSO-PUB compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-PUB'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-01
+    description: Evidence collection for CDS-CSO-PUB
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-01"
+        RequirementId = "CDS-CSO-PUB"
         RequirementName = "Public Information"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-01.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-PUB.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2088,8 +2114,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_02
 name: Consistency Between Formats Compliance
-description: Validates compliance with FRR-ADS-02 - Consistency Between Formats
-family: ADS
+description: Validates compliance with CDS-CSO-CBF - Consistency Between Formats
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2098,9 +2124,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-02 - Consistency Between Formats compliance check
-  description_template: Configuration requires validation for FRR-ADS-02 compliance
-  remediation_template: Implement FRR-ADS-02 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-CBF - Consistency Between Formats compliance check
+  description_template: Configuration requires validation for CDS-CSO-CBF compliance
+  remediation_template: Implement CDS-CSO-CBF requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2109,33 +2135,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-02
+- CDS-CSO-CBF
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-02 policy documentation
+  name: CDS-CSO-CBF policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-02 configuration evidence
+  name: CDS-CSO-CBF configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-02 compliance validation
+    description: Automated CDS-CSO-CBF compliance validation
     implementation: |
-      # FRR-ADS-02 compliance automation
+      # CDS-CSO-CBF compliance automation
       # GitHub Actions
-      - name: FRR-ADS-02 Validation
+      - name: CDS-CSO-CBF Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_02 \
@@ -2143,30 +2169,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-02 Check'
+        displayName: 'CDS-CSO-CBF Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-02 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-02'"
+            # Validate CDS-CSO-CBF compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-CBF'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-02
+    description: Evidence collection for CDS-CSO-CBF
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-02"
+        RequirementId = "CDS-CSO-CBF"
         RequirementName = "Consistency Between Formats"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-02.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-CBF.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2174,8 +2200,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_03
 name: Detailed Service List Compliance
-description: Validates compliance with FRR-ADS-03 - Detailed Service List
-family: ADS
+description: Validates compliance with CDS-CSO-SVC - Detailed Service List
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2184,9 +2210,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-03 - Detailed Service List compliance check
-  description_template: Configuration requires validation for FRR-ADS-03 compliance
-  remediation_template: Implement FRR-ADS-03 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-SVC - Detailed Service List compliance check
+  description_template: Configuration requires validation for CDS-CSO-SVC compliance
+  remediation_template: Implement CDS-CSO-SVC requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2195,33 +2221,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-03
+- CDS-CSO-SVC
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-03 policy documentation
+  name: CDS-CSO-SVC policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-03 configuration evidence
+  name: CDS-CSO-SVC configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-03 compliance validation
+    description: Automated CDS-CSO-SVC compliance validation
     implementation: |
-      # FRR-ADS-03 compliance automation
+      # CDS-CSO-SVC compliance automation
       # GitHub Actions
-      - name: FRR-ADS-03 Validation
+      - name: CDS-CSO-SVC Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_03 \
@@ -2229,30 +2255,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-03 Check'
+        displayName: 'CDS-CSO-SVC Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-03 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-03'"
+            # Validate CDS-CSO-SVC compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-SVC'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-03
+    description: Evidence collection for CDS-CSO-SVC
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-03"
+        RequirementId = "CDS-CSO-SVC"
         RequirementName = "Detailed Service List"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-03.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-SVC.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2260,8 +2286,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_04
 name: Uninterrupted Sharing Compliance
-description: Validates compliance with FRR-ADS-04 - Uninterrupted Sharing
-family: ADS
+description: Validates compliance with CDS-TRC-USH - Uninterrupted Sharing
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2270,9 +2296,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-04 - Uninterrupted Sharing compliance check
-  description_template: Configuration requires validation for FRR-ADS-04 compliance
-  remediation_template: Implement FRR-ADS-04 requirements per FedRAMP 20x documentation
+  title_template: CDS-TRC-USH - Uninterrupted Sharing compliance check
+  description_template: Configuration requires validation for CDS-TRC-USH compliance
+  remediation_template: Implement CDS-TRC-USH requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2281,33 +2307,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-04
+- CDS-TRC-USH
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-04 policy documentation
+  name: CDS-TRC-USH policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-04 configuration evidence
+  name: CDS-TRC-USH configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-04 compliance validation
+    description: Automated CDS-TRC-USH compliance validation
     implementation: |
-      # FRR-ADS-04 compliance automation
+      # CDS-TRC-USH compliance automation
       # GitHub Actions
-      - name: FRR-ADS-04 Validation
+      - name: CDS-TRC-USH Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_04 \
@@ -2315,30 +2341,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-04 Check'
+        displayName: 'CDS-TRC-USH Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-04 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-04'"
+            # Validate CDS-TRC-USH compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-TRC-USH'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-04
+    description: Evidence collection for CDS-TRC-USH
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-04"
+        RequirementId = "CDS-TRC-USH"
         RequirementName = "Uninterrupted Sharing"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-04.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-TRC-USH.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2346,8 +2372,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_05
 name: Responsible Information Sharing Compliance
-description: Validates compliance with FRR-ADS-05 - Responsible Information Sharing
-family: ADS
+description: Validates compliance with CDS-CSO-RIS - Responsible Information Sharing
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2356,9 +2382,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-05 - Responsible Information Sharing compliance check
-  description_template: Configuration requires validation for FRR-ADS-05 compliance
-  remediation_template: Implement FRR-ADS-05 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-RIS - Responsible Information Sharing compliance check
+  description_template: Configuration requires validation for CDS-CSO-RIS compliance
+  remediation_template: Implement CDS-CSO-RIS requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2367,33 +2393,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-05
+- CDS-CSO-RIS
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-05 policy documentation
+  name: CDS-CSO-RIS policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-05 configuration evidence
+  name: CDS-CSO-RIS configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-05 compliance validation
+    description: Automated CDS-CSO-RIS compliance validation
     implementation: |
-      # FRR-ADS-05 compliance automation
+      # CDS-CSO-RIS compliance automation
       # GitHub Actions
-      - name: FRR-ADS-05 Validation
+      - name: CDS-CSO-RIS Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_05 \
@@ -2401,30 +2427,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-05 Check'
+        displayName: 'CDS-CSO-RIS Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-05 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-05'"
+            # Validate CDS-CSO-RIS compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-RIS'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-05
+    description: Evidence collection for CDS-CSO-RIS
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-05"
+        RequirementId = "CDS-CSO-RIS"
         RequirementName = "Responsible Information Sharing"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-05.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-RIS.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2432,8 +2458,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_06
 name: USDA Connect Community Portal Compliance
-description: Validates compliance with FRR-ADS-06 - USDA Connect Community Portal
-family: ADS
+description: Validates compliance with CDS-CSO-UTC - USDA Connect Community Portal
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2442,9 +2468,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-06 - USDA Connect Community Portal compliance check
-  description_template: Configuration requires validation for FRR-ADS-06 compliance
-  remediation_template: Implement FRR-ADS-06 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-UTC - USDA Connect Community Portal compliance check
+  description_template: Configuration requires validation for CDS-CSO-UTC compliance
+  remediation_template: Implement CDS-CSO-UTC requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2453,33 +2479,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-06
+- CDS-CSO-UTC
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-06 policy documentation
+  name: CDS-CSO-UTC policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-06 configuration evidence
+  name: CDS-CSO-UTC configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-06 compliance validation
+    description: Automated CDS-CSO-UTC compliance validation
     implementation: |
-      # FRR-ADS-06 compliance automation
+      # CDS-CSO-UTC compliance automation
       # GitHub Actions
-      - name: FRR-ADS-06 Validation
+      - name: CDS-CSO-UTC Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_06 \
@@ -2487,30 +2513,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-06 Check'
+        displayName: 'CDS-CSO-UTC Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-06 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-06'"
+            # Validate CDS-CSO-UTC compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-UTC'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-06
+    description: Evidence collection for CDS-CSO-UTC
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-06"
+        RequirementId = "CDS-CSO-UTC"
         RequirementName = "USDA Connect Community Portal"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-06.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-UTC.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2518,8 +2544,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_07
 name: FedRAMP-Compatible Trust Centers Compliance
-description: Validates compliance with FRR-ADS-07 - FedRAMP-Compatible Trust Centers
-family: ADS
+description: Validates compliance with CDS-CSO-UTC - FedRAMP-Compatible Trust Centers
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2528,9 +2554,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-07 - FedRAMP-Compatible Trust Centers compliance check
-  description_template: Configuration requires validation for FRR-ADS-07 compliance
-  remediation_template: Implement FRR-ADS-07 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-UTC - FedRAMP-Compatible Trust Centers compliance check
+  description_template: Configuration requires validation for CDS-CSO-UTC compliance
+  remediation_template: Implement CDS-CSO-UTC requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2539,33 +2565,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-07
+- CDS-CSO-UTC
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-07 policy documentation
+  name: CDS-CSO-UTC policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-07 configuration evidence
+  name: CDS-CSO-UTC configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-07 compliance validation
+    description: Automated CDS-CSO-UTC compliance validation
     implementation: |
-      # FRR-ADS-07 compliance automation
+      # CDS-CSO-UTC compliance automation
       # GitHub Actions
-      - name: FRR-ADS-07 Validation
+      - name: CDS-CSO-UTC Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_07 \
@@ -2573,30 +2599,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-07 Check'
+        displayName: 'CDS-CSO-UTC Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-07 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-07'"
+            # Validate CDS-CSO-UTC compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-UTC'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-07
+    description: Evidence collection for CDS-CSO-UTC
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-07"
+        RequirementId = "CDS-CSO-UTC"
         RequirementName = "FedRAMP-Compatible Trust Centers"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-07.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-UTC.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2604,8 +2630,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_08
 name: Trust Center Migration Notification Compliance
-description: Validates compliance with FRR-ADS-08 - Trust Center Migration Notification
-family: ADS
+description: Validates compliance with CDS-CSF-TCM - Trust Center Migration Notification
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2614,9 +2640,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-08 - Trust Center Migration Notification compliance check
-  description_template: Configuration requires validation for FRR-ADS-08 compliance
-  remediation_template: Implement FRR-ADS-08 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSF-TCM - Trust Center Migration Notification compliance check
+  description_template: Configuration requires validation for CDS-CSF-TCM compliance
+  remediation_template: Implement CDS-CSF-TCM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2625,33 +2651,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-08
+- CDS-CSF-TCM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-08 policy documentation
+  name: CDS-CSF-TCM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-08 configuration evidence
+  name: CDS-CSF-TCM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-08 compliance validation
+    description: Automated CDS-CSF-TCM compliance validation
     implementation: |
-      # FRR-ADS-08 compliance automation
+      # CDS-CSF-TCM compliance automation
       # GitHub Actions
-      - name: FRR-ADS-08 Validation
+      - name: CDS-CSF-TCM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_08 \
@@ -2659,30 +2685,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-08 Check'
+        displayName: 'CDS-CSF-TCM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-08 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-08'"
+            # Validate CDS-CSF-TCM compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSF-TCM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-08
+    description: Evidence collection for CDS-CSF-TCM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-08"
+        RequirementId = "CDS-CSF-TCM"
         RequirementName = "Trust Center Migration Notification"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-08.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSF-TCM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2690,8 +2716,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_09
 name: Historical Authorization Data Compliance
-description: Validates compliance with FRR-ADS-09 - Historical Authorization Data
-family: ADS
+description: Validates compliance with CDS-CSO-HAD - Historical Authorization Data
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2700,9 +2726,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-09 - Historical Authorization Data compliance check
-  description_template: Configuration requires validation for FRR-ADS-09 compliance
-  remediation_template: Implement FRR-ADS-09 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-HAD - Historical Authorization Data compliance check
+  description_template: Configuration requires validation for CDS-CSO-HAD compliance
+  remediation_template: Implement CDS-CSO-HAD requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2711,33 +2737,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-09
+- CDS-CSO-HAD
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-09 policy documentation
+  name: CDS-CSO-HAD policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-09 configuration evidence
+  name: CDS-CSO-HAD configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-09 compliance validation
+    description: Automated CDS-CSO-HAD compliance validation
     implementation: |
-      # FRR-ADS-09 compliance automation
+      # CDS-CSO-HAD compliance automation
       # GitHub Actions
-      - name: FRR-ADS-09 Validation
+      - name: CDS-CSO-HAD Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_09 \
@@ -2745,116 +2771,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-09 Check'
+        displayName: 'CDS-CSO-HAD Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-09 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-09'"
+            # Validate CDS-CSO-HAD compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-HAD'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-09
+    description: Evidence collection for CDS-CSO-HAD
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-09"
+        RequirementId = "CDS-CSO-HAD"
         RequirementName = "Historical Authorization Data"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-09.json"
-    azure_services:
-    - Azure Automation
-    - Azure Storage
-impact_levels: ['Low', 'Moderate', 'High']
----
-pattern_id: ads.frr.frr_ads_10
-name: Best Practices and Technical Assistance Compliance
-description: Validates compliance with FRR-ADS-10 - Best Practices and Technical Assistance
-family: ADS
-severity: MEDIUM
-pattern_type: compliance
-languages:
-  bicep:
-    regex_fallback: ".*"
-  terraform:
-    regex_fallback: ".*"
-finding:
-  title_template: FRR-ADS-10 - Best Practices and Technical Assistance compliance check
-  description_template: Configuration requires validation for FRR-ADS-10 compliance
-  remediation_template: Implement FRR-ADS-10 requirements per FedRAMP 20x documentation
-  evidence_collection:
-  - Compliance documentation
-  - Policy artifacts
-  - Configuration evidence
-  azure_services:
-  - Azure Policy
-  - Microsoft Defender for Cloud
-tags:
-- ads
-- frr
-- compliance
-nist_controls:
-- fedramp-20x
-related_frrs:
-- FRR-ADS-10
-evidence_artifacts:
-- artifact_type: policy
-  name: FRR-ADS-10 policy documentation
-  source: Azure DevOps
-  frequency: monthly
-  retention_months: 84
-  format: PDF
-- artifact_type: configuration
-  name: FRR-ADS-10 configuration evidence
-  source: Azure Resource Manager
-  frequency: daily
-  retention_months: 36
-  format: JSON
-automation:
-  automation_1:
-    description: Automated FRR-ADS-10 compliance validation
-    implementation: |
-      # FRR-ADS-10 compliance automation
-      # GitHub Actions
-      - name: FRR-ADS-10 Validation
-        run: |
-          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
-            --pattern ads.frr.frr_ads_10 \
-            --code-path ./src
-      
-      # Azure Pipelines
-      - task: AzureCLI@2
-        displayName: 'FRR-ADS-10 Check'
-        inputs:
-          azureSubscription: 'AzureConnection'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            # Validate FRR-ADS-10 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-10'"
-    azure_services:
-    - Azure Policy
-    - Azure CLI
-    - Azure DevOps
-  automation_2:
-    description: Evidence collection for FRR-ADS-10
-    implementation: |
-      # Automated evidence collection
-      # PowerShell script
-      $evidence = @{
-        RequirementId = "FRR-ADS-10"
-        RequirementName = "Best Practices and Technical Assistance"
-        CollectionDate = Get-Date -Format "yyyy-MM-dd"
-        ComplianceStatus = "To Be Determined"
-      }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-10.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-HAD.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2862,8 +2802,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_ac_01
 name: Public Guidance Compliance
-description: Validates compliance with FRR-ADS-AC-01 - Public Guidance
-family: ADS
+description: Validates compliance with CDS-CSO-UTC - Public Guidance
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2872,9 +2812,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-AC-01 - Public Guidance compliance check
-  description_template: Configuration requires validation for FRR-ADS-AC-01 compliance
-  remediation_template: Implement FRR-ADS-AC-01 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSO-UTC - Public Guidance compliance check
+  description_template: Configuration requires validation for CDS-CSO-UTC compliance
+  remediation_template: Implement CDS-CSO-UTC requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2883,33 +2823,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-AC-01
+- CDS-CSO-UTC
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-AC-01 policy documentation
+  name: CDS-CSO-UTC policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-AC-01 configuration evidence
+  name: CDS-CSO-UTC configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-AC-01 compliance validation
+    description: Automated CDS-CSO-UTC compliance validation
     implementation: |
-      # FRR-ADS-AC-01 compliance automation
+      # CDS-CSO-UTC compliance automation
       # GitHub Actions
-      - name: FRR-ADS-AC-01 Validation
+      - name: CDS-CSO-UTC Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_ac_01 \
@@ -2917,30 +2857,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-AC-01 Check'
+        displayName: 'CDS-CSO-UTC Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-AC-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-AC-01'"
+            # Validate CDS-CSO-UTC compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSO-UTC'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-AC-01
+    description: Evidence collection for CDS-CSO-UTC
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-AC-01"
+        RequirementId = "CDS-CSO-UTC"
         RequirementName = "Public Guidance"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-AC-01.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSO-UTC.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -2948,8 +2888,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_ac_02
 name: Prospective Customer Access Compliance
-description: Validates compliance with FRR-ADS-AC-02 - Prospective Customer Access
-family: ADS
+description: Validates compliance with CDS-UTC-AGA - Prospective Customer Access
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -2958,9 +2898,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-AC-02 - Prospective Customer Access compliance check
-  description_template: Configuration requires validation for FRR-ADS-AC-02 compliance
-  remediation_template: Implement FRR-ADS-AC-02 requirements per FedRAMP 20x documentation
+  title_template: CDS-UTC-AGA - Prospective Customer Access compliance check
+  description_template: Configuration requires validation for CDS-UTC-AGA compliance
+  remediation_template: Implement CDS-UTC-AGA requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -2969,33 +2909,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-AC-02
+- CDS-UTC-AGA
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-AC-02 policy documentation
+  name: CDS-UTC-AGA policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-AC-02 configuration evidence
+  name: CDS-UTC-AGA configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-AC-02 compliance validation
+    description: Automated CDS-UTC-AGA compliance validation
     implementation: |
-      # FRR-ADS-AC-02 compliance automation
+      # CDS-UTC-AGA compliance automation
       # GitHub Actions
-      - name: FRR-ADS-AC-02 Validation
+      - name: CDS-UTC-AGA Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_ac_02 \
@@ -3003,30 +2943,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-AC-02 Check'
+        displayName: 'CDS-UTC-AGA Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-AC-02 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-AC-02'"
+            # Validate CDS-UTC-AGA compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-UTC-AGA'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-AC-02
+    description: Evidence collection for CDS-UTC-AGA
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-AC-02"
+        RequirementId = "CDS-UTC-AGA"
         RequirementName = "Prospective Customer Access"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-AC-02.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-UTC-AGA.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -3034,8 +2974,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_ex_01
 name: Legacy Self-Managed Repository Exception Compliance
-description: Validates compliance with FRR-ADS-EX-01 - Legacy Self-Managed Repository Exception
-family: ADS
+description: Validates compliance with CDS-CSF-TCM - Legacy Self-Managed Repository Exception
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -3044,9 +2984,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-EX-01 - Legacy Self-Managed Repository Exception compliance check
-  description_template: Configuration requires validation for FRR-ADS-EX-01 compliance
-  remediation_template: Implement FRR-ADS-EX-01 requirements per FedRAMP 20x documentation
+  title_template: CDS-CSF-TCM - Legacy Self-Managed Repository Exception compliance check
+  description_template: Configuration requires validation for CDS-CSF-TCM compliance
+  remediation_template: Implement CDS-CSF-TCM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -3055,33 +2995,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-EX-01
+- CDS-CSF-TCM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-EX-01 policy documentation
+  name: CDS-CSF-TCM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-EX-01 configuration evidence
+  name: CDS-CSF-TCM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-EX-01 compliance validation
+    description: Automated CDS-CSF-TCM compliance validation
     implementation: |
-      # FRR-ADS-EX-01 compliance automation
+      # CDS-CSF-TCM compliance automation
       # GitHub Actions
-      - name: FRR-ADS-EX-01 Validation
+      - name: CDS-CSF-TCM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_ex_01 \
@@ -3089,116 +3029,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-EX-01 Check'
+        displayName: 'CDS-CSF-TCM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-EX-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-EX-01'"
+            # Validate CDS-CSF-TCM compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-CSF-TCM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-EX-01
+    description: Evidence collection for CDS-CSF-TCM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-EX-01"
+        RequirementId = "CDS-CSF-TCM"
         RequirementName = "Legacy Self-Managed Repository Exception"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-EX-01.json"
-    azure_services:
-    - Azure Automation
-    - Azure Storage
-impact_levels: ['Low', 'Moderate', 'High']
----
-pattern_id: ads.frr.frr_ads_tc_01
-name: Trust Center Assessment Compliance
-description: Validates compliance with FRR-ADS-TC-01 - Trust Center Assessment
-family: ADS
-severity: MEDIUM
-pattern_type: compliance
-languages:
-  bicep:
-    regex_fallback: ".*"
-  terraform:
-    regex_fallback: ".*"
-finding:
-  title_template: FRR-ADS-TC-01 - Trust Center Assessment compliance check
-  description_template: Configuration requires validation for FRR-ADS-TC-01 compliance
-  remediation_template: Implement FRR-ADS-TC-01 requirements per FedRAMP 20x documentation
-  evidence_collection:
-  - Compliance documentation
-  - Policy artifacts
-  - Configuration evidence
-  azure_services:
-  - Azure Policy
-  - Microsoft Defender for Cloud
-tags:
-- ads
-- frr
-- compliance
-nist_controls:
-- fedramp-20x
-related_frrs:
-- FRR-ADS-TC-01
-evidence_artifacts:
-- artifact_type: policy
-  name: FRR-ADS-TC-01 policy documentation
-  source: Azure DevOps
-  frequency: monthly
-  retention_months: 84
-  format: PDF
-- artifact_type: configuration
-  name: FRR-ADS-TC-01 configuration evidence
-  source: Azure Resource Manager
-  frequency: daily
-  retention_months: 36
-  format: JSON
-automation:
-  automation_1:
-    description: Automated FRR-ADS-TC-01 compliance validation
-    implementation: |
-      # FRR-ADS-TC-01 compliance automation
-      # GitHub Actions
-      - name: FRR-ADS-TC-01 Validation
-        run: |
-          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
-            --pattern ads.frr.frr_ads_tc_01 \
-            --code-path ./src
-      
-      # Azure Pipelines
-      - task: AzureCLI@2
-        displayName: 'FRR-ADS-TC-01 Check'
-        inputs:
-          azureSubscription: 'AzureConnection'
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            # Validate FRR-ADS-TC-01 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-01'"
-    azure_services:
-    - Azure Policy
-    - Azure CLI
-    - Azure DevOps
-  automation_2:
-    description: Evidence collection for FRR-ADS-TC-01
-    implementation: |
-      # Automated evidence collection
-      # PowerShell script
-      $evidence = @{
-        RequirementId = "FRR-ADS-TC-01"
-        RequirementName = "Trust Center Assessment"
-        CollectionDate = Get-Date -Format "yyyy-MM-dd"
-        ComplianceStatus = "To Be Determined"
-      }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-01.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-CSF-TCM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -3206,8 +3060,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_tc_02
 name: Human and Machine-Readable Compliance
-description: Validates compliance with FRR-ADS-TC-02 - Human and Machine-Readable
-family: ADS
+description: Validates compliance with CDS-TRC-HMR - Human and Machine-Readable
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -3216,9 +3070,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-TC-02 - Human and Machine-Readable compliance check
-  description_template: Configuration requires validation for FRR-ADS-TC-02 compliance
-  remediation_template: Implement FRR-ADS-TC-02 requirements per FedRAMP 20x documentation
+  title_template: CDS-TRC-HMR - Human and Machine-Readable compliance check
+  description_template: Configuration requires validation for CDS-TRC-HMR compliance
+  remediation_template: Implement CDS-TRC-HMR requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -3227,33 +3081,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-TC-02
+- CDS-TRC-HMR
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-TC-02 policy documentation
+  name: CDS-TRC-HMR policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-TC-02 configuration evidence
+  name: CDS-TRC-HMR configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-TC-02 compliance validation
+    description: Automated CDS-TRC-HMR compliance validation
     implementation: |
-      # FRR-ADS-TC-02 compliance automation
+      # CDS-TRC-HMR compliance automation
       # GitHub Actions
-      - name: FRR-ADS-TC-02 Validation
+      - name: CDS-TRC-HMR Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_tc_02 \
@@ -3261,30 +3115,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-TC-02 Check'
+        displayName: 'CDS-TRC-HMR Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-TC-02 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-02'"
+            # Validate CDS-TRC-HMR compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-TRC-HMR'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-TC-02
+    description: Evidence collection for CDS-TRC-HMR
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-TC-02"
+        RequirementId = "CDS-TRC-HMR"
         RequirementName = "Human and Machine-Readable"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-02.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-TRC-HMR.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -3292,8 +3146,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_tc_03
 name: Programmatic Access Compliance
-description: Validates compliance with FRR-ADS-TC-03 - Programmatic Access
-family: ADS
+description: Validates compliance with CDS-TRC-PAC - Programmatic Access
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -3302,9 +3156,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-TC-03 - Programmatic Access compliance check
-  description_template: Configuration requires validation for FRR-ADS-TC-03 compliance
-  remediation_template: Implement FRR-ADS-TC-03 requirements per FedRAMP 20x documentation
+  title_template: CDS-TRC-PAC - Programmatic Access compliance check
+  description_template: Configuration requires validation for CDS-TRC-PAC compliance
+  remediation_template: Implement CDS-TRC-PAC requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -3313,33 +3167,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-TC-03
+- CDS-TRC-PAC
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-TC-03 policy documentation
+  name: CDS-TRC-PAC policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-TC-03 configuration evidence
+  name: CDS-TRC-PAC configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-TC-03 compliance validation
+    description: Automated CDS-TRC-PAC compliance validation
     implementation: |
-      # FRR-ADS-TC-03 compliance automation
+      # CDS-TRC-PAC compliance automation
       # GitHub Actions
-      - name: FRR-ADS-TC-03 Validation
+      - name: CDS-TRC-PAC Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_tc_03 \
@@ -3347,30 +3201,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-TC-03 Check'
+        displayName: 'CDS-TRC-PAC Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-TC-03 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-03'"
+            # Validate CDS-TRC-PAC compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-TRC-PAC'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-TC-03
+    description: Evidence collection for CDS-TRC-PAC
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-TC-03"
+        RequirementId = "CDS-TRC-PAC"
         RequirementName = "Programmatic Access"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-03.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-TRC-PAC.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -3378,8 +3232,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_tc_04
 name: Self-Service Access Management Compliance
-description: Validates compliance with FRR-ADS-TC-04 - Self-Service Access Management
-family: ADS
+description: Validates compliance with CDS-TRC-SSM - Self-Service Access Management
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -3388,9 +3242,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-TC-04 - Self-Service Access Management compliance check
-  description_template: Configuration requires validation for FRR-ADS-TC-04 compliance
-  remediation_template: Implement FRR-ADS-TC-04 requirements per FedRAMP 20x documentation
+  title_template: CDS-TRC-SSM - Self-Service Access Management compliance check
+  description_template: Configuration requires validation for CDS-TRC-SSM compliance
+  remediation_template: Implement CDS-TRC-SSM requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -3399,33 +3253,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-TC-04
+- CDS-TRC-SSM
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-TC-04 policy documentation
+  name: CDS-TRC-SSM policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-TC-04 configuration evidence
+  name: CDS-TRC-SSM configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-TC-04 compliance validation
+    description: Automated CDS-TRC-SSM compliance validation
     implementation: |
-      # FRR-ADS-TC-04 compliance automation
+      # CDS-TRC-SSM compliance automation
       # GitHub Actions
-      - name: FRR-ADS-TC-04 Validation
+      - name: CDS-TRC-SSM Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_tc_04 \
@@ -3433,30 +3287,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-TC-04 Check'
+        displayName: 'CDS-TRC-SSM Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-TC-04 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-04'"
+            # Validate CDS-TRC-SSM compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-TRC-SSM'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-TC-04
+    description: Evidence collection for CDS-TRC-SSM
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-TC-04"
+        RequirementId = "CDS-TRC-SSM"
         RequirementName = "Self-Service Access Management"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-04.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-TRC-SSM.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -3464,8 +3318,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_tc_05
 name: Access Inventory Compliance
-description: Validates compliance with FRR-ADS-TC-05 - Access Inventory
-family: ADS
+description: Validates compliance with CDS-TRC-AAI - Access Inventory
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -3474,9 +3328,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-TC-05 - Access Inventory compliance check
-  description_template: Configuration requires validation for FRR-ADS-TC-05 compliance
-  remediation_template: Implement FRR-ADS-TC-05 requirements per FedRAMP 20x documentation
+  title_template: CDS-TRC-AAI - Access Inventory compliance check
+  description_template: Configuration requires validation for CDS-TRC-AAI compliance
+  remediation_template: Implement CDS-TRC-AAI requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -3485,33 +3339,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-TC-05
+- CDS-TRC-AAI
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-TC-05 policy documentation
+  name: CDS-TRC-AAI policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-TC-05 configuration evidence
+  name: CDS-TRC-AAI configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-TC-05 compliance validation
+    description: Automated CDS-TRC-AAI compliance validation
     implementation: |
-      # FRR-ADS-TC-05 compliance automation
+      # CDS-TRC-AAI compliance automation
       # GitHub Actions
-      - name: FRR-ADS-TC-05 Validation
+      - name: CDS-TRC-AAI Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_tc_05 \
@@ -3519,30 +3373,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-TC-05 Check'
+        displayName: 'CDS-TRC-AAI Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-TC-05 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-05'"
+            # Validate CDS-TRC-AAI compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-TRC-AAI'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-TC-05
+    description: Evidence collection for CDS-TRC-AAI
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-TC-05"
+        RequirementId = "CDS-TRC-AAI"
         RequirementName = "Access Inventory"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-05.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-TRC-AAI.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -3550,8 +3404,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_tc_06
 name: Access Logging Compliance
-description: Validates compliance with FRR-ADS-TC-06 - Access Logging
-family: ADS
+description: Validates compliance with CDS-TRC-ACL - Access Logging
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -3560,9 +3414,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-TC-06 - Access Logging compliance check
-  description_template: Configuration requires validation for FRR-ADS-TC-06 compliance
-  remediation_template: Implement FRR-ADS-TC-06 requirements per FedRAMP 20x documentation
+  title_template: CDS-TRC-ACL - Access Logging compliance check
+  description_template: Configuration requires validation for CDS-TRC-ACL compliance
+  remediation_template: Implement CDS-TRC-ACL requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -3571,33 +3425,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-TC-06
+- CDS-TRC-ACL
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-TC-06 policy documentation
+  name: CDS-TRC-ACL policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-TC-06 configuration evidence
+  name: CDS-TRC-ACL configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-TC-06 compliance validation
+    description: Automated CDS-TRC-ACL compliance validation
     implementation: |
-      # FRR-ADS-TC-06 compliance automation
+      # CDS-TRC-ACL compliance automation
       # GitHub Actions
-      - name: FRR-ADS-TC-06 Validation
+      - name: CDS-TRC-ACL Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_tc_06 \
@@ -3605,30 +3459,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-TC-06 Check'
+        displayName: 'CDS-TRC-ACL Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-TC-06 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-06'"
+            # Validate CDS-TRC-ACL compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-TRC-ACL'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-TC-06
+    description: Evidence collection for CDS-TRC-ACL
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-TC-06"
+        RequirementId = "CDS-TRC-ACL"
         RequirementName = "Access Logging"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-06.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-TRC-ACL.json"
     azure_services:
     - Azure Automation
     - Azure Storage
@@ -3636,8 +3490,8 @@ impact_levels: ['Low', 'Moderate', 'High']
 ---
 pattern_id: ads.frr.frr_ads_tc_07
 name: Responsive Performance Compliance
-description: Validates compliance with FRR-ADS-TC-07 - Responsive Performance
-family: ADS
+description: Validates compliance with CDS-TRC-USH - Responsive Performance
+family: CDS
 severity: MEDIUM
 pattern_type: compliance
 languages:
@@ -3646,9 +3500,9 @@ languages:
   terraform:
     regex_fallback: ".*"
 finding:
-  title_template: FRR-ADS-TC-07 - Responsive Performance compliance check
-  description_template: Configuration requires validation for FRR-ADS-TC-07 compliance
-  remediation_template: Implement FRR-ADS-TC-07 requirements per FedRAMP 20x documentation
+  title_template: CDS-TRC-USH - Responsive Performance compliance check
+  description_template: Configuration requires validation for CDS-TRC-USH compliance
+  remediation_template: Implement CDS-TRC-USH requirements per FedRAMP 20x documentation
   evidence_collection:
   - Compliance documentation
   - Policy artifacts
@@ -3657,33 +3511,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- ads
+- cds
 - frr
 - compliance
 nist_controls:
 - fedramp-20x
 related_frrs:
-- FRR-ADS-TC-07
+- CDS-TRC-USH
 evidence_artifacts:
 - artifact_type: policy
-  name: FRR-ADS-TC-07 policy documentation
+  name: CDS-TRC-USH policy documentation
   source: Azure DevOps
   frequency: monthly
   retention_months: 84
   format: PDF
 - artifact_type: configuration
-  name: FRR-ADS-TC-07 configuration evidence
+  name: CDS-TRC-USH configuration evidence
   source: Azure Resource Manager
   frequency: daily
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Automated FRR-ADS-TC-07 compliance validation
+    description: Automated CDS-TRC-USH compliance validation
     implementation: |
-      # FRR-ADS-TC-07 compliance automation
+      # CDS-TRC-USH compliance automation
       # GitHub Actions
-      - name: FRR-ADS-TC-07 Validation
+      - name: CDS-TRC-USH Validation
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern ads.frr.frr_ads_tc_07 \
@@ -3691,30 +3545,30 @@ automation:
       
       # Azure Pipelines
       - task: AzureCLI@2
-        displayName: 'FRR-ADS-TC-07 Check'
+        displayName: 'CDS-TRC-USH Check'
         inputs:
           azureSubscription: 'AzureConnection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Validate FRR-ADS-TC-07 compliance
-            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-07'"
+            # Validate CDS-TRC-USH compliance
+            az policy state list --filter "policyDefinitionName eq 'CDS-TRC-USH'"
     azure_services:
     - Azure Policy
     - Azure CLI
     - Azure DevOps
   automation_2:
-    description: Evidence collection for FRR-ADS-TC-07
+    description: Evidence collection for CDS-TRC-USH
     implementation: |
       # Automated evidence collection
       # PowerShell script
       $evidence = @{
-        RequirementId = "FRR-ADS-TC-07"
+        RequirementId = "CDS-TRC-USH"
         RequirementName = "Responsive Performance"
         CollectionDate = Get-Date -Format "yyyy-MM-dd"
         ComplianceStatus = "To Be Determined"
       }
-      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-07.json"
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_CDS-TRC-USH.json"
     azure_services:
     - Azure Automation
     - Azure Storage

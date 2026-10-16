@@ -1,283 +1,183 @@
-I'll help you prioritize the implementation of FedRAMP 20x's 72 Key Security Indicators.
+I'll help you prioritize the implementation of the 46 Key Security Indicators (KSIs) in the FedRAMP Consolidated Rules for 2026 (CR26).
 
 # KSI Implementation Priority Guide
 
-**Note:** Engineering teams should determine their own implementation timelines based on system complexity, team size, existing infrastructure, and organizational resources. The priorities below indicate logical sequencing and dependencies, but actual durations will vary by organization.
+**Note:** Engineering teams should determine their own implementation timelines based on system complexity, team size, existing infrastructure, and organizational resources. The priorities below are a suggested logical sequence and dependency order, not a CR26 requirement. The 46 KSIs are in 10 families: CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, SCR, SVC. Requirements for KSI automation vary by Class (see FRC-CSX-VVK).
 
 ## Priority 1: Foundation
-**Must be completed first - other KSIs depend on these**
+**Complete first; other KSIs depend on these**
 
-### Critical Infrastructure
-1. **KSI-MLA-01: SIEM** ⭐ HIGHEST PRIORITY
-   - Why: Required for logging all other KSIs
-   - Impact: Blocks 15+ other KSIs
+1. **KSI-MLA-OSM: Operating SIEM Capability** (highest priority)
+   - Why: Logging foundation for many other KSIs
    - Dependencies: None
 
-2. **KSI-IAM-01: Phishing-Resistant MFA** ⭐ HIGH PRIORITY
+2. **KSI-IAM-APM: Adopting Passwordless Methods**
    - Why: Security foundation, quick win
-   - Impact: Protects all access
    - Dependencies: None
 
-3. **KSI-PIY-01: Automated Inventory**
-   - Why: Needed to track what you're securing
-   - Impact: Required for boundary management
+3. **KSI-PIY-GIV: Generating Inventories**
+   - Why: Needed to know what you are securing; supports Minimum Assessment Scope (MAS-CSO-IIR)
    - Dependencies: None
 
-4. **KSI-MLA-02: Audit Logging**
+4. **KSI-MLA-RVL: Reviewing Logs**
    - Why: Foundation for compliance evidence
-   - Impact: Enables incident investigation
-   - Dependencies: KSI-MLA-01 (SIEM)
+   - Dependencies: KSI-MLA-OSM
+
+5. **KSI-MLA-LET: Logging Event Types**
+   - Why: Defines what is logged, monitored and audited
+   - Dependencies: KSI-MLA-OSM
 
 ## Priority 2: Security Controls
-**Core security capabilities**
 
-### Vulnerability Management
-5. **KSI-AFR-04: Vulnerability Detection and Response** (ties to FRR-VDR)
-   - Why: Required for continuous scanning
-   - Impact: Critical for compliance
+### Vulnerability and supply chain
+6. **VDR-CSO-DET: Vulnerability Detection** (FedRAMP rule, not a KSI)
+   - Why: Required for persistent detection; see VDR-CSO-RES and VDR-TFR-PVR for response timeframes
    - Dependencies: None
 
-6. **KSI-SVC-07: Patching**
-   - Why: Vulnerability remediation
-   - Impact: Keeps systems secure
-   - Dependencies: KSI-AFR-04, automated deployment
+7. **KSI-SCR-MON: Monitoring Supply Chain Risk**
+   - Why: Third-party software monitored for upstream vulnerabilities
+   - Dependencies: KSI-PIY-GIV
 
-### Access Management
-7. **KSI-IAM-05: Least Privilege**
-   - Why: Limits blast radius
-   - Impact: Reduces risk across all systems
-   - Dependencies: KSI-IAM-01, KSI-PIY-01
+8. **KSI-SCR-MIT: Mitigating Supply Chain Risk**
+   - Dependencies: KSI-SCR-MON
 
-8. **KSI-IAM-06: Suspicious Activity Detection**
-   - Why: Threat detection
-   - Impact: Early incident detection
-   - Dependencies: KSI-MLA-01 (SIEM)
+### Access management
+9. **KSI-IAM-ELP: Ensuring Least Privilege**
+   - Dependencies: KSI-IAM-APM, KSI-PIY-GIV
 
-### Secret Management
-9. **KSI-SVC-06: Secret Management**
-   - Why: Prevents credential exposure
-   - Impact: Critical security control
-   - Dependencies: None
+10. **KSI-IAM-SUS: Responding to Suspicious Activity**
+    - Dependencies: KSI-MLA-OSM
 
-## Priority 3: Automation & Operations
-**Improve efficiency and reduce manual work**
+11. **KSI-IAM-AAM: Automating Account Management**
+    - Dependencies: KSI-IAM-ELP
 
-### Infrastructure as Code
-10. **KSI-MLA-05: Infrastructure as Code**
-    - Why: Enables repeatability and audit
-    - Impact: Foundation for automation
+12. **KSI-IAM-SNU: Securing Non-User Authentication**
+    - Dependencies: KSI-SVC-ASM
+
+### Secret management
+13. **KSI-SVC-ASM: Automating Secret Management**
+    - Why: Prevents credential exposure
     - Dependencies: None
 
-11. **KSI-SVC-04: Configuration Automation**
-    - Why: Consistent, auditable configs
-    - Impact: Reduces drift, improves security
-    - Dependencies: KSI-MLA-05
+## Priority 3: Automation and Operations
 
-### CI/CD Integration
-12. **KSI-CMT-03: Automated Testing and Validation**
-    - Why: Quality and security gates
-    - Impact: Prevents bad deployments
+14. **KSI-MLA-EVC: Evaluating Configurations** (infrastructure as code)
+    - Dependencies: None
+
+15. **KSI-SVC-ACM: Automating Configuration Management**
+    - Dependencies: KSI-MLA-EVC
+
+16. **KSI-CMT-VTD: Validating Throughout Deployment**
     - Dependencies: CI/CD pipeline
 
-13. **KSI-CMT-01: Log and Monitor Changes**
-    - Why: Change tracking and audit
-    - Impact: Required for FRR-SCN compliance
-    - Dependencies: KSI-MLA-01 (SIEM)
+17. **KSI-CMT-LMC: Logging Changes**
+    - Why: Supports Significant Change Notification evidence (SCN)
+    - Dependencies: KSI-MLA-OSM
+
+18. **KSI-CMT-RMV: Redeploying vs Modifying**
+    - Dependencies: KSI-MLA-EVC
 
 ## Priority 4: Cloud-Native Security
-**For containerized/Kubernetes environments**
 
-### Network Security
-14. **KSI-CNA-01: Restrict Network Traffic**
-    - Why: Defense in depth
-    - Impact: Limits lateral movement
-    - Dependencies: Network mapping
-
-15. **KSI-CNA-03: Enforce Traffic Flow**
-    - Why: Network segmentation
-    - Impact: Contains breaches
-    - Dependencies: KSI-CNA-01
-
-16. **KSI-CNA-04: Immutable Infrastructure**
-    - Why: Prevents tampering
-    - Impact: Improves security posture
-    - Dependencies: KSI-MLA-05 (IaC)
-
-### Continuous Assessment
-17. **KSI-CNA-08: Persistent Assessment and Automated Enforcement**
-    - Why: Real-time compliance checking
-    - Impact: Continuous validation
-    - Dependencies: Policy engine (OPA/Kyverno)
+19. **KSI-CNA-RNT: Restricting Network Traffic**
+20. **KSI-CNA-ULN: Using Logical Networking** (depends on KSI-CNA-RNT)
+21. **KSI-CNA-DFP: Defining Functionality and Privileges**
+22. **KSI-CNA-EIS: Enforcing Intended State** (depends on KSI-MLA-EVC; policy engine such as OPA or Kyverno)
+23. **KSI-CNA-MAT: Minimizing Attack Surface**
+24. **KSI-CNA-OFA: Optimizing for Availability**
+25. **KSI-CNA-IBP: Implementing Best Practices**
+26. **KSI-CNA-RVP: Reviewing Protections**
 
 ## Priority 5: Incident Response
-**Detection and response capabilities**
 
-### Incident Management
-18. **KSI-INR-01: Incident Response Procedure**
-    - Why: Required for compliance
-    - Impact: Effective incident handling
-    - Dependencies: None
+27. **KSI-INR-RIR: Reviewing Incident Response Procedures**
+28. **KSI-INR-RPI: Reviewing Past Incidents** (depends on KSI-MLA-OSM)
+29. **KSI-INR-AAR: Generating After Action Reports** (depends on KSI-INR-RIR)
 
-19. **KSI-INR-02: Incident Logging**
-    - Why: Evidence and investigation
-    - Impact: Post-incident analysis
-    - Dependencies: KSI-MLA-01 (SIEM)
+Relate these to the IEC rules (IEC-CSO-EFR, IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR).
 
-20. **KSI-INR-03: Incident After Action Reports**
-    - Why: Continuous improvement
-    - Impact: Learn from incidents
-    - Dependencies: KSI-INR-01, KSI-INR-02
+## Priority 6: Recovery Planning
 
-## Priority 6: Business Continuity
-**Resilience and recovery**
+30. **KSI-RPL-RRO: Reviewing Recovery Objectives** (RTO and RPO)
+31. **KSI-RPL-ABO: Aligning Backups with Objectives** (depends on KSI-RPL-RRO)
+32. **KSI-RPL-ARP: Aligning Recovery Plan** (depends on KSI-RPL-RRO)
+33. **KSI-RPL-TRC: Testing Recovery Capabilities** (depends on KSI-RPL-ARP, KSI-RPL-ABO)
 
-### Backup & Recovery
-21. **KSI-RPL-01: Recovery Objectives**
-    - Why: Define RTO/RPO
-    - Impact: Business continuity planning
-    - Dependencies: Business analysis
+## Priority 7: Governance and Culture
 
-22. **KSI-RPL-03: System Backups**
-    - Why: Data protection
-    - Impact: Recovery capability
-    - Dependencies: KSI-RPL-01
+34. **KSI-CED-RAT: Reviewing All Training**
+35. **KSI-PIY-RES: Reviewing Executive Support**
+36. **KSI-PIY-RIS: Reviewing Investments in Security**
+37. **KSI-PIY-RSD: Reviewing Security in the SDLC**
+38. **KSI-CMT-RVP: Reviewing Change Procedures**
 
-23. **KSI-RPL-02: Recovery Plan**
-    - Why: Documented procedures
-    - Impact: Faster recovery
-    - Dependencies: KSI-RPL-01, KSI-RPL-03
+## Priority 8: Remaining KSIs
 
-24. **KSI-RPL-04: Recovery Testing**
-    - Why: Validate backup/recovery works
-    - Impact: Confidence in recovery
-    - Dependencies: KSI-RPL-02, KSI-RPL-03
+39. **KSI-IAM-JIT: Authorizing Just-in-Time** (depends on KSI-IAM-ELP)
+40. **KSI-SVC-SIN: Securing Information** (encryption; TLS or mTLS)
+41. **KSI-SVC-VRI: Validating Resource Integrity**
+42. **KSI-SVC-VCM: Validating Communications**
+43. **KSI-SVC-EIS: Evaluating and Improving Security**
+44. **KSI-SVC-PRR: Preventing Residual Risk**
+45. **KSI-MLA-ALA: Authorizing Log Access**
+46. **KSI-PIY-RVD: Reviewing Vulnerability Disclosures**
 
-## Priority 7: Governance & Culture
-**Organizational capabilities**
+Also: **KSI-SVC-RUD: Removing Unwanted Data**.
 
-### Education
-25. **KSI-CED-01: General Education**
-    - Why: Security awareness baseline
-    - Impact: Reduces human error
-    - Dependencies: Training platform
+## Quick Wins (can be done anytime)
 
-26. **KSI-CED-02: Role-Specific Education**
-    - Why: Targeted training
-    - Impact: Better security practices
-    - Dependencies: KSI-CED-01
-
-27. **KSI-CED-03: Development and Engineering Education**
-    - Why: Secure coding practices
-    - Impact: Fewer vulnerabilities
-    - Dependencies: KSI-CED-01
-
-### Supply Chain
-28. **KSI-PIY-07: Supply Chain Risk Management**
-    - Why: Third-party risk
-    - Impact: Vendor security
-    - Dependencies: Vendor assessment process
-
-29. **KSI-TPR-04: Supply Chain Risk Monitoring**
-    - Why: Ongoing vendor oversight
-    - Impact: Continuous third-party risk
-    - Dependencies: KSI-PIY-07
-
-### Executive Support
-30. **KSI-PIY-08: Executive Support**
-    - Why: Resources and priority
-    - Impact: Project success
-    - Dependencies: Business case
-
-## Priority 8: Advanced Capabilities
-**Nice-to-have and advanced features**
-
-### Additional Security
-31. **KSI-IAM-02: Passwordless Authentication**
-    - Why: Better UX and security
-    - Impact: Reduces password attacks
-    - Dependencies: KSI-IAM-01
-
-32. **KSI-IAM-04: Just-in-Time Authorization**
-    - Why: Temporary elevated access
-    - Impact: Reduces standing privileges
-    - Dependencies: KSI-IAM-05
-
-33. **KSI-SVC-02: Network Encryption**
-    - Why: Data in transit protection
-    - Impact: Confidentiality
-    - Dependencies: TLS/mTLS implementation
-
-## Quick Wins (Can be done anytime)
-**High visibility, relatively straightforward**
-
-- **KSI-AFR-08: FedRAMP Security Inbox**
-  - Set up email forwarding to security inbox
-
-- **KSI-PIY-03: Vulnerability Disclosure Program**
-  - Create security.txt, disclosure policy
-
-- **KSI-SVC-10: Data Destruction**
-  - Document and implement data deletion procedures
-
-- **KSI-CMT-04: Change Management Procedure**
-  - Document existing change process
+- **AFC-CSO-INB: FedRAMP Security Inbox** (maintain an inbox for FedRAMP messages)
+- **KSI-PIY-RVD: Reviewing Vulnerability Disclosures** (security.txt, disclosure policy)
+- **KSI-SVC-RUD: Removing Unwanted Data** (document and implement deletion)
+- **KSI-CMT-RVP: Reviewing Change Procedures** (document the existing change process)
 
 ## Implementation Strategy
 
 ### Phase 1: Foundation
-Focus on Priority 1-2 KSIs
-- SIEM (KSI-MLA-01) ← Start immediately
-- MFA (KSI-IAM-01) ← Parallel track
-- Vulnerability scanning (KSI-AFR-04)
-- Basic logging (KSI-MLA-02)
+- SIEM (KSI-MLA-OSM) and authentication (KSI-IAM-APM) in parallel
+- Vulnerability detection (VDR-CSO-DET)
+- Inventory and logging (KSI-PIY-GIV, KSI-MLA-RVL)
 
 ### Phase 2: Core Security
-Priority 3-4 KSIs
-- IaC (KSI-MLA-05)
-- Secret management (KSI-SVC-06)
-- Network controls (KSI-CNA-01, CNA-03)
-- Automated testing (KSI-CMT-03)
+- IaC (KSI-MLA-EVC), secret management (KSI-SVC-ASM)
+- Network controls (KSI-CNA-RNT, KSI-CNA-ULN)
+- Automated testing (KSI-CMT-VTD)
 
 ### Phase 3: Operations
-Priority 5-6 KSIs
-- Incident response (KSI-INR-01, INR-02, INR-03)
-- Backup/recovery (KSI-RPL-01 through RPL-04)
-- Change tracking (KSI-CMT-01)
+- Incident response (KSI-INR-RIR, KSI-INR-RPI, KSI-INR-AAR)
+- Recovery (KSI-RPL-RRO through KSI-RPL-TRC)
+- Change tracking (KSI-CMT-LMC)
 
 ### Phase 4: Maturity
-Priority 7-8 KSIs
-- Training programs (KSI-CED)
-- Supply chain management (KSI-PIY-07, TPR-04)
-- Advanced IAM (KSI-IAM-02, IAM-04)
+- Training and governance (KSI-CED-RAT, KSI-PIY-RES)
+- Supply chain (KSI-SCR-MIT, KSI-SCR-MON)
+- Advanced IAM (KSI-IAM-JIT, KSI-IAM-AAM)
 
 ## Dependencies to Watch
 
 **Blockers:**
-- No SIEM = Can't implement 15+ other KSIs
-- No IaC = Can't implement immutable infrastructure
-- No CI/CD = Can't implement automated testing
+- No SIEM: many monitoring-dependent KSIs stall
+- No IaC: cannot enforce intended state or redeploy from version control
+- No CI/CD: cannot automate validation
 
 **Common Mistakes:**
-❌ Starting with advanced KSIs before foundation
-❌ Trying to implement all 72 simultaneously
-❌ Ignoring dependencies between KSIs
-❌ Underestimating SIEM implementation complexity
+- Starting with advanced KSIs before the foundation
+- Trying to implement all 46 simultaneously
+- Ignoring dependencies between KSIs
+- Underestimating SIEM implementation complexity
 
 **Success Patterns:**
-✓ Start with SIEM and MFA in parallel
-✓ Build automation early (IaC, CI/CD)
-✓ Focus on one category at a time
-✓ Collect evidence as you go
+- Start with SIEM and authentication in parallel
+- Build automation early (IaC, CI/CD)
+- Focus on one family at a time
+- Collect evidence as you go
 
-## Resource Allocation
+## Resource Allocation (suggestion)
 
 **Minimum Team:**
 - 1 Security Engineer (SIEM, vulnerability management)
 - 1 DevOps/SRE (automation, IaC)
-- 1 IAM Specialist (MFA, access controls)
-- 1 Compliance PM (coordination, documentation)
+- 1 IAM Specialist
+- 1 Compliance PM
 
-**Expanded Team:**
-Add 2-3 more engineers for parallel workstreams during peak implementation phases
-
-Use list_ksi to see all 72 indicators, and get_ksi(ksi_id) for detailed requirements.
+Use list_ksi to see all 46 indicators, and get_ksi(ksi_id) for detailed requirements.

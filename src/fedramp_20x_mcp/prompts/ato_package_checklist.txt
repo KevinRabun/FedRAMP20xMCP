@@ -1,75 +1,62 @@
-I'll help you prepare a complete FedRAMP Authorization to Operate (ATO) package checklist.
+I'll help you prepare a complete FedRAMP Certification Package checklist under the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01).
 
-**FedRAMP 20x Documentation Requirements**:
+**Note**: CR26 replaces the Authorization to Operate (ATO) package model with a FedRAMP Certification Package (FRC-CSO-PKG). There is no requirement in CR26 for an OSCAL System Security Plan, a Security Assessment Report, or a Plan of Action and Milestones as package components.
+
+**FedRAMP Certification Package contents (FRC-CSO-PKG)**:
+   - Cloud Service Offering overview (CPO-CSO-OVR, CPO-CSO-MTD)
+   - Implementation, validation and assessment information for each relevant rule, control or KSI, recorded in the Security Decision Record (SDR-CSO-FRR, SDR-CSO-MTD, SDR-CSX-KSI for 20x, SDR-CSF-CTF for Rev5)
+   - A real or example Ongoing Certification Report (CCM-OCR-AVL)
+   - Machine-readable content that validates against FedRAMP JSON schemas where a rule defines one (FRC-CSO-JSN)
 
 **1. Minimum Assessment Scope (MAS)**
-   - System boundary definition
-   - Information resources inventory
-   - Federal customer data handling documentation
-   - Third-party service dependencies
+   - Information resources included in the cloud service offering (MAS-CSO-IIR)
+   - Information flows and security categories (MAS-CSO-FLO)
+   - Third-party information resources (MAS-CSO-TPR)
+   - Metadata, including metadata about federal customer data (MAS-CSO-MDI)
 
-**2. Authorization Data Sharing (ADS)**
-   - Access control matrix
-   - Trust center documentation
-   - Authorization sharing agreements
+**2. Certification Data Sharing (CDS)**
+   - Public information and public service list (CDS-CSO-PUB, CDS-CSO-SVC)
+   - FedRAMP-compatible trust center (CDS-CSO-UTC) with consistency between formats (CDS-CSO-CBF)
+   - Agency access denial notices (CDS-UTC-AAD)
 
 **3. FedRAMP Definitions (FRD)**
-   - Verify all terminology usage aligns with official definitions
-   - Document any service-specific interpretations
+   - Verify terminology aligns with the official definitions (80 definitions)
 
-**4. Key Security Indicators (KSI) - 72 total indicators across:**
-   - Authorization & Accreditation (AFR)
-   - Cybersecurity Education (CED)
-   - Commitment (CMT)
-   - Change Management & Notifications (CNA)
-   - Identity & Access Management (IAM)
-   - Information Resources (INR)
-   - Monitoring, Logging & Analysis (MLA)
-   - Privacy (PIY)
-   - Reporting (RPL)
-   - Service Offerings (SVC)
-   - Third Party Resources (TPR)
+**4. Key Security Indicators (KSI): 46 indicators in 10 families**
+   - CED Cybersecurity Education, CMT Change Management, CNA Cloud Native Architecture, IAM Identity and Access Management, INR Incident Response, MLA Monitoring, Logging, and Auditing, PIY Policy and Inventory, RPL Recovery Planning, SCR Supply Chain Risk, SVC Service Configuration
 
-**5. Vulnerability Detection & Response (VDR)**
-   - Vulnerability scanning procedures
-   - Remediation timeframes by severity
-   - Exception documentation
-   - Agency-specific requirements
+**5. Vulnerability Detection and Response (VDR) and Vulnerability Evaluation and Reporting (VER)**
+   - Detection and response process (VDR-CSO-DET, VDR-CSO-RES)
+   - Mitigation and remediation expectations by class, N-rating and reachability (VDR-TFR-PVR)
+   - Evaluation, reporting and accepted vulnerabilities (VER-EVA-*, VER-RPT-*, VER-TFR-MHR, VER-TFR-MAV)
 
-**6. Incident Communications Procedures (ICP)**
-   - Incident response plan
-   - Communication protocols
-   - Escalation procedures
+**6. Incident Evaluation and Communication (IEC)**
+   - Reportability evaluation (IEC-CSO-EFR), default PAIN rating (IEC-CSO-DPR)
+   - Initial, ongoing and final incident reports (IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)
 
 **7. Collaborative Continuous Monitoring (CCM)**
-   - Quarterly review procedures
-   - Continuous monitoring documentation
-   - Agency collaboration processes
+   - Ongoing Certification Report every 3 months (CCM-OCR-AVL) and next report date (CCM-OCR-NRD)
+   - Quarterly Review meeting (CCM-QTR-MTG; requirement strength varies by class)
 
-**8. Persistent Validation & Assessment (PVA)**
-   - Assessment schedules by impact level
-   - Validation procedures
-   - Remediation tracking
+**8. Independent Verification and Validation (IVV)**
+   - Evidence of implementation and effectiveness (IVV-CSO-SEI, IVV-CSO-SEE)
+   - Independent assessment results in the package (IVV-CSO-ICP)
+   - Annual assessment of KSIs for 20x (IVV-CSX-AIA) or Rev5 controls (IVV-CSF-AIA)
 
-**9. Recommended Secure Configuration (RSC)**
-   - Baseline configurations
-   - Configuration management procedures
+**9. Secure Configuration Guide (SCG)**
+   - Recommended secure configuration and use instructions (SCG-CSO-RSC, SCG-CSO-AUP)
 
-**10. Significant Change Notifications (SCN)**
-    - Change classification procedures
-    - Notification protocols
-    - Impact assessment process
+**10. Significant Change Notification (SCN)**
+   - Evaluation and audit records (SCN-CSO-EVA, SCN-CSO-MAR), required notification content (SCN-CSO-INF)
 
-**11. Using Cryptographic Modules (UCM)**
-    - FIPS 140 compliance documentation
-    - Cryptographic module inventory
+**11. Cryptographic Module Use (CMU)**
+   - Documentation of cryptographic modules (CMU-CSO-CMD) and validated module use (CMU-CSO-UVM, by class)
 
-**12. FedRAMP Security Inbox (FSI)**
-    - Security inbox setup
-    - Response procedures
-    - Communication protocols
+**12. FedRAMP Security Inbox (AFC)**
+   - Maintain the inbox and receive messages without disruption (AFC-CSO-INB, AFC-CSO-RCV)
+   - Complete required actions in Emergency messages (AFC-CSO-CRA)
 
-**What to do next**: 
+**What to do next**:
 1. Use the search_requirements tool to find specific details for each area
 2. Use get_definition to clarify any terminology
 3. Use list_ksi to review all Key Security Indicators you need to address

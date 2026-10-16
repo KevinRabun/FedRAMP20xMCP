@@ -51,6 +51,7 @@ class Pattern:
     requires_any: Optional[List[str]] = None
     requires_absence: Optional[List[str]] = None
     conflicts_with: Optional[List[str]] = None
+    related_frrs: Optional[List[str]] = None
 
 
 class PatternEngine:
@@ -136,7 +137,8 @@ class PatternEngine:
                 requires_all=data.get('requires_all'),
                 requires_any=data.get('requires_any'),
                 requires_absence=data.get('requires_absence'),
-                conflicts_with=data.get('conflicts_with')
+                conflicts_with=data.get('conflicts_with'),
+                related_frrs=data.get('related_frrs') or []
             )
         except Exception as e:
             print(f"Warning: Failed to parse pattern: {e}", file=__import__('sys').stderr)
@@ -478,7 +480,8 @@ class PatternEngine:
             code_snippet=self._extract_code_snippet(matches, code),
             remediation=remediation,
             file_path=file_path,
-            requirement_id=pattern.pattern_id
+            requirement_id=(pattern.related_ksis or pattern.related_frrs or [None])[0],
+            pattern_id=pattern.pattern_id
         )
     
     def _extract_line_number(self, matches: Any, code: str) -> int:

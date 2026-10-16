@@ -1,20 +1,23 @@
 ````plaintext
-## Bicep Template for FRR-CCM (Collaborative Continuous Monitoring)
+## Bicep Template for CCM (Collaborative Continuous Monitoring)
 
 ```bicep
 // frr_ccm.bicep - Collaborative Continuous Monitoring Infrastructure
-// Implements FRR-CCM family requirements for real-time security monitoring,
-// automated alerting, incident detection, and continuous compliance validation
+// Infrastructure sketch that collects the monitoring data feeding the CCM family deliverables
+// under the FedRAMP Consolidated Rules for 2026 (CR26).
 //
-// FRR-CCM Requirements Supported:
-// - FRR-CCM-01 to CCM-07: Core continuous monitoring requirements
-// - FRR-CCM-AG-01 to AG-07: Agency-specific monitoring and reporting
-// - FRR-CCM-QR-01 to QR-11: Quarterly review and assessment requirements
+// CCM rules supported:
+// - CCM-OCR-AVL: Ongoing Certification Report every 3 months covering the period since the previous report
+// - CCM-OCR-FBM, CCM-OCR-AFS: Feedback mechanism and anonymized feedback summary
+// - CCM-QTR-MTG: Quarterly Review meeting (MAY for Class A, SHOULD for Class B, MUST for Class C and D)
+// - CCM-QTR-REG, CCM-QTR-NRD: Registration information and next review date
+// - CCM-AGM-ROR: Agencies review Ongoing Certification Reports (agency-facing guidance)
 //
 // Related KSIs:
-// - KSI-CMT-01: Change management tracking
-// - KSI-INR-01: Incident response and notification
-// - KSI-CED-01: Continuous evidence collection
+// - KSI-MLA-OSM: SIEM capability
+// - KSI-CMT-LMC: Logging changes
+// - KSI-INR-RPI: Reviewing past incidents
+// Related rules: IEC-CSO-EFR (incident reportability evaluation), SCN-CSO-EVA (change evaluation)
 
 targetScope = 'resourceGroup'
 
@@ -23,10 +26,13 @@ param workspaceName string = 'law-ccm-${uniqueString(resourceGroup().id)}'
 param sentinelName string = 'sentinel-ccm-${uniqueString(resourceGroup().id)}'
 param storageAccountName string = 'ccmevidence${uniqueString(resourceGroup().id)}'
 param actionGroupEmail string = 'security@contoso.com'
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period.')
+param logRetentionDays int
+@description('Hours after which an untriaged incident raises an alert. Organization-defined; IEC-CSO-EFR requires prompt reportability evaluation and the IEC report timeframes vary by Class and N-rating.')
+param incidentTriageHours int = 1
 
 // Log Analytics Workspace for all security logs
-// MANDATORY: Central logging for FedRAMP 20x compliance
-// Retention: 730 days minimum (FRR-CCM-01, FRR-CCM-02)
+// Central logging (KSI-MLA-OSM). Retention is organization-defined (CR26 sets no numeric value)
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName
   location: location
@@ -34,7 +40,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 730  // MANDATORY: 2-year retention for FedRAMP 20x
+    retentionInDays: logRetentionDays  // organization-defined
     features: {
       enableLogAccessUsingOnlyResourcePermissions: true
       immediatePurgeDataOn30Days: false  // Preserve logs for compliance
@@ -45,7 +51,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 }
 
 // Microsoft Sentinel for SIEM capabilities
-// Supports: FRR-CCM-01 (continuous monitoring), FRR-CCM-02 (incident detection)
+// Supports: KSI-MLA-OSM (SIEM), KSI-INR-RPI (incident review)
 resource sentinel 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {
   name: 'SecurityInsights(${logAnalytics.name})'
   location: location
@@ -61,7 +67,7 @@ resource sentinel 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' 
 }
 
 // Storage Account for continuous monitoring evidence
-// Supports: FRR-CCM-AG-01 (agency reporting), FRR-CCM-QR-01 (quarterly reviews)
+// Supports: CCM-OCR-AVL (Ongoing Certification Report inputs), CCM-QTR-MTG (Quarterly Review materials)
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
@@ -92,14 +98,13 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 }
 
 // Blob containers for monitoring evidence categories
-// Supports: FRR-CCM-QR quarterly review requirements
+// Supports: CCM-OCR and CCM-QTR deliverables (container names are design suggestions)
 resource securityAlertsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
   name: '${storageAccount.name}/default/security-alerts'
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-CCM-01 security alert archive'
-      retention: '3 years'
+      purpose: 'Security alert archive (input to CCM-OCR-AVL)'
     }
   }
 }
@@ -109,8 +114,7 @@ resource incidentReportsContainer 'Microsoft.Storage/storageAccounts/blobService
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-CCM-02 incident detection and response'
-      retention: '7 years'
+      purpose: 'Incident evaluation and reports (IEC-CSO-EFR, IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)'
     }
   }
 }
@@ -120,25 +124,23 @@ resource quarterlyReviewsContainer 'Microsoft.Storage/storageAccounts/blobServic
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-CCM-QR-01 to QR-11 quarterly assessment artifacts'
-      retention: '7 years'
+      purpose: 'Quarterly Review materials and recordings (CCM-QTR-MTG, CCM-QTR-RTR)'
     }
   }
 }
 
-resource agencyReportsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${storageAccount.name}/default/agency-reports'
+resource ongoingReportsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/ongoing-certification-reports'
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-CCM-AG-01 to AG-07 agency-specific monitoring reports'
-      retention: '7 years'
+      purpose: 'Ongoing Certification Reports and snapshots (CCM-OCR-AVL, CDS-CSO-HAD)'
     }
   }
 }
 
 // Action Group for security alerts
-// Supports: FRR-CCM-01 (real-time alerting), FRR-CCM-02 (incident notification)
+// Supports: KSI-MLA-OSM (alerting), IEC-CSO-EFR (prompt incident evaluation)
 resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   name: 'ccm-security-alerts'
   location: 'global'
@@ -157,8 +159,8 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
         useCommonAlertSchema: true
       }
       {
-        name: 'FedRAMP PMO'
-        emailAddress: 'fedramp-pmo@contoso.com'
+        name: 'FedRAMP Security Inbox owner (AFC-CSO-INB)'
+        emailAddress: 'fedramp-inbox@contoso.com'
         useCommonAlertSchema: true
       }
     ]
@@ -167,15 +169,15 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   }
 }
 
-// Sentinel Analytics Rules for FRR-CCM requirements
-// Rule 1: Multiple failed authentication attempts (FRR-CCM-01)
+// Sentinel Analytics Rules (KSI-MLA-OSM, KSI-IAM-SUS)
+// Rule 1: Multiple failed authentication attempts (KSI-IAM-SUS)
 resource failedAuthRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-preview' = {
   scope: logAnalytics
   name: 'failed-authentication-attempts'
   kind: 'Scheduled'
   properties: {
     displayName: 'Multiple Failed Authentication Attempts'
-    description: 'Detects multiple failed authentication attempts from single source (FRR-CCM-01)'
+    description: 'Detects multiple failed authentication attempts from single source (KSI-IAM-SUS)'
     severity: 'Medium'
     enabled: true
     query: '''
@@ -195,14 +197,14 @@ resource failedAuthRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-previe
   }
 }
 
-// Rule 2: Privileged role assignments (FRR-CCM-01, FRR-CCM-03)
+// Rule 2: Privileged role assignments (KSI-IAM-ELP, KSI-IAM-SUS)
 resource privilegedRoleRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-preview' = {
   scope: logAnalytics
   name: 'privileged-role-assignment'
   kind: 'Scheduled'
   properties: {
     displayName: 'Privileged Role Assignment Detected'
-    description: 'Alerts on assignment of privileged Azure roles (FRR-CCM-01, FRR-CCM-03)'
+    description: 'Alerts on assignment of privileged Azure roles (KSI-IAM-ELP, KSI-IAM-SUS)'
     severity: 'High'
     enabled: true
     query: '''
@@ -224,14 +226,14 @@ resource privilegedRoleRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-pr
   }
 }
 
-// Rule 3: Resource configuration changes (FRR-CCM-04)
+// Rule 3: Resource configuration changes (KSI-CMT-LMC; input to SCN-CSO-EVA evaluation)
 resource configChangeRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-preview' = {
   scope: logAnalytics
   name: 'security-configuration-change'
   kind: 'Scheduled'
   properties: {
     displayName: 'Security-Relevant Configuration Change'
-    description: 'Detects changes to security-sensitive resources (FRR-CCM-04, FRR-SCN)'
+    description: 'Detects changes to security-sensitive resources (KSI-CMT-LMC, SCN-CSO-EVA)'
     severity: 'Medium'
     enabled: true
     query: '''
@@ -256,14 +258,14 @@ resource configChangeRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-prev
   }
 }
 
-// Rule 4: Suspicious network traffic (FRR-CCM-01)
+// Rule 4: Suspicious network traffic (KSI-CNA-RNT, KSI-MLA-OSM)
 resource networkTrafficRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-preview' = {
   scope: logAnalytics
   name: 'suspicious-network-traffic'
   kind: 'Scheduled'
   properties: {
     displayName: 'Suspicious Network Traffic Detected'
-    description: 'Alerts on network traffic to known malicious IPs (FRR-CCM-01)'
+    description: 'Alerts on network traffic to known malicious IPs (KSI-CNA-RNT)'
     severity: 'High'
     enabled: true
     query: '''
@@ -286,8 +288,8 @@ resource networkTrafficRule 'Microsoft.SecurityInsights/alertRules@2023-12-01-pr
   }
 }
 
-// Automation Account for quarterly reporting
-// Supports: FRR-CCM-QR-01 to QR-11 (quarterly reviews), FRR-CCM-AG-01 (agency reports)
+// Automation Account for report generation
+// Supports: CCM-OCR-AVL (Ongoing Certification Report), CCM-QTR-MTG (Quarterly Review materials)
 resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
   name: 'automation-ccm-${uniqueString(resourceGroup().id)}'
   location: location
@@ -305,13 +307,13 @@ resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' 
 }
 
 // Scheduled Query Alerts for compliance metrics
-// Alert 1: Log retention compliance (FRR-CCM-AG-02)
+// Alert 1: Log retention policy check (KSI-MLA-RVL; the threshold is your organization-defined retention)
 resource logRetentionAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
   name: 'log-retention-compliance'
   location: location
   properties: {
-    displayName: 'Log Retention Compliance Check'
-    description: 'Validates 730-day log retention requirement (FRR-CCM-AG-02)'
+    displayName: 'Log Retention Policy Check'
+    description: 'Validates log retention against the organization-defined period (KSI-MLA-RVL)'
     severity: 0  // Critical
     enabled: true
     evaluationFrequency: 'P1D'
@@ -322,13 +324,13 @@ resource logRetentionAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-pr
     criteria: {
       allOf: [
         {
-          query: '''
+          query: format('''
             Usage
             | where DataType == "SecurityEvent"
             | summarize OldestLog = min(TimeGenerated)
             | extend RetentionDays = datetime_diff('day', now(), OldestLog)
-            | where RetentionDays < 730
-          '''
+            | where RetentionDays < {0}
+          ''', logRetentionDays)
           timeAggregation: 'Count'
           operator: 'GreaterThan'
           threshold: 0
@@ -347,13 +349,13 @@ resource logRetentionAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-pr
   }
 }
 
-// Alert 2: Incident response time (FRR-CCM-02)
+// Alert 2: Untriaged incidents (IEC-CSO-EFR: promptly evaluate incidents)
 resource incidentResponseAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
   name: 'incident-response-time'
   location: location
   properties: {
-    displayName: 'Incident Response Time Exceeded'
-    description: 'Alerts when incident response time exceeds 1 hour (FRR-CCM-02)'
+    displayName: 'Incident Triage Window Exceeded'
+    description: 'Alerts when a new incident stays untriaged beyond the organization-defined window (IEC-CSO-EFR)'
     severity: 1  // High
     enabled: true
     evaluationFrequency: 'PT15M'
@@ -364,12 +366,12 @@ resource incidentResponseAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-1
     criteria: {
       allOf: [
         {
-          query: '''
+          query: format('''
             SecurityIncident
             | where Status == "New"
-            | where TimeGenerated < ago(1h)
+            | where TimeGenerated < ago({0}h)
             | summarize Count = count() by IncidentName, Severity
-          '''
+          ''', incidentTriageHours)
           timeAggregation: 'Count'
           operator: 'GreaterThan'
           threshold: 0
@@ -389,12 +391,12 @@ resource incidentResponseAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-1
 }
 
 // Data Collection Rules for comprehensive monitoring
-// Supports: FRR-CCM-01 (continuous data collection)
+// Supports: KSI-MLA-OSM, KSI-MLA-LET (event types collected)
 resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
   name: 'dcr-ccm-security'
   location: location
   properties: {
-    description: 'FRR-CCM continuous monitoring data collection'
+    description: 'Security monitoring data collection (KSI-MLA-LET)'
     dataSources: {
       performanceCounters: [
         {
@@ -468,52 +470,54 @@ output automationAccountName string = automationAccount.name
    - Network Security Group Flow Logs
 
 4. **Configure Sentinel Workbooks:**
-   - FedRAMP Compliance Dashboard
+   - Certification Data Dashboard (KSI measures, vulnerabilities, accepted vulnerabilities)
    - Incident Response Metrics
    - Security Operations Center (SOC) Overview
 
 5. **Set Up Automation Runbooks:**
-   - Quarterly compliance report generation (FRR-CCM-QR-01)
-   - Agency-specific report generation (FRR-CCM-AG-01)
-   - Monthly security metrics aggregation
+   - Ongoing Certification Report generation (CCM-OCR-AVL, every 3 months)
+   - Quarterly Review material generation (CCM-QTR-MTG)
+   - Monthly vulnerability report generation (VER-TFR-MHR)
 
-## Continuous Monitoring Coverage (FRR-CCM-01)
+## Continuous Monitoring Coverage (CCM-OCR-AVL)
 
-| Category | Data Sources | Retention |
-|----------|-------------|-----------|
-| **Authentication** | Entra ID Sign-in Logs, Security Events | 730 days |
-| **Authorization** | Azure Activity Logs, Role Assignments | 730 days |
-| **Network Security** | NSG Flow Logs, Firewall Logs | 730 days |
-| **Resource Changes** | Azure Activity Logs, Resource Graph | 730 days |
-| **Security Alerts** | Defender for Cloud, Sentinel Incidents | 730 days |
-| **Compliance Status** | Policy Compliance, Secure Score | 730 days |
+| Category | Data Sources | Supports |
+|----------|-------------|----------|
+| **Authentication** | Entra ID Sign-in Logs, Security Events | KSI-IAM-APM, KSI-IAM-SUS |
+| **Authorization** | Azure Activity Logs, Role Assignments | KSI-IAM-ELP |
+| **Network Security** | NSG Flow Logs, Firewall Logs | KSI-CNA-RNT |
+| **Resource Changes** | Azure Activity Logs, Resource Graph | KSI-CMT-LMC, SCN-CSO-EVA |
+| **Security Alerts** | Defender for Cloud, Sentinel Incidents | KSI-MLA-OSM, IEC-CSO-EFR |
+| **Compliance Status** | Policy Compliance, Secure Score | KSI-SVC-ACM |
 
-## Quarterly Review Requirements (FRR-CCM-QR)
+Retention is organization-defined; CR26 sets no numeric log retention period.
 
-**FRR-CCM-QR-01 to QR-11 Quarterly Deliverables:**
-1. Security control effectiveness assessment
-2. Vulnerability scan results summary
-3. Incident response metrics and trends
-4. Configuration change audit
-5. Access review results
-6. Security training completion status
-7. Contingency plan testing results
-8. Third-party service validation
-9. Significant change notifications
-10. Continuous monitoring metrics
-11. Remediation action item tracking
+## Ongoing Certification Report and Quarterly Review (CCM-OCR, CCM-QTR)
 
-**Automated Collection Schedule:**
-- Weekly: Aggregate security metrics
-- Monthly: Generate trend reports
-- Quarterly: Comprehensive compliance package
+**Ongoing Certification Report content (CCM-OCR-AVL), covering the period since the previous report:**
+1. Changes to FedRAMP Certification Data
+2. Planned changes to Certification Data during at least the next 3 months
+3. Accepted vulnerabilities
+4. Transformative changes
+5. Updated recommendations or best practices for security, configuration or usage
+6. A list of all agencies directly using the product
+7. FedRAMP Reportable Incidents, or an attestation that none occurred
+8. Lessons learned and changes from Reportable Incidents (if any)
 
-## Agency Reporting (FRR-CCM-AG)
+**Quarterly Review logistics:**
+- Supply registration information (CCM-QTR-REG) and publish the next review date (CCM-QTR-NRD)
+- SHOULD schedule at least 3 business days after and within 10 business days of releasing the report (CCM-QTR-SAR)
+- SHOULD record or transcribe the review (CCM-QTR-RTR)
 
-**FRR-CCM-AG-01 to AG-07 Requirements:**
-- Agency-specific report formats
-- Custom dashboards for stakeholders
-- Machine-readable data exports (JSON/CSV)
-- Real-time compliance posture API
-- Escalation procedures for critical findings
+**Automated collection schedule (design suggestion):**
+- Continuous: security telemetry and alerts
+- Monthly: vulnerability report (VER-TFR-MHR)
+- Every 3 months: Ongoing Certification Report package
+
+## Agency-facing Sharing (CCM-OCR-FBM, CCM-OCR-AFS, CDS)
+
+- Asynchronous feedback mechanism for each report (CCM-OCR-FBM)
+- Anonymized feedback summary in an addendum or the next report (CCM-OCR-AFS)
+- Machine-readable data exports (JSON) through your trust center (CDS-TRC-PAC)
+- Do not irresponsibly disclose sensitive information (CCM-OCR-LSI)
 ````

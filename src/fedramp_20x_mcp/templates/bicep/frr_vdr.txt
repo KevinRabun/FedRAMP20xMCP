@@ -1,22 +1,26 @@
 ````plaintext
-## Bicep Template for FRR-VDR (Vulnerability Detection and Response)
+## Bicep Template for VDR and VER (Vulnerability Detection, Response, Evaluation and Reporting)
 
 ```bicep
 // frr_vdr.bicep - Vulnerability Management Infrastructure
-// Implements FRR-VDR family requirements for vulnerability detection,
-// patch management, remediation tracking, and compliance reporting
+// Infrastructure sketch for vulnerability detection, response, evaluation and reporting
+// under the FedRAMP Consolidated Rules for 2026 (CR26). VDR and VER are required from 2026-12-07
+// (mandated by CISA BOD 26-04).
 //
-// FRR-VDR Requirements Supported:
-// - FRR-VDR-01 through VDR-16: Core vulnerability detection and response
-// - FRR-VDR-AC-01 to AC-02: Authenticated vulnerability scanning
-// - FRR-VDR-EX-01: Deviation tracking and exception management
-// - FRR-VDR-RP-01 to RP-03: Agency-specific vulnerability reporting
-// - FRR-VDR-TF-01 to TF-02: Remediation timeframes and KEV tracking
+// Rules supported:
+// - VDR-CSO-DET, VDR-CSO-RES: Vulnerability detection and response
+// - VDR-CSO-ADT, VDR-CSO-DAC: Automated detection, detection after changes
+// - VDR-TFR-PVR: Mitigation and remediation timeframes (by Class, N-rating, reachability)
+// - VDR-TFR-KEV: Known Exploited Vulnerabilities per CISA due dates
+// - VER-EVA-ELX, VER-EVA-EIR, VER-EVA-EPA: Exploitability, reachability, potential agency impact
+// - VER-RPT-PER, VER-RPT-VDT, VER-RPT-AVI: Reporting and accepted vulnerabilities
+// - VER-TFR-MHR: Report at least monthly
+// - VER-TFR-MAV: Accepted vulnerability after 192 days from evaluation
 //
-// Related KSIs:
-// - KSI-AFR-01: Asset discovery and inventory
-// - KSI-AFR-04: Vulnerability detection and remediation
-// - KSI-CED-01: Continuous evidence collection
+// Related rules and KSIs:
+// - MAS-CSO-IIR: Scope of information resources
+// - KSI-SCR-MON: Supply chain risk monitoring
+// - KSI-PIY-GIV: Generating inventories
 
 targetScope = 'resourceGroup'
 
@@ -24,9 +28,11 @@ param location string = resourceGroup().location
 param workspaceName string = 'vdr-compliance-${uniqueString(resourceGroup().id)}'
 param storageAccountName string = 'vdrevidence${uniqueString(resourceGroup().id)}'
 param defenderEnabled bool = true
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period.')
+param logRetentionDays int
 
 // Log Analytics Workspace for vulnerability scan logs
-// Retention: 730 days (FedRAMP 20x requirement)
+// Retention is organization-defined (CR26 sets no numeric log retention period)
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName
   location: location
@@ -34,7 +40,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 730  // MANDATORY: FedRAMP 20x requires 2-year retention
+    retentionInDays: logRetentionDays  // organization-defined
     features: {
       enableLogAccessUsingOnlyResourcePermissions: true
     }
@@ -44,7 +50,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 }
 
 // Storage Account for vulnerability reports and evidence
-// Supports: FRR-VDR evidence storage, FRR-ADS machine-readable reports
+// Supports: VER-RPT-PER (reports are Certification Data), CDS-CSO-CBF (consistent human and machine-readable formats)
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
@@ -68,52 +74,49 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
           keyType: 'Account'
         }
       }
-      keySource: 'Microsoft.Storage'  // Use Customer-Managed Keys in production
+      keySource: 'Microsoft.Storage'  // design default for production: customer-managed keys (KSI-SVC-ASM)
     }
   }
 }
 
 // Blob Container for vulnerability scan results
-// Supports: FRR-VDR-01 (scan results), FRR-ADS-01 (machine-readable evidence)
+// Supports: VDR-CSO-DET (detection results), VER-RPT-VDT (report inputs)
 resource scanResultsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
   name: '${storageAccount.name}/default/vulnerability-scans'
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-VDR vulnerability scan results'
-      retention: '7 years'
+      purpose: 'Vulnerability detection results (VDR-CSO-DET)'
     }
   }
 }
 
 // Blob Container for remediation tracking
-// Supports: FRR-VDR-TF-01 (remediation timeframes)
+// Supports: VDR-TFR-PVR (mitigation and remediation timeframes)
 resource remediationContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
   name: '${storageAccount.name}/default/remediation-tracking'
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-VDR remediation timeframe tracking'
-      retention: '3 years'
+      purpose: 'Mitigation and remediation tracking (VDR-TFR-PVR)'
     }
   }
 }
 
-// Blob Container for deviation approvals
-// Supports: FRR-VDR-EX-01 (exception management)
-resource deviationsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${storageAccount.name}/default/vulnerability-deviations'
+// Blob Container for accepted vulnerabilities
+// Supports: VER-TFR-MAV, VER-RPT-AVI
+resource acceptedVulnerabilitiesContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/accepted-vulnerabilities'
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-VDR-EX deviation approvals and documentation'
-      retention: '7 years'
+      purpose: 'Accepted vulnerability information (VER-RPT-AVI)'
     }
   }
 }
 
 // Action Group for vulnerability alerts
-// Supports: FRR-VDR-01 (alerting), FRR-VDR-TF-01 (deadline alerts)
+// Supports: VDR-CSO-RES (response tracking), VDR-TFR-PVR (deadline alerts)
 resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   name: 'vdr-compliance-alerts'
   location: 'global'
@@ -135,14 +138,16 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   }
 }
 
-// Alert Rule: Critical vulnerabilities exceeding remediation timeframe
-// Supports: FRR-VDR-TF-01 (15-day critical, 30-day high remediation)
+// Alert Rule: Vulnerabilities past their VDR-TFR-PVR target
+// The RemediationDeadline column is assumed to be computed upstream from the VDR-TFR-PVR table for your
+// Certification Class using the vulnerability's N-rating, internet-reachability and likely exploitability.
+// Supports: VDR-TFR-PVR, VDR-TFR-KEV
 resource criticalVulnAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
-  name: 'critical-vuln-overdue'
+  name: 'vuln-past-pvr-target'
   location: location
   properties: {
-    displayName: 'Critical Vulnerabilities Overdue for Remediation'
-    description: 'Alerts when critical vulnerabilities exceed 15-day remediation timeframe (FRR-VDR-TF-01)'
+    displayName: 'Vulnerabilities Past Mitigation or Remediation Target'
+    description: 'Alerts when vulnerabilities pass the VDR-TFR-PVR target for their N-rating and reachability (VDR-TFR-PVR)'
     severity: 0  // Critical
     enabled: true
     evaluationFrequency: 'PT1H'
@@ -155,7 +160,7 @@ resource criticalVulnAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-pr
         {
           query: '''
             SecurityVulnerability
-            | where Severity == "Critical"
+            | where NRating >= 3
             | where RemediationDeadline < now()
             | summarize Count = count() by VulnerabilityId, AffectedResource
           '''
@@ -178,7 +183,7 @@ resource criticalVulnAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-pr
 }
 
 // Microsoft Defender for Cloud configuration (optional but recommended)
-// Supports: FRR-VDR-01 (vulnerability scanning), KSI-AFR-04
+// Supports: VDR-CSO-DET, VDR-CSO-ADT (automated detection)
 resource defenderForServers 'Microsoft.Security/pricings@2024-01-01' = if (defenderEnabled) {
   name: 'VirtualMachines'
   properties: {
@@ -195,7 +200,7 @@ resource defenderForContainers 'Microsoft.Security/pricings@2024-01-01' = if (de
 }
 
 // Automation Account for scheduled vulnerability reporting
-// Supports: FRR-VDR-RP-01 (agency-specific reports), FRR-VDR-TF-01 (monthly KEV reports)
+// Supports: VER-RPT-PER (reporting), VER-TFR-MHR (at least monthly reports), VDR-TFR-KEV (KEV tracking)
 resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
   name: 'vdr-automation-${uniqueString(resourceGroup().id)}'
   location: location
@@ -238,39 +243,40 @@ output automationAccountName string = automationAccount.name
 
 3. **Configure Vulnerability Scanning:**
    - Enable Defender for Cloud vulnerability assessments
-   - Integrate with Trivy, Qualys, or Tenable for authenticated scanning
+   - Integrate with Trivy, Qualys, or Tenable (authenticated scanning improves coverage of VDR-CSO-DET)
    - Configure CI/CD pipeline to upload scan results to blob storage
 
 4. **Set Up Evidence Collection:**
-   - Create Azure Function to collect daily scan results
+   - Create Azure Function to collect detection results (cadence per VDR-TFR-PDD, VDR-TFR-PCD, VDR-TFR-PSD for your Class)
    - Store results in `vulnerability-scans` container
-   - Generate monthly reports for FRR-VDR-TF-01 (KEV tracking)
+   - Generate reports at least monthly (VER-TFR-MHR) including the VER-RPT-VDT fields and KEV status
 
 5. **Configure Remediation Tracking:**
    - Set up automated tracking for vulnerability remediation
-   - Calculate remediation deadlines: Critical=15 days, High=30 days, Moderate=90 days
+   - Calculate target dates from the VDR-TFR-PVR table for your Class (N-rating x internet-reachability x exploitability); flag vulnerabilities not mitigated or remediated within 192 days of evaluation as accepted (VER-TFR-MAV)
    - Alert when deadlines are approaching or exceeded
 
-## Evidence Artifacts (FRR-ADS)
+## Evidence Artifacts (Certification Data, CDS-CSO-CBF)
 
 **Machine-Readable Formats:**
 - `vulnerability-scans/YYYY-MM-DD-scan-results.json` - Daily scan results
 - `remediation-tracking/YYYY-MM-DD-remediation-status.json` - Remediation progress
-- `vulnerability-deviations/YYYY-MM-DD-exceptions.json` - Approved exceptions
+- `accepted-vulnerabilities/YYYY-MM-DD-accepted.json` - Accepted vulnerabilities (VER-RPT-AVI)
 
 **Collection Schedule:**
-- Vulnerability scans: Daily (automated in CI/CD)
-- Remediation status: Weekly
-- KEV tracking report: Monthly (FRR-VDR-TF-01)
-- Deviation reviews: Quarterly
+- Detection: per VDR-TFR-PDD, VDR-TFR-PCD, VDR-TFR-PSD for your Class (automated in CI/CD where possible)
+- Remediation status: as often as your reporting needs
+- Vulnerability report: at least monthly (VER-TFR-MHR)
+- Ongoing Certification Report inputs: every 3 months (CCM-OCR-AVL)
 
-## Related FRR Requirements
+## Related Rules
 
-- **FRR-VDR-01**: Vulnerability scanning implementation ✓
-- **FRR-VDR-08**: Patch management procedures (requires process documentation)
-- **FRR-VDR-11**: Deviation tracking and approvals ✓
-- **FRR-VDR-AC-01**: Authenticated scanning (configure scanner credentials)
-- **FRR-VDR-TF-01**: Remediation timeframes and KEV tracking ✓
-- **FRR-VDR-TF-02**: KEV vulnerability prioritization ✓
-- **FRR-VDR-RP-01**: Agency-specific vulnerability reporting ✓
+- **VDR-CSO-DET**: Vulnerability detection implementation (this template)
+- **VDR-TFR-PVR**: Timeframes by Class, N-rating and reachability (alert rule; the deadline calculation is yours to implement)
+- **VER-EVA-EIR**: Evaluate internet-reachability (requires process documentation)
+- **VER-RPT-HLO**: High-level overviews of all detection and response activity (SHOULD)
+- **VER-TFR-MHR**: Monthly report (this template provides storage and automation)
+- **VER-TFR-MAV, VER-RPT-AVI**: Accepted vulnerabilities (container and reporting fields)
+- **VDR-TFR-KEV**: KEV remediation by CISA due dates
+- **VER-RPT-PER**: Persistent reporting as Certification Data
 ````

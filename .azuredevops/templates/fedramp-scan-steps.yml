@@ -1,0 +1,114 @@
+# FedRAMP 20x pattern scan steps.
+#
+# Installs this repository's package (editable, so the YAML pattern library in
+# data/patterns is found) and runs `fedramp-20x-scan` over a source tree. The
+# scan writes findings.json, report.md and run.json to outputDir. run.json
+# records the FedRAMP Consolidated Rules version and sha256 the scan used, plus
+# the build provenance, so the output can be stored as evidence as-is (see
+# evidence-upload-steps.yml).
+#
+# The gate is enforced in a separate, last step so the report is always
+# published (and can be uploaded as evidence by a later job) even when the
+# gate fails. Exit code 2 (tool error) fails the scan step immediately.
+#
+# Runs on a Microsoft-hosted or self-hosted Linux agent with Python 3.10+.
+
+parameters:
+  # Where this repository is checked out. With a single `checkout: self` that
+  # is $(Build.SourcesDirectory); with multiple checkouts it is
+  # $(Build.SourcesDirectory)/<repo name> (or the checkout's `path:`).
+  - name: toolPath
+    type: string
+    default: '$(Build.SourcesDirectory)'
+  # File or directory to scan.
+  - name: scanPath
+    type: string
+    default: '$(Build.SourcesDirectory)'
+  - name: outputDir
+    type: string
+    default: '$(Build.ArtifactStagingDirectory)/fedramp-scan'
+  # Fail the job when any issue is at or above this severity:
+  # critical | high | medium | low | none
+  - name: failOn
+    type: string
+    default: 'high'
+    values: [critical, high, medium, low, none]
+  # Comma-separated pattern families (e.g. 'IAM,SVC,MLA'); empty = all.
+  - name: families
+    type: string
+    default: ''
+  # Application profile to cut false positives (e.g. web-app, cli-tool,
+  # api-service). Empty = no filtering.
+  - name: profile
+    type: string
+    default: ''
+  # Extra relative-path globs to skip, one per entry.
+  - name: excludes
+    type: object
+    default: []
+  - name: artifactName
+    type: string
+    default: 'fedramp-scan'
+  # Use UsePythonVersion (needs the hosted tool cache). Set false on a
+  # self-hosted agent that already has python3.
+  - name: useHostedPython
+    type: boolean
+    default: true
+  - name: pythonVersion
+    type: string
+    default: '3.12'
+  # Rules source: 'live' fetches the latest FedRAMP/rules release; 'bundled'
+  # uses the snapshot pinned in this package (reproducible, no network).
+  - name: rulesSource
+    type: string
+    default: 'live'
+    values: [live, bundled]
+
+steps:
+- ${{ if eq(parameters.useHostedPython, true) }}:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python ${{ parameters.pythonVersion }}'
+    inputs:
+      versionSpec: '${{ parameters.pythonVersion }}'
+
+- bash: |
+    set -euo pipefail
+    python3 -m venv "$(Agent.TempDirectory)/fedramp-venv"
+    "$(Agent.TempDirectory)/fedramp-venv/bin/python" -m pip install --quiet --upgrade pip
+    "$(Agent.TempDirectory)/fedramp-venv/bin/python" -m pip install --quiet -e "${{ parameters.toolPath }}"
+    "$(Agent.TempDirectory)/fedramp-venv/bin/fedramp-20x-scan" --help > /dev/null
+  displayName: 'Install fedramp-20x-mcp scanner'
+
+- bash: |
+    set -uo pipefail
+    args=( "${{ parameters.scanPath }}" --output-dir "${{ parameters.outputDir }}" --fail-on "${{ parameters.failOn }}" )
+    if [ -n "${{ parameters.families }}" ]; then args+=( --families "${{ parameters.families }}" ); fi
+    if [ -n "${{ parameters.profile }}" ]; then args+=( --profile "${{ parameters.profile }}" ); fi
+    excludes='${{ join('|', parameters.excludes) }}'
+    if [ -n "$excludes" ]; then
+      IFS='|' read -r -a globs <<< "$excludes"
+      for g in "${globs[@]}"; do args+=( --exclude "$g" ); done
+    fi
+    if [ "${{ parameters.rulesSource }}" = "bundled" ]; then export FEDRAMP_RULES_OFFLINE=1; fi
+
+    "$(Agent.TempDirectory)/fedramp-venv/bin/fedramp-20x-scan" "${args[@]}"
+    rc=$?
+    echo "##vso[task.setvariable variable=fedrampScanExitCode]$rc"
+    if [ "$rc" -ge 2 ]; then
+      echo "##vso[task.logissue type=error]fedramp-20x-scan failed to run (exit $rc)"
+      exit "$rc"
+    fi
+    exit 0
+  name: fedrampScan
+  displayName: 'FedRAMP 20x pattern scan'
+
+- publish: '${{ parameters.outputDir }}'
+  artifact: '${{ parameters.artifactName }}'
+  displayName: 'Publish scan results'
+  condition: succeededOrFailed()
+
+- bash: |
+    echo "##vso[task.logissue type=error]FedRAMP 20x gate failed: issues at or above '${{ parameters.failOn }}'. See the scan summary tab or report.md."
+    exit 1
+  displayName: 'Enforce FedRAMP 20x gate (fail on ${{ parameters.failOn }})'
+  condition: and(succeeded(), eq(variables['fedrampScanExitCode'], '1'))

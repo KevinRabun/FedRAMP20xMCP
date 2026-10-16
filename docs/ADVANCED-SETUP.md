@@ -117,10 +117,10 @@ VS Code will prompt you to grant permissions on first use.
 ## Example Workflow with Multiple Servers
 
 ```
-User: "Check if my Azure Key Vault configuration meets FedRAMP KSI-IAM-06 requirements"
+User: "Check if my Azure Key Vault configuration meets FedRAMP KSI-IAM-SUS requirements"
 
 AI Assistant uses:
-1. fedramp-20x-mcp → Get KSI-IAM-06 requirements
+1. fedramp-20x-mcp → Get KSI-IAM-SUS requirements
 2. azure-mcp → Query actual Key Vault configuration
 3. microsoft-docs → Get Azure Key Vault security best practices
 4. Returns compliance analysis with gaps and remediation steps

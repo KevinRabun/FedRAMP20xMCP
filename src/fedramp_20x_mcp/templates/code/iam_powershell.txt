@@ -5,7 +5,7 @@
 
 <#
 .SYNOPSIS
-    Collects IAM evidence for FedRAMP 20x KSI-IAM-01
+    Collects IAM evidence for FedRAMP 20x KSI-IAM-APM
 .DESCRIPTION
     Gathers MFA enrollment and usage data from Microsoft Entra ID
     and stores evidence in Azure Blob Storage
@@ -28,7 +28,7 @@ function Get-MFAEvidence {
     
     $evidence = @{
         collection_date = (Get-Date).ToUniversalTime().ToString("o")
-        ksi_id = "KSI-IAM-01"
+        ksi_id = "KSI-IAM-APM"
         total_users = 0
         users_with_mfa = 0
         non_compliant_users = @()

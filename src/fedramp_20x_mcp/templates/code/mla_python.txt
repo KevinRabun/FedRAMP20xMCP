@@ -18,7 +18,7 @@ WORKSPACE_ID = os.environ["LOG_ANALYTICS_WORKSPACE_ID"]
 STORAGE_ACCOUNT = os.environ["EVIDENCE_STORAGE_ACCOUNT"]
 
 def collect_log_coverage_evidence():
-    \"\"\"Collect evidence of log sources for KSI-MLA-02\"\"\"
+    \"\"\"Collect evidence of log sources for KSI-MLA-RVL\"\"\"
     credential = DefaultAzureCredential(
         exclude_environment_credential=False,
         exclude_managed_identity_credential=False,
@@ -47,7 +47,7 @@ def collect_log_coverage_evidence():
     
     evidence = {
         "collection_date": datetime.utcnow().isoformat(),
-        "ksi_id": "KSI-MLA-02",
+        "ksi_id": "KSI-MLA-RVL",
         "workspace_id": WORKSPACE_ID,
         "log_sources_count": len(log_types),
         "log_sources": log_types,
@@ -81,7 +81,7 @@ def collect_retention_evidence():
     
     retention_report = {
         "collection_date": datetime.utcnow().isoformat(),
-        "ksi_id": "KSI-MLA-02",
+        "ksi_id": "KSI-MLA-RVL",
         "workspaces": []
     }
     

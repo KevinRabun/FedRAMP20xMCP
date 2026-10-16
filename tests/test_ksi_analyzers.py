@@ -347,9 +347,9 @@ class TestKSIComprehensiveCoverage:
             if len(parts) >= 2:
                 families.add(parts[1])
         
-        # Should cover major families (based on actual KSI patterns available)
-        # Note: SCN family has FRR patterns but no KSI patterns
-        expected_families = ["IAM", "CNA", "VDR", "PIY", "CMT", "MLA"]
+        # Should cover the CR26 KSI families that have patterns
+        # Note: CR26 has no KSI-VDR family (vulnerability work is FRR family VDR)
+        expected_families = ["IAM", "CNA", "PIY", "CMT", "MLA", "SVC", "RPL"]
         for family in expected_families:
             assert family in families, f"Missing family coverage: {family}"
     

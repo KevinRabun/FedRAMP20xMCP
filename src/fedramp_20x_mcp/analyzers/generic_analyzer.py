@@ -15,6 +15,26 @@ from .base import Finding, AnalysisResult, Severity
 from .ast_utils import ASTParser, CodeLanguage
 from .application_context import ApplicationContext
 
+# Retired pre-CR26 family codes -> CR26 successor family.
+_FAMILY_SUCCESSORS = {"ADS": "CDS", "FSI": "AFC", "UCM": "CMU", "PVA": "IVV",
+                      "ICP": "IEC", "RSC": "SCG", "TPR": "SCR"}
+_CROSSWALK: Optional[Dict[str, Any]] = None
+
+
+def _current_ids_for(rule_id: str) -> List[str]:
+    """Resolve a (possibly legacy) rule/KSI ID to its CR26 ID(s) via the bundled crosswalk."""
+    global _CROSSWALK
+    if _CROSSWALK is None:
+        try:
+            import json
+            path = Path(__file__).resolve().parent.parent / "rules_data" / "legacy-crosswalk.json"
+            _CROSSWALK = json.loads(path.read_text(encoding="utf-8")).get("crosswalk", {})
+        except Exception:
+            _CROSSWALK = {}
+    rid = rule_id.upper()
+    entry = _CROSSWALK.get(rid)
+    return [rid] + (entry.get("current_ids", []) if entry else [])
+
 
 @dataclass
 class Pattern:
@@ -508,18 +528,20 @@ class GenericPatternAnalyzer:
     ) -> List[Pattern]:
         """Get patterns applicable to this analysis, filtered by application context."""
         if ksi_ids:
-            # Get specific patterns by KSI ID
-            patterns = []
-            for ksi_id in ksi_ids:
-                # Find patterns related to this KSI
-                for pattern in self.pattern_loader.get_all_patterns():
-                    if ksi_id in pattern.related_ksis:
-                        patterns.append(pattern)
+            # Get specific patterns by KSI/rule ID; legacy IDs resolve to CR26
+            # through the bundled crosswalk.
+            wanted = {cid for kid in ksi_ids for cid in _current_ids_for(kid)}
+            patterns = [
+                p for p in self.pattern_loader.get_all_patterns()
+                if wanted & (set(p.related_ksis or []) | set(getattr(p, "related_frrs", None) or []))
+            ]
         elif families:
-            # Get patterns for specific families
+            # Get patterns for specific families (retired family codes map to
+            # their CR26 successor, e.g. ADS -> CDS)
             patterns = []
             for family in families:
-                patterns.extend(self.pattern_loader.get_patterns_for_family(family))
+                fam = _FAMILY_SUCCESSORS.get(family.upper(), family)
+                patterns.extend(self.pattern_loader.get_patterns_for_family(fam))
         else:
             # Get all patterns for this language
             patterns = self.pattern_loader.get_patterns_for_language(language)
@@ -751,7 +773,7 @@ class GenericPatternAnalyzer:
             line_number = code[:match.start()].count('\n') + 1
             
             findings.append(self._create_finding(
-                pattern, file_path, None, line_number, match.group(0)
+                pattern, file_path, None, line_number=line_number, code_snippet=match.group(0)
             ))
         
         return findings
@@ -839,8 +861,8 @@ class GenericPatternAnalyzer:
             requirement_id = pattern.related_ksis[0]
         elif pattern.related_frrs:
             requirement_id = pattern.related_frrs[0]
-        else:
-            requirement_id = f"{pattern.family}-{pattern.pattern_id}"
+        # Never synthesize an ID: a pattern without a CR26 mapping reports
+        # requirement_id None and is identified by pattern_id only.
         
         # Get line number from node if available
         if node and hasattr(node, 'start_point'):

@@ -71,7 +71,7 @@ class FRRAnalyzerFactory:
         Get analyzer for specific FRR (returns adapter, not traditional analyzer).
         
         Args:
-            frr_id: FRR identifier (e.g., "FRR-VDR-01")
+            frr_id: FRR identifier (e.g., "VDR-CSO-DET")
             
         Returns:
             Pattern-based analyzer adapter
@@ -100,7 +100,7 @@ class FRRAnalyzerFactory:
         List FRR IDs for a specific family.
         
         Args:
-            family: Family code (e.g., "VDR", "RSC", "UCM")
+            family: Family code (e.g., "VDR", "SCG", "CMU")
             
         Returns:
             List of FRR identifiers in that family
@@ -108,7 +108,7 @@ class FRRAnalyzerFactory:
         all_frrs = self.list_frrs()
         return sorted([
             frr_id for frr_id in all_frrs
-            if frr_id.startswith(f"FRR-{family.upper()}-")
+            if frr_id.startswith(f"{family.upper()}-")
         ])
     
     async def analyze(self, frr_id: str, code: str, language: str, file_path: str = "") -> Optional[AnalysisResult]:
@@ -127,7 +127,7 @@ class FRRAnalyzerFactory:
         self._ensure_analyzer()
         
         # Extract family from FRR ID
-        match = re.match(r'FRR-([A-Z]+)-\d+', frr_id)
+        match = re.match(r'([A-Z]{3})-[A-Z0-9]{3}-[A-Z0-9]{3}$', frr_id)
         families = [match.group(1)] if match else None
         
         return await analyze_with_generic_analyzer(
@@ -168,7 +168,7 @@ class FRRAnalyzerFactory:
         Analyze code against all FRRs in a specific family.
         
         Args:
-            family: Family code (e.g., "VDR", "RSC", "UCM")
+            family: Family code (e.g., "VDR", "SCG", "CMU")
             code: Source code or configuration
             language: Language/framework
             file_path: Optional file path
@@ -203,7 +203,7 @@ class FRRAnalyzerFactory:
         patterns = await get_patterns_for_requirement(frr_id)
         if patterns:
             # Extract family from FRR ID
-            match = re.match(r'FRR-([A-Z]+)-\d+', frr_id)
+            match = re.match(r'([A-Z]{3})-[A-Z0-9]{3}-[A-Z0-9]{3}$', frr_id)
             family = match.group(1) if match else "UNKNOWN"
             
             return {
@@ -236,7 +236,7 @@ class FRRAnalyzerFactory:
         stats = await get_pattern_statistics()
         
         # Count FRR patterns
-        total_frrs = len([p for p in self._generic_analyzer.patterns if hasattr(p, 'frr_id') and p.frr_id and p.frr_id.startswith("FRR-")])
+        total_frrs = len([p for p in self._generic_analyzer.patterns if hasattr(p, 'frr_id') and p.frr_id and re.match(r"[A-Z]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$", p.frr_id)])
         
         return {
             "total_frrs": total_frrs,
@@ -259,7 +259,7 @@ class PatternBasedFRRAnalyzer:
         self._generic_analyzer = generic_analyzer
         
         # Extract family from FRR ID
-        match = re.match(r'FRR-([A-Z]+)-\d+', frr_id)
+        match = re.match(r'([A-Z]{3})-[A-Z0-9]{3}-[A-Z0-9]{3}$', frr_id)
         self.FAMILY = match.group(1) if match else "UNKNOWN"
         self.FAMILY_NAME = self.FAMILY  # Simplified
         

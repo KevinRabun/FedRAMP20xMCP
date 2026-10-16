@@ -18,8 +18,8 @@ def get_requirement_header(
     Generate a detailed requirement header comment block for code/IaC.
     
     Args:
-        ksi_ids: List of KSI IDs (e.g., ["KSI-IAM-01", "KSI-MLA-01"])
-        frr_ids: List of FRR IDs (e.g., ["FRR-VDR-01", "FRR-ADS-01"])
+        ksi_ids: List of KSI IDs (e.g., ["KSI-IAM-APM", "KSI-MLA-OSM"])
+        frr_ids: List of FRR IDs (e.g., ["VDR-CSO-DET", "CDS-CSO-PUB"])
         data_loader: DataLoader instance to fetch metadata
         language: Programming language for comment syntax
     
@@ -41,7 +41,7 @@ def get_requirement_header(
             ksi = data_loader.get_ksi(ksi_id)
             if ksi:
                 name = ksi.get("name", "")
-                description = ksi.get("description", "")
+                description = ksi.get("statement") or ksi.get("description", "")
                 lines.append(f"{comment_prefix}")
                 lines.append(f"{comment_prefix} {ksi_id}: {name}")
                 if description:
@@ -58,7 +58,7 @@ def get_requirement_header(
             frr = data_loader.get_control(frr_id)  # FRRs are stored as controls
             if frr:
                 name = frr.get("name", "")
-                description = frr.get("description", "")
+                description = frr.get("statement") or frr.get("description", "")
                 lines.append(f"{comment_prefix}")
                 lines.append(f"{comment_prefix} {frr_id}: {name}")
                 if description:
@@ -83,7 +83,7 @@ def get_inline_requirement_comment(
     Generate an inline comment for a specific requirement.
     
     Args:
-        requirement_id: KSI or FRR ID (e.g., "KSI-IAM-01" or "FRR-VDR-01")
+        requirement_id: KSI or FRR ID (e.g., "KSI-IAM-APM" or "VDR-CSO-DET")
         data_loader: DataLoader instance to fetch metadata
         language: Programming language for comment syntax
         compact: If True, use compact format (ID and name only)
@@ -105,7 +105,7 @@ def get_inline_requirement_comment(
     if compact:
         return f"{comment_prefix} {requirement_id}: {name}"
     
-    description = metadata.get("description", "")
+    description = metadata.get("statement") or metadata.get("description", "")
     if description:
         # For inline, keep it short
         short_desc = description[:100] + "..." if len(description) > 100 else description

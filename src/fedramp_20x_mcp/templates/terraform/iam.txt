@@ -22,6 +22,11 @@ provider "azurerm" {
   }
 }
 
+variable "log_retention_days" {
+  description = "Log retention in days. Organization-defined: CR26 sets no numeric log retention period."
+  type        = number
+}
+
 variable "environment_name" {
   description = "Environment name (prod, dev, test)"
   default     = "prod"
@@ -54,7 +59,7 @@ resource "azurerm_log_analytics_workspace" "iam" {
   location            = var.location
   resource_group_name = azurerm_resource_group.evidence.name
   sku                 = "PerGB2018"
-  retention_in_days   = 730  # 2 years for FedRAMP
+  retention_in_days   = var.log_retention_days  # organization-defined (KSI-MLA-RVL); CR26 sets no numeric value
   tags                = local.tags
 
   # Prevent accidental deletion

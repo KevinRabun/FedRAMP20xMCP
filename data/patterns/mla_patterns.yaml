@@ -56,7 +56,7 @@ languages:
     - winston-daily-rotate-file
 finding:
   title_template: Local file logging detected
-  description_template: Application logs to local files. KSI-MLA-01 requires centralized logging to SIEM (Azure Monitor, Sentinel, Splunk).
+  description_template: Application logs to local files. KSI-MLA-OSM requires centralized logging to SIEM (Azure Monitor, Sentinel, Splunk).
   remediation_template: 'Migrate to centralized logging:
 
 
@@ -76,7 +76,7 @@ finding:
 
     - Send logs to Azure Log Analytics workspace
 
-    - Configure log retention (90+ days for FedRAMP)
+    - Configure a log retention period that meets your documented logging and audit policy (KSI-MLA-LET)
 
     - Set up alerts for security events
 
@@ -101,7 +101,7 @@ nist_controls:
 - au-6
 - au-12
 related_ksis:
-- KSI-MLA-01
+- KSI-MLA-OSM
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -174,7 +174,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -254,7 +254,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-01
+    requirement_id: KSI-MLA-OSM
     requirement_name: Security Information and Event Management (SIEM)
     impact_levels:
     - Low
@@ -318,7 +318,7 @@ languages:
 finding:
   title_template: Azure Monitor integration detected
   description_template: Application uses Azure Monitor for centralized logging. Verify Log Analytics workspace configuration.
-  remediation_template: N/A - Positive finding. Ensure logs are sent to long-term retention (90+ days).
+  remediation_template: N/A - Positive finding. Ensure logs are sent to long-term retention that meets your documented policy.
 tags:
 - logging
 - azure-monitor
@@ -328,7 +328,7 @@ nist_controls:
 - au-6
 - au-12
 related_ksis:
-- KSI-MLA-01
+- KSI-MLA-OSM
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -401,7 +401,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -481,7 +481,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-01
+    requirement_id: KSI-MLA-OSM
     requirement_name: Security Information and Event Management (SIEM)
     impact_levels:
     - Low
@@ -552,7 +552,7 @@ nist_controls:
 - au-6
 - si-4
 related_ksis:
-- KSI-MLA-01
+- KSI-MLA-OSM
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -625,7 +625,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -704,7 +704,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-01
+    requirement_id: KSI-MLA-OSM
     requirement_name: Security Information and Event Management (SIEM)
     impact_levels:
     - Low
@@ -744,9 +744,9 @@ languages:
       - value_less_than:90
     regex_fallback: azurerm_log_analytics_workspace
 finding:
-  title_template: Log retention less than 90 days
-  description_template: Log Analytics workspace retention is {value} days. FedRAMP 20x requires 90+ days retention (KSI-MLA-02).
-  remediation_template: "Update retention:\n\nBicep:\nproperties: {\n  retentionInDays: 90  // Minimum for FedRAMP\n}\n\nTerraform:\nretention_in_days = 90\n"
+  title_template: Log retention below the organizational baseline
+  description_template: Log Analytics workspace retention is {value} days. CR26 sets no numeric log retention requirement; confirm this meets your documented logging policy and supports persistent log review (KSI-MLA-RVL). The 90 day threshold is an organizational heuristic, not a FedRAMP rule.
+  remediation_template: "Update retention:\n\nBicep:\nproperties: {\n  retentionInDays: 90  // Example value; set per your documented logging policy\n}\n\nTerraform:\nretention_in_days = 90\n"
 tags:
 - logging
 - retention
@@ -754,7 +754,7 @@ tags:
 nist_controls:
 - au-11
 related_ksis:
-- KSI-MLA-02
+- KSI-MLA-RVL
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -830,7 +830,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -908,7 +908,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-02
+    requirement_id: KSI-MLA-RVL
     requirement_name: Audit Logging
     impact_levels:
     - Low
@@ -1012,7 +1012,7 @@ nist_controls:
 - au-6
 - si-4
 related_ksis:
-- KSI-MLA-05
+- KSI-MLA-EVC
 evidence_collection:
   azure_monitor_kql:
   - query: 'SigninLogs
@@ -1089,7 +1089,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -1168,7 +1168,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-05
+    requirement_id: KSI-MLA-EVC
     requirement_name: Infrastructure as Code
     impact_levels:
     - Low
@@ -1250,8 +1250,8 @@ nist_controls:
 - au-6
 - ir-4
 related_ksis:
-- KSI-MLA-05
-- KSI-MLA-07
+- KSI-MLA-EVC
+- KSI-MLA-LET
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -1328,7 +1328,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -1408,7 +1408,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-05
+    requirement_id: KSI-MLA-EVC
     requirement_name: Infrastructure as Code
     impact_levels:
     - Low
@@ -1473,7 +1473,7 @@ nist_controls:
 - ir-4
 - ir-6
 related_ksis:
-- KSI-MLA-07
+- KSI-MLA-LET
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -1551,7 +1551,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -1630,7 +1630,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-07
+    requirement_id: KSI-MLA-LET
     requirement_name: Event Types
     impact_levels:
     - Low
@@ -1707,8 +1707,8 @@ nist_controls:
 - si-4
 - cp-2
 related_ksis:
-- KSI-MLA-07
-- KSI-RPL-01
+- KSI-MLA-LET
+- KSI-RPL-RRO
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -1786,7 +1786,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -1865,7 +1865,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-07
+    requirement_id: KSI-MLA-LET
     requirement_name: Event Types
     impact_levels:
     - Low
@@ -1951,7 +1951,7 @@ nist_controls:
 - si-2
 - si-4
 related_ksis:
-- KSI-MLA-08
+- KSI-MLA-ALA
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -2027,7 +2027,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -2106,7 +2106,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-08
+    requirement_id: KSI-MLA-ALA
     requirement_name: Log Data Access
     impact_levels:
     - Low
@@ -2191,7 +2191,7 @@ nist_controls:
 - au-3
 - au-12
 related_ksis:
-- KSI-MLA-08
+- KSI-MLA-ALA
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -2207,7 +2207,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-08
+    requirement_id: KSI-MLA-ALA
     requirement_name: Security Monitoring and Analytics
     impact_levels:
     - Low
@@ -2292,7 +2292,7 @@ languages:
     regex_fallback: resource\s+"azurerm_(storage_account|sql_server|key_vault)"
 finding:
   title_template: Resource logs not exported to SIEM
-  description_template: '{resource_type} does not have diagnostic settings configured. KSI-MLA-08 requires all audit logs to be exported.'
+  description_template: '{resource_type} does not have diagnostic settings configured. KSI-MLA-ALA requires all audit logs to be exported.'
   remediation_template: "Enable diagnostic settings:\n\nBicep:\nresource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  scope: storageAccount\n  name: 'logs-to-workspace'\n  properties: {\n    workspaceId: logAnalyticsWorkspace.id\n    logs: [\n      {\n        category: 'StorageRead'\n        enabled: true\n      }\n      {\n        category: 'StorageWrite'\n        enabled: true\n      }\n    ]\n  }\n}\n"
 tags:
 - audit
@@ -2302,7 +2302,7 @@ nist_controls:
 - au-2
 - au-12
 related_ksis:
-- KSI-MLA-08
+- KSI-MLA-ALA
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -2317,7 +2317,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-08
+    requirement_id: KSI-MLA-ALA
     requirement_name: Security Monitoring and Analytics
     impact_levels:
     - Low
@@ -2402,13 +2402,13 @@ languages:
     - evaluationFrequency
 finding:
   title_template: Real-Time Monitoring Detected
-  description_template: "Real-time monitoring configured with automated alerts using Azure Monitor or Application Insights, compliant with KSI-MLA-05"
+  description_template: "Real-time monitoring configured with automated alerts using Azure Monitor or Application Insights, compliant with KSI-MLA-EVC"
   remediation_template: "N/A - Positive finding"
 tags:
 - monitoring
 - positive
 related_ksis:
-- KSI-MLA-05
+- KSI-MLA-EVC
 ---
 pattern_id: mla.monitoring.no_monitoring
 name: No Monitoring Configuration
@@ -2437,7 +2437,7 @@ tags:
 - monitoring
 - negative
 related_ksis:
-- KSI-MLA-05
+- KSI-MLA-EVC
 ---
 pattern_id: mla.audit_logging.comprehensive
 name: Comprehensive Audit Logging
@@ -2491,13 +2491,13 @@ languages:
     - logger
 finding:
   title_template: Comprehensive Audit Logging Detected
-  description_template: "Comprehensive audit logging for sensitive operations with timestamps, user, IP, and compliance framework, compliant with KSI-MLA-07"
+  description_template: "Comprehensive audit logging for sensitive operations with timestamps, user, IP, and compliance framework, compliant with KSI-MLA-LET"
   remediation_template: "N/A - Positive finding"
 tags:
 - audit_logging
 - positive
 related_ksis:
-- KSI-MLA-07
+- KSI-MLA-LET
 ---
 pattern_id: mla.audit_logging.no_audit
 name: No Audit Logging
@@ -2555,7 +2555,7 @@ tags:
 - audit_logging
 - negative
 related_ksis:
-- KSI-MLA-07
+- KSI-MLA-LET
 ---
 pattern_id: mla.log_integrity.tamper_evident
 name: Tamper-Evident Logging
@@ -2625,13 +2625,13 @@ languages:
     - previousHash
 finding:
   title_template: Tamper-Evident Logging Detected
-  description_template: "Cryptographic log integrity protection using hash chains and immutable storage, compliant with KSI-MLA-08"
+  description_template: "Cryptographic log integrity protection using hash chains and immutable storage, compliant with KSI-MLA-ALA"
   remediation_template: "N/A - Positive finding"
 tags:
 - log_integrity
 - positive
 related_ksis:
-- KSI-MLA-08
+- KSI-MLA-ALA
 ---
 pattern_id: mla.log_integrity.no_protection
 name: No Log Integrity Protection
@@ -2689,4 +2689,4 @@ tags:
 - log_integrity
 - negative
 related_ksis:
-- KSI-MLA-08
+- KSI-MLA-ALA

@@ -1,400 +1,264 @@
-I'll help you generate documentation templates for FedRAMP 20x compliance.
+I'll help you generate documentation templates for FedRAMP compliance under the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01).
 
-# Documentation Generator for FedRAMP 20x
+# Documentation Generator for CR26
 
-**PRODUCTION-FIRST ASSUMPTION:** All documentation and system descriptions assume **PRODUCTION systems** with full security controls unless explicitly stated otherwise. FedRAMP authorization applies to production environments processing federal data.
+**PRODUCTION-FIRST ASSUMPTION:** All documentation and system descriptions assume **PRODUCTION systems** with full security controls unless explicitly stated otherwise. FedRAMP Certification applies to production environments processing federal data.
 
-**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON/XML) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x** - it's a NIST standard shown below as one example implementation approach. Custom JSON/XML formats are equally valid.
+**Important Note on formats:** CR26 replaces the System Security Plan (SSP) with the **Certification Package Overview** (CPO) and the **Security Decision Record** (SDR). Both MUST be supplied in human-readable and JSON formats (CPO-CSO-OVR, SDR-CSO-FRR), and JSON MUST validate against the FedRAMP JSON schema when a rule defines one (FRC-CSO-JSN). OSCAL is not required. CR26 does not require a POA&M or a SAR. The JSON skeletons below are illustrative; always validate against the official schemas referenced in the rules data (schema.url fields).
 
-## OSCAL System Security Plan (SSP) Template
+## Certification Package Overview Template (CPO-CSO-OVR, CPO-CSO-MTD)
 
-### 1. Metadata Section
+The overview MUST include the information required by CPO-CSO-MTD, CDS-CSO-PUB, CDS-CSO-SVC, CDS-CSO-IRP, MAS-CSO-IIR, MAS-CSO-FLO, MAS-CSO-TPR, CMU-CSO-CMD and IVV-CSO-ICP (rules that do not apply to your Class or Type are not required).
+
+### 1. Metadata (CPO-CSO-MTD)
 ```json
 {
-  "system-security-plan": {
-    "uuid": "GENERATE-UUID-HERE",
-    "metadata": {
-      "title": "[Your System Name] System Security Plan",
-      "published": "YYYY-MM-DDTHH:MM:SSZ",
-      "last-modified": "YYYY-MM-DDTHH:MM:SSZ",
-      "version": "1.0.0",
-      "oscal-version": "1.1.2",
-      "roles": [
-        {
-          "id": "ciso",
-          "title": "Chief Information Security Officer"
-        },
-        {
-          "id": "system-owner",
-          "title": "System Owner"
-        },
-        {
-          "id": "authorizing-official",
-          "title": "Authorizing Official"
-        }
-      ],
-      "parties": [
-        {
-          "uuid": "GENERATE-UUID",
-          "type": "organization",
-          "name": "[Your Organization Name]",
-          "email-addresses": ["security@example.com"]
-        }
-      ],
-      "responsible-parties": [
-        {
-          "role-id": "ciso",
-          "party-uuids": ["PARTY-UUID"]
-        }
-      ]
-    }
+  "certification-package-overview": {
+    "responsible-official": {
+      "name": "[Name]",
+      "title": "[Title]",
+      "contact": "security@example.com"
+    },
+    "version": "1.0.0",
+    "last-updated": "YYYY-MM-DDTHH:MM:SSZ",
+    "update-source": "[automation or person that produced the update]",
+    "fedramp-id": "FR-########"
   }
 }
 ```
+Always include the FedRAMP ID in all Certification Data once assigned (CDS-CSO-FID).
 
-### 2. System Characteristics (FRR-MAS)
+### 2. Cloud Service Offering and Scope (MAS)
 ```json
 {
-  "system-characteristics": {
-    "system-ids": [
+  "cloud-service-offering": {
+    "name": "[Your System Name]",
+    "description": "[Overall service description including federal customer data handling]",
+    "service-model": "SaaS",
+    "deployment-model": "[Deployment model]",
+    "services": [
       {
-        "identifier-type": "https://fedramp.gov",
-        "id": "FR-########"
+        "name": "[Service name aligned with public marketing materials]",
+        "security-category": "[category]",
+        "in-minimum-assessment-scope": true
       }
     ],
-    "system-name": "[Your System Name]",
-    "system-name-short": "[Acronym]",
-    "description": "[Detailed system description including Federal Customer Data handling]",
-    "security-sensitivity-level": "moderate",
-    "system-information": {
-      "information-types": [
-        {
-          "uuid": "GENERATE-UUID",
-          "title": "Federal Customer Data",
-          "description": "Information provided by federal agencies",
-          "categorizations": [
-            {
-              "system": "https://doi.org/10.6028/NIST.SP.800-60v2r1",
-              "information-type-ids": ["C.3.5.8"]
-            }
-          ],
-          "confidentiality-impact": {
-            "base": "moderate",
-            "selected": "moderate"
-          },
-          "integrity-impact": {
-            "base": "moderate",
-            "selected": "moderate"
-          },
-          "availability-impact": {
-            "base": "moderate",
-            "selected": "moderate"
-          }
-        }
-      ]
-    },
-    "security-impact-level": {
-      "security-objective-confidentiality": "moderate",
-      "security-objective-integrity": "moderate",
-      "security-objective-availability": "moderate"
-    },
-    "authorization-boundary": {
-      "description": "[Detailed boundary description per FRR-MAS requirements]",
-      "diagrams": [
-        {
-          "uuid": "GENERATE-UUID",
-          "description": "System Architecture Diagram",
-          "links": [
-            {
-              "href": "https://example.com/architecture.png",
-              "rel": "diagram"
-            }
-          ]
-        }
-      ],
-      "remarks": "Includes all information resources likely to handle Federal Customer Data"
-    },
-    "network-architecture": {
-      "description": "Network segmentation and traffic flow (KSI-CNA-01, CNA-03)"
-    },
-    "data-flow": {
-      "description": "Federal Customer Data flow through system"
-    }
-  }
-}
-```
-
-### 3. System Implementation
-```json
-{
-  "system-implementation": {
-    "users": [
+    "information-resources": [
       {
-        "uuid": "GENERATE-UUID",
-        "role-ids": ["system-admin"],
-        "authorized-privileges": [
-          {
-            "title": "System Administration",
-            "description": "Full administrative access",
-            "functions-performed": ["user-management", "configuration"]
-          }
-        ]
+        "id": "AST-001",
+        "type": "machine-based",
+        "handles-federal-customer-data": true,
+        "third-party": false
       }
     ],
-    "components": [
+    "information-flows": "[Machine-readable output of permitted connections between components (MAS-CSO-FLO)]",
+    "third-party-resources": [
       {
-        "uuid": "GENERATE-UUID",
-        "type": "software",
-        "title": "Web Application Server",
-        "description": "Primary application hosting environment",
-        "status": {
-          "state": "operational"
-        },
-        "props": [
-          {
-            "name": "handles-federal-customer-data",
-            "value": "yes"
-          },
-          {
-            "name": "vendor",
-            "value": "[Vendor Name]"
-          }
-        ]
-      }
-    ],
-    "inventory-items": [
-      {
-        "uuid": "GENERATE-UUID",
-        "description": "Component inventory per KSI-PIY-01",
-        "props": [
-          {
-            "name": "asset-id",
-            "value": "AST-001"
-          },
-          {
-            "name": "asset-type",
-            "value": "virtual-machine"
-          }
-        ],
-        "implemented-components": [
-          {
-            "component-uuid": "COMPONENT-UUID"
-          }
-        ]
+        "name": "[Vendor]",
+        "usage-and-configuration": "[...]",
+        "justification": "[...]",
+        "mitigation-measures": "[...]",
+        "compensating-controls": "[...]"
       }
     ]
   }
 }
 ```
+Notes:
+- MAS-CSO-IIR: the cloud service offering is all information resources likely to handle federal customer data or likely to impact its confidentiality, integrity, or availability.
+- MAS-CSO-FLO: document information flows and security categories for all resources; supply a machine-readable output, a human-readable explanation of how it is derived, and the code that generates it.
+- MAS-CSO-TPR: for each third-party resource document general usage and configuration, justification, mitigation measures and compensating controls.
+- Network architecture evidence relates to KSI-CNA-RNT and KSI-CNA-ULN; inventory evidence to KSI-PIY-GIV.
 
-## Vulnerability Detection & Response Procedure (FRR-VDR)
+### 3. Policies reference (CDS-CSO-IRP)
+For each policy and procedure: name, file or page name, brief summary, word count, current version, date of last update, related FedRAMP Practices (if applicable).
+
+## Security Decision Record Template (SDR-CSO-FRR, SDR-CSO-MTD, SDR-CSX-KSI)
+
+```json
+{
+  "security-decision-record": {
+    "version": "1.0.0",
+    "last-updated": "YYYY-MM-DDTHH:MM:SSZ",
+    "update-source": "[automation or person]",
+    "rules": [
+      {
+        "rule-id": "VDR-CSO-DET",
+        "how-followed": "[Explanation of how the rule is followed, or the reason and resulting risk to customers for not following it]",
+        "verification": "[Verification that the implementation is appropriate]",
+        "validation": "[Validation that it is in place and working as intended]",
+        "independent-verification": "[...]",
+        "independent-validation": "[...]",
+        "responses-to-comments": "[...]",
+        "artifacts": []
+      }
+    ],
+    "key-security-indicators": [
+      {
+        "ksi-id": "KSI-IAM-APM",
+        "measures-and-objectives": "[...]",
+        "measure-cycle": "[persistent measure cycle, if applicable]",
+        "verification": "[...]",
+        "automation-verification": "[...]",
+        "validation": "[...]"
+      }
+    ]
+  }
+}
+```
+Notes:
+- 20x Class B, C and D providers include KSI metrics history per SDR-CSX-KMT (strength varies by class).
+- Rev5 providers use SDR-CSF-CTF per control: organization-defined parameter values, implementation status (Implemented, Partially Implemented, Planned, Alternative Implementation, Not Applicable), mechanisms, verification, validation, independent verification and validation, and artifacts. Assign control parameters following FedRAMP Rev5 Controls Guidance (FRC-CSF-ACP, FRC-CSF-FFG).
+
+## Vulnerability Detection and Response Procedure (VDR and VER)
 
 ```markdown
 # Vulnerability Detection and Response Procedure
 
-## 1. Vulnerability Scanning (FRR-VDR-01)
+## 1. Vulnerability Detection (VDR-CSO-DET)
 
-### Scanning Frequency
-- **Infrastructure**: Continuous, minimum daily
-- **Containers**: On build and weekly in production
-- **Code**: On every commit (SAST)
-- **Dependencies**: Daily checks
+Detection is not limited to scanning. Techniques include assessment, scanning, threat intelligence, vulnerability disclosure mechanisms, bug bounties, penetration testing, incident response, automated control testing and supply chain monitoring. An out-of-date control statement in the Security Decision Record is itself a vulnerability.
 
-### Scanning Tools
+### Detection cadence (varies by Certification Class; take values from the rules)
+- Resources likely to drift: VDR-TFR-PDD
+- Resources not likely to drift: VDR-TFR-PCD
+- Representative samples of similar machine-based resources: VDR-TFR-PSD
+- Non-machine-based resources verified and validated at least every 3 months: VDR-TFR-NMV
+- Machine-based resources verified and validated: VDR-TFR-MVX (20x) or VDR-TFR-MVF (Rev5)
+- Automate detection (VDR-CSO-ADT) and detect after changes on representative samples (VDR-CSO-DAC)
+
+### Detection sources
 - Infrastructure: [Tool Name]
 - Containers: [Tool Name]
 - Code: [Tool Name]
-- Dependencies: [Tool Name]
+- Dependencies and supply chain: [Tool Name]
 
-## 2. Remediation Timeframes (FRR-VDR-TF)
+## 2. Evaluation (VER-EVA-*)
+For each detected vulnerability evaluate exploitability (VER-EVA-ELX), internet-reachability (VER-EVA-EIR) and Potential Agency Impact N-rating (VER-EVA-EPA); assume exploitation can be automated unless shown otherwise (VER-EVA-AIA); group vulnerabilities and evaluate false positives where useful (VER-EVA-GRV, VER-EVA-EFP). Evaluate within the VER-TFR-EVU timeframe for your Class.
 
-### High Impact Systems
-| Severity | CVSS Score | Timeframe |
-|----------|------------|-----------|
-| Critical | 9.0-10.0   | 7 days    |
-| High     | 7.0-8.9    | 15 days   |
-| Medium   | 4.0-6.9    | 60 days   |
-| Low      | 0.1-3.9    | 180 days  |
+## 3. Mitigation and Remediation Timeframes (VDR-TFR-PVR)
+Timeframes depend on Certification Class, N-rating, internet-reachability and likely exploitability. Copy the table for your Class from the rule (read varies_by_class in the rules data). They are not CVSS severity buckets.
 
-### Moderate Impact Systems
-| Severity | CVSS Score | Timeframe |
-|----------|------------|-----------|
-| Critical | 9.0-10.0   | 15 days   |
-| High     | 7.0-8.9    | 30 days   |
-| Medium   | 4.0-6.9    | 90 days   |
-| Low      | 0.1-3.9    | 180 days  |
+| N-rating | IRV + LEV | Not internet-reachable + LEV | Not likely exploitable |
+|----------|-----------|------------------------------|------------------------|
+| N2       | [days]    | [days]                       | [days]                 |
+| N3       | [days]    | [days]                       | [days]                 |
+| N4       | [days]    | [days]                       | [days]                 |
+| N5       | [days]    | [days]                       | [days]                 |
 
-## 3. Remediation Process
+Known Exploited Vulnerabilities follow the CISA KEV due dates (VDR-TFR-KEV, CISA BOD 26-04).
 
-1. **Detection**: Automated scan identifies vulnerability
-2. **Triage**: Security team assesses within 24 hours
-3. **Assignment**: Create ticket, assign to owner
-4. **Remediation**: Apply patch or mitigating control
-5. **Validation**: Re-scan to confirm fix
-6. **Documentation**: Update POA&M if needed
+## 4. Response Process (VDR-CSO-RES)
+1. Detection: automated or manual discovery
+2. Evaluation: ratings per VER-EVA-*
+3. Assignment: ticket and owner
+4. Mitigation or remediation: partial mitigation, full mitigation or remediation
+5. Validation: confirm the result
+6. Reporting: VER-RPT-PER
 
-## 4. Exception Process (FRR-VDR-EX)
+## 5. Accepted Vulnerabilities (VER-TFR-MAV, VER-RPT-AVI)
+A vulnerability not fully mitigated or remediated within 192 days of evaluation MUST be categorized as an accepted vulnerability. Report: tracking identifier, time and source of detection, time of evaluation, internet-reachable, likely exploitable, current N-rating, explanation of why it is accepted, and supplementary information for agencies.
 
-Exceptions may be granted for:
-- No patch available
-- Patch breaks critical functionality
-- Compensating controls in place
-
-**Exception Request Must Include:**
-- Vulnerability details (CVE, CVSS)
-- Business justification
-- Risk assessment
-- Compensating controls
-- Exception duration (max 90 days)
-- Review date
-
-**Approval Required From:**
-- CISO
-- System Owner
-- Authorizing Official (for High/Critical)
-
-## 5. Agency Reporting (FRR-VDR-RP)
-
-Report to affected agencies within 24 hours if:
-- Critical/High vulnerability affects their data
-- Active exploitation detected
-- Patch will cause service disruption
-
-**Report Via:**
-- FedRAMP Security Inbox (FRR-FSI)
-- Agency-specific incident channels (FRR-ICP)
+## 6. Reporting (VER-RPT-*, VER-TFR-MHR)
+- Report vulnerability detection and response activity at least monthly in a consistent human-readable format (VER-TFR-MHR)
+- Include the VER-RPT-VDT fields for each vulnerability
+- Do not irresponsibly disclose sensitive details (VER-RPT-NID)
+- Vulnerability reports are FedRAMP Certification Data (VER-RPT-PER)
+- Treat failures in this process as vulnerabilities (VDR-CSO-FAV)
 ```
 
-## Incident Communications Procedure (FRR-ICP)
+## Incident Evaluation and Communication Procedure (IEC)
 
 ```markdown
-# Incident Communications Procedure
+# Incident Evaluation and Communication Procedure
 
-## 1. Incident Classification
+## 1. Reportability Evaluation (IEC-CSO-EFR)
+Promptly evaluate incidents to determine whether they affect, or are likely to affect, the confidentiality or integrity of federal customer data. Such incidents are FedRAMP Reportable Incidents. Keep an incident log showing the evaluation and reasons.
 
-### Severity Levels
-- **Critical**: Data breach, service outage affecting federal data
-- **High**: Security event with potential data impact
-- **Medium**: Security event contained, no data impact
-- **Low**: Security event, no immediate risk
+## 2. Potential Agency Impact N-rating (IEC-CSO-EFI, IEC-CSO-DPR)
+- N1 likely minimal customer effect on 1 or more agencies
+- N2 likely narrow customer effect on 1 or more agencies
+- N3 likely disruptive effect on 1 agency
+- N4 likely debilitating effect on 1 agency or disruptive effect on more than 1 agency
+- N5 likely debilitating effect on more than 1 agency
+Treat Reportable Incidents as N5 unless you promptly estimate the rating.
 
-## 2. Notification Timeframes
+## 3. Reports and Timeframes (by Class and N-rating)
+- Initial Incident Report (IEC-CSO-IIR)
+- Ongoing Incident Reports (IEC-CSO-OIR)
+- Final Incident Report (IEC-CSO-FIR)
+Copy the timeframes for your Certification Class from the rules data (pain_timeframes). Requirement strength varies by Class (Class A: SHOULD for IIR and OIR; Class B, C and D: MUST; FIR is MUST for all).
 
-| Severity | Internal | FedRAMP | Agencies | Public |
-|----------|----------|---------|----------|--------|
-| Critical | Immediate| 1 hour  | 2 hours  | TBD    |
-| High     | 1 hour   | 4 hours | 6 hours  | TBD    |
-| Medium   | 4 hours  | 24 hours| 24 hours | N/A    |
-| Low      | 24 hours | N/A     | N/A      | N/A    |
+## 4. Communication Channels (AFC)
+- Maintain a FedRAMP Security Inbox and notify FedRAMP of address changes (AFC-CSO-INB, AFC-CSO-NOC)
+- Treat email from @fedramp.gov or @gsa.gov as trusted (AFC-CSO-TFG)
+- Receive and react without disruption (AFC-CSO-RCV)
+- Route Emergency messages to a senior security official (AFC-CSO-EMR) and complete required actions (AFC-CSO-CRA)
 
-## 3. Communication Channels (FRR-FSI)
+## 5. Initial Incident Report Content (IEC-CSO-IIR)
+- Contact information for the federal incident response coordinator
+- Provider tracking identifier
+- Description of the incident
+- Timeline (start, detection time and source, completed reportability evaluation, other milestones)
+- Historical and current N-rating with explanation
+- Functional impact to federal agency customers
+- Estimated recovery plan, milestones and timelines
+- List of likely affected customer agencies
 
-**FedRAMP Security Inbox**: security@fedramp.gov
-- All security-related communications
-- Vulnerability notifications
-- Significant changes
-- Incident reports
+Use automation to minimize human intervention in reporting (IEC-CSO-AIR).
 
-**Agency-Specific Channels**: Per ICP agreements
-- Direct agency security contacts
-- Agency-specific portals
-- Coordinated disclosure timelines
-
-## 4. Incident Report Template
-
-```
-Subject: [INCIDENT] [SEVERITY] - [Brief Description]
-
-Incident ID: INC-YYYY-###
-Date/Time Detected: YYYY-MM-DD HH:MM UTC
-Severity: [Critical/High/Medium/Low]
-Status: [Investigating/Contained/Resolved]
-
-IMPACT:
-- Systems Affected: [List]
-- Data Affected: [Federal Customer Data? Yes/No]
-- Agencies Affected: [List or "None"]
-- User Impact: [Description]
-
-SUMMARY:
-[What happened, when detected, initial assessment]
-
-RESPONSE ACTIONS:
-- [Action 1]
-- [Action 2]
-
-NEXT STEPS:
-[Planned actions and timeline]
-
-CONTACT:
-[Incident Commander name and contact]
-```
-
-## 5. Post-Incident Activities (KSI-INR-03)
-
-Within 30 days of incident closure:
-- [ ] Complete after-action report
+## 6. Post-Incident Activities (KSI-INR-AAR, KSI-INR-RPI)
+- [ ] Generate the after action report and incorporate lessons learned
+- [ ] Review past incidents for patterns
 - [ ] Identify root cause
-- [ ] Document lessons learned
-- [ ] Update procedures if needed
-- [ ] Implement preventive measures
-- [ ] Share with relevant stakeholders
+- [ ] Update procedures
+- [ ] Record lessons learned for the next Ongoing Certification Report (CCM-OCR-AVL)
 ```
 
-## Significant Change Notification Template (FRR-SCN)
+## Significant Change Notification Template (SCN)
 
 ```markdown
 # Significant Change Notification
 
-## Change Information
-- **Change ID**: CHG-YYYY-###
-- **Date**: YYYY-MM-DD
-- **Type**: [Routine/Administrative/Transformative/Impact]
-- **Submitted By**: [Name, Role]
+## Required information (SCN-CSO-INF)
+- **Service Offering FedRAMP ID**:
+- **Assessor Name (if applicable)**:
+- **Related Vulnerability (if applicable)**:
+- **Significant Change type and explanation of categorization**: [Adaptive / Transformative] (Routine Recurring changes need no notification, SCN-RTR-NNR)
+- **Short description of change**:
+- **Reason for change**:
+- **Summary of customer impact**, including changes to services and customer configuration responsibilities:
+- **Plan and timeline**, including verification, assessment and/or validation of impacted Key Security Indicators or Rev5 Controls:
+- **Copy of the business or security impact analysis**:
+- **Name and title of approver**:
 
-## Change Description
-[Detailed description of the change]
+## Notification timing
+- Adaptive: within 10 business days after finishing (SCN-ADP-NTF), including a summary of new risks or vulnerabilities
+- Transformative: initial plans at least 30 business days before starting (SCN-TRF-NIP); final plans at least 10 business days before starting (SCN-TRF-NFP); within 5 business days after finishing (SCN-TRF-NAF); within 5 business days after verification, assessment and/or validation (SCN-TRF-NAV); updated documentation within 30 business days after finishing (SCN-TRF-UPD)
 
 ## Impact Assessment
-
-### Authorization Boundary (FRR-MAS)
-- [ ] No boundary changes
+### Minimum Assessment Scope (MAS)
+- [ ] No scope changes
 - [ ] New components added: [List]
 - [ ] Components removed: [List]
 - [ ] Third-party services changed: [List]
 
-### Security Controls
-- [ ] No control changes
-- [ ] Controls added: [List]
-- [ ] Controls modified: [List]
-- [ ] Controls removed: [List]
+### Key Security Indicators and controls
+- [ ] No KSI or control impact
+- [ ] KSIs or controls impacted: [List]
 
 ### Federal Customer Data
 - [ ] No impact to data handling
-- [ ] New data types collected: [List]
+- [ ] New data types: [List]
 - [ ] Data flow changes: [Description]
-- [ ] Data retention changes: [Description]
 
-### Risk Assessment
-- **Likelihood**: [Low/Medium/High]
-- **Impact**: [Low/Medium/High]
-- **Overall Risk**: [Low/Medium/High]
-
-## Notification Required (FRR-SCN)
-- [ ] FedRAMP PMO
-- [ ] Authorizing Agencies: [List]
-- [ ] 3PAO (if assessment needed)
-
-## Testing & Validation
-- [ ] Security testing completed
-- [ ] Vulnerability scan completed
-- [ ] Configuration review completed
-- [ ] Monitoring updated
+## Records
+- Maintain auditable evaluation records (SCN-CSO-MAR)
+- Keep 12 months of historical notifications in human-readable and JSON formats (SCN-CSO-HIS, SCN-CSO-HRM)
 
 ## Approvals
 - System Owner: ________________ Date: ______
-- CISO: ________________ Date: ______
-- Change Advisory Board: ________________ Date: ______
+- Approver named above: ________________ Date: ______
 
 ## Implementation
 - **Scheduled Date**: YYYY-MM-DD HH:MM UTC
@@ -408,17 +272,20 @@ Within 30 days of incident closure:
 # Key Security Indicator: [KSI-ID]
 
 ## Indicator Information
-- **ID**: [e.g., KSI-IAM-01]
-- **Title**: [e.g., Phishing-Resistant MFA]
-- **Category**: [e.g., Identity & Access Management]
+- **ID**: [e.g., KSI-IAM-APM]
+- **Name**: [e.g., Adopting Passwordless Methods]
+- **Family**: [e.g., Identity and Access Management (IAM)]
 - **Implementation Date**: YYYY-MM-DD
 - **Owner**: [Name, Role]
 
 ## Requirement Description
 [Copy requirement text from get_ksi(ksi_id)]
 
-## Implementation Approach
+## Measures (SDR-CSX-KSI)
+- Measures and their objectives that demonstrate the KSI (or the reason and resulting risk of not having them)
+- Cycle for measures implemented persistently
 
+## Implementation Approach
 ### Technology/Tools
 - [Tool/service name]
 - [Configuration details]
@@ -427,46 +294,31 @@ Within 30 days of incident closure:
 ### Procedures
 1. [Step 1]
 2. [Step 2]
-3. [Step 3]
 
 ## Evidence Collection
-
 ### Automated Collection
 - **Frequency**: [Continuous/Daily/Weekly]
 - **Method**: [API/Log extraction/Report generation]
 - **Storage**: [Location]
 - **Format**: [JSON/CSV/PDF]
+- Automated methods per KSI by Class: see FRC-CSX-VVK
 
 ### Manual Collection
-- **Frequency**: [Monthly/Quarterly]
+- **Frequency**: [as appropriate]
 - **Responsible Party**: [Name, Role]
-- **Checklist**: [Items to collect]
 
-## Metrics & Measurement
-
-### Current Status
-- **Compliance**: [Compliant/Partial/Non-compliant]
+## Metrics and Verification
+- **Current Status**: [Compliant/Partial/Non-compliant]
 - **Metric Value**: [e.g., "100% of users"]
 - **Last Measured**: YYYY-MM-DD
-
-### Targets
-- **Target Value**: [e.g., "100%"]
-- **Target Date**: YYYY-MM-DD
-
-### Tracking
-- **Dashboard**: [Link to dashboard]
-- **Reporting**: [Where metrics are published]
-
-## Testing & Validation
-- **Test Procedure**: [How compliance is tested]
-- **Test Frequency**: [Quarterly/Annual]
-- **Last Test Date**: YYYY-MM-DD
-- **Next Test Date**: YYYY-MM-DD
+- **Verification** that the measures demonstrate the KSI:
+- **Verification** that the automation is accurate and sufficient:
+- **Validation** that the measures are accurate and working as intended:
 
 ## Related Requirements
-[List related KSIs and FRR requirements using check_requirement_dependencies]
+[List related KSIs and FRR rules using check_requirement_dependencies]
 
-## Evidence for 3PAO
+## Evidence for the Assessor
 - [ ] Policy documentation
 - [ ] Configuration screenshots
 - [ ] Compliance reports
@@ -477,25 +329,26 @@ Within 30 days of incident closure:
 ## Quick Reference: Required Documents
 
 **Core Documents:**
-1. System Security Plan (OSCAL format preferred)
-2. Vulnerability Detection & Response Procedure (FRR-VDR)
-3. Incident Communications Procedure (FRR-ICP)
-4. Significant Change Notification Procedure (FRR-SCN)
-5. Continuous Monitoring Plan (FRR-CCM)
-6. All 72 KSI Implementation Documents
+1. Certification Package Overview (CPO-CSO-OVR)
+2. Security Decision Record (SDR-CSO-FRR, SDR-CSX-KSI or SDR-CSF-CTF)
+3. Vulnerability Detection, Response, Evaluation and Reporting Procedure (VDR, VER)
+4. Incident Evaluation and Communication Procedure (IEC)
+5. Significant Change Notification Procedure (SCN)
+6. Ongoing Certification Report procedure (CCM-OCR-AVL)
+7. KSI implementation documentation for all 46 KSIs
 
 **Supporting Documents:**
-7. Authorization Boundary Description (FRR-MAS)
-8. Authorization Data Sharing API Documentation (FRR-ADS)
-9. Persistent Validation Procedures (FRR-PVA)
-10. Recommended Secure Configuration (FRR-RSC)
-11. Cryptographic Module Usage (FRR-UCM)
+8. Minimum Assessment Scope description (MAS)
+9. Public information and trust center documentation (CDS)
+10. Secure Configuration Guide (SCG-CSO-RSC, SCG-CSO-AUP)
+11. Cryptographic module documentation (CMU-CSO-CMD)
+12. FedRAMP Security Inbox procedures (AFC)
 
-**Quarterly Deliverables:**
-12. Quarterly Review Report (FRR-CCM-QR)
-13. KSI Metrics Dashboard
-14. Vulnerability Status Report
-15. Incident Summary
-16. Change Log
+**Recurring Deliverables:**
+13. Ongoing Certification Report every 3 months (CCM-OCR-AVL)
+14. Quarterly Review materials (CCM-QTR-MTG, CCM-QTR-REG, CCM-QTR-NRD)
+15. KSI metrics (SDR-CSX-KMT, by Class)
+16. Vulnerability report at least monthly (VER-TFR-MHR)
+17. Significant Change Notifications, 12 months retained (SCN-CSO-HIS)
 
 Use get_control(requirement_id) to get specific requirement details for any documentation section.

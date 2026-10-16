@@ -6,16 +6,20 @@ to get recommendations, queries, and artifact lists for automated evidence
 collection for specific KSI requirements.
 """
 
+import argparse
 import asyncio
-import sys
+import json
 import os
+import sys
+from pathlib import Path
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.fedramp_20x_mcp.data_loader import FedRAMPDataLoader
-from src.fedramp_20x_mcp.analyzers.ksi.factory import get_factory
-from src.fedramp_20x_mcp.tools.ksi import (
+import azure_evidence_store  # noqa: E402  (sibling example module)
+from fedramp_20x_mcp.data_loader import FedRAMPDataLoader  # noqa: E402
+from fedramp_20x_mcp.tools.ksi import (  # noqa: E402
     get_ksi_evidence_automation_impl,
     get_ksi_evidence_queries_impl,
     get_ksi_evidence_artifacts_impl
@@ -24,12 +28,12 @@ from src.fedramp_20x_mcp.tools.ksi import (
 
 async def example_iam_01_evidence_automation():
     """
-    Example: Get evidence automation for KSI-IAM-01 (Phishing-Resistant MFA)
+    Example: Get evidence automation for KSI-IAM-APM (Phishing-Resistant MFA)
     
     This demonstrates how to automate evidence collection for MFA compliance.
     """
     print("\n" + "="*80)
-    print("EXAMPLE: Evidence Automation for KSI-IAM-01 (Phishing-Resistant MFA)")
+    print("EXAMPLE: Evidence Automation for KSI-IAM-APM (Phishing-Resistant MFA)")
     print("="*80)
     
     # Initialize data loader
@@ -39,30 +43,30 @@ async def example_iam_01_evidence_automation():
     # Get evidence automation recommendations
     print("\n1. EVIDENCE AUTOMATION RECOMMENDATIONS")
     print("-" * 80)
-    recommendations = await get_ksi_evidence_automation_impl("KSI-IAM-01", data_loader)
+    recommendations = await get_ksi_evidence_automation_impl("KSI-IAM-APM", data_loader)
     print(recommendations)
     
     # Get evidence collection queries
     print("\n2. EVIDENCE COLLECTION QUERIES")
     print("-" * 80)
-    queries = await get_ksi_evidence_queries_impl("KSI-IAM-01", data_loader)
+    queries = await get_ksi_evidence_queries_impl("KSI-IAM-APM", data_loader)
     print(queries)
     
     # Get evidence artifacts list
     print("\n3. EVIDENCE ARTIFACTS TO COLLECT")
     print("-" * 80)
-    artifacts = await get_ksi_evidence_artifacts_impl("KSI-IAM-01", data_loader)
+    artifacts = await get_ksi_evidence_artifacts_impl("KSI-IAM-APM", data_loader)
     print(artifacts)
 
 
 async def example_cna_01_evidence_automation():
     """
-    Example: Get evidence automation for KSI-CNA-01 (Restrict Network Traffic)
+    Example: Get evidence automation for KSI-CNA-RNT (Restrict Network Traffic)
     
     This demonstrates how to automate evidence collection for network security.
     """
     print("\n" + "="*80)
-    print("EXAMPLE: Evidence Automation for KSI-CNA-01 (Restrict Network Traffic)")
+    print("EXAMPLE: Evidence Automation for KSI-CNA-RNT (Restrict Network Traffic)")
     print("="*80)
     
     data_loader = FedRAMPDataLoader()
@@ -71,154 +75,76 @@ async def example_cna_01_evidence_automation():
     # Get evidence automation recommendations
     print("\n1. EVIDENCE AUTOMATION RECOMMENDATIONS")
     print("-" * 80)
-    recommendations = await get_ksi_evidence_automation_impl("KSI-CNA-01", data_loader)
+    recommendations = await get_ksi_evidence_automation_impl("KSI-CNA-RNT", data_loader)
     print(recommendations)
     
     # Get evidence collection queries (Azure Resource Graph queries for NSG rules)
     print("\n2. EVIDENCE COLLECTION QUERIES (NSG Rules, Firewall Policies)")
     print("-" * 80)
-    queries = await get_ksi_evidence_queries_impl("KSI-CNA-01", data_loader)
+    queries = await get_ksi_evidence_queries_impl("KSI-CNA-RNT", data_loader)
     print(queries)
 
 
-async def example_direct_analyzer_access():
+async def example_save_guidance_as_evidence(output_dir: str, upload: bool):
     """
-    Example: Access evidence automation directly from KSI analyzers
-    
-    This demonstrates the programmatic API for evidence automation.
+    Example: write the evidence-automation guidance for a few KSIs to disk,
+    stamped with the rules version it came from, and optionally store it in
+    the WORM evidence account (see azure_evidence_store.py).
+
+    Guidance is not evidence of implementation by itself; storing it records
+    which collection method was planned against which rules release, which is
+    what an assessor asks for alongside the collected data.
     """
     print("\n" + "="*80)
-    print("EXAMPLE: Direct Analyzer Access for Evidence Automation")
+    print("EXAMPLE: Save KSI evidence-automation guidance with rules provenance")
     print("="*80)
-    
-    # Get factory and analyzer
-    factory = get_factory()
-    analyzer = factory.get_analyzer("KSI-IAM-01")
-    
-    if not analyzer:
-        print("ERROR: Analyzer not found")
-        return
-    
-    # Get recommendations programmatically
-    print("\n1. Get Evidence Automation Recommendations (Programmatic)")
-    print("-" * 80)
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    
-    print(f"KSI ID: {recommendations['ksi_id']}")
-    print(f"KSI Name: {recommendations['ksi_name']}")
-    print(f"Evidence Type: {recommendations['evidence_type']}")
-    print(f"Automation Feasibility: {recommendations['automation_feasibility']}")
-    print(f"Implementation Effort: {recommendations['implementation_effort']}")
-    
-    print(f"\nAzure Services Required: {len(recommendations['azure_services'])}")
-    for svc in recommendations['azure_services']:
-        print(f"  - {svc['service']}: {svc['purpose']}")
-    
-    print(f"\nCollection Methods: {len(recommendations['collection_methods'])}")
-    for method in recommendations['collection_methods']:
-        print(f"  - {method['method']} ({method['frequency']})")
-    
-    # Get queries programmatically
-    print("\n2. Get Evidence Collection Queries (Programmatic)")
-    print("-" * 80)
-    queries = analyzer.get_evidence_collection_queries()
-    
-    print(f"Total Queries: {len(queries)}")
-    for query in queries:
-        print(f"\n  Query: {query['name']}")
-        print(f"  Type: {query['query_type']}")
-        print(f"  Data Source: {query['data_source']}")
-        print(f"  Schedule: {query['schedule']}")
-    
-    # Get artifacts programmatically
-    print("\n3. Get Evidence Artifacts (Programmatic)")
-    print("-" * 80)
-    artifacts = analyzer.get_evidence_artifacts()
-    
-    print(f"Total Artifacts: {len(artifacts)}")
-    for artifact in artifacts:
-        print(f"\n  Artifact: {artifact['artifact_name']}")
-        print(f"  Type: {artifact['artifact_type']}")
-        print(f"  Format: {artifact['format']}")
-        print(f"  Frequency: {artifact['frequency']}")
 
+    data_loader = FedRAMPDataLoader()
+    await data_loader.load_data()
+    meta = data_loader.get_rules_metadata()
 
-async def example_list_all_automation():
-    """
-    Example: List all KSIs with evidence automation implemented
-    
-    This demonstrates how to discover which KSIs have automation support.
-    """
-    print("\n" + "="*80)
-    print("EXAMPLE: List All KSIs with Evidence Automation")
-    print("="*80)
-    
-    factory = get_factory()
-    
-    # Find KSIs with evidence automation
-    automated_ksis = []
-    manual_ksis = []
-    
-    for ksi_id, analyzer in sorted(factory._analyzers.items()):
-        if analyzer.RETIRED:
-            continue
-        
-        recommendations = analyzer.get_evidence_automation_recommendations()
-        
-        if recommendations['automation_feasibility'] != 'manual-only':
-            automated_ksis.append({
-                'ksi_id': ksi_id,
-                'name': analyzer.KSI_NAME,
-                'feasibility': recommendations['automation_feasibility'],
-                'effort': recommendations['implementation_effort']
-            })
-        else:
-            manual_ksis.append({
-                'ksi_id': ksi_id,
-                'name': analyzer.KSI_NAME
-            })
-    
-    print(f"\nKSIs with Evidence Automation: {len(automated_ksis)}")
-    print("-" * 80)
-    for ksi in automated_ksis[:10]:  # Show first 10
-        print(f"{ksi['ksi_id']}: {ksi['name']}")
-        print(f"  Feasibility: {ksi['feasibility'].upper()}, Effort: {ksi['effort'].upper()}")
-    
-    if len(automated_ksis) > 10:
-        print(f"\n... and {len(automated_ksis) - 10} more")
-    
-    print(f"\nKSIs Requiring Manual Evidence Collection: {len(manual_ksis)}")
-    print("-" * 80)
-    for ksi in manual_ksis[:5]:  # Show first 5
-        print(f"{ksi['ksi_id']}: {ksi['name']}")
-    
-    if len(manual_ksis) > 5:
-        print(f"\n... and {len(manual_ksis) - 5} more")
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    for ksi_id in ("KSI-IAM-APM", "KSI-CNA-RNT", "KSI-SVC-SIN"):
+        ksi = data_loader.get_ksi(ksi_id)
+        if ksi is None:
+            raise SystemExit(f"{ksi_id} is not a KSI in rules {meta.get('version')}")
+        guidance = await get_ksi_evidence_automation_impl(ksi_id, data_loader)
+        (out / f"{ksi_id}-automation.md").write_text(guidance, encoding="utf-8")
+        print(f"  {ksi_id} ({ksi['name']}) -> {ksi_id}-automation.md")
+
+    (out / "run.json").write_text(json.dumps({
+        "producer": "examples/evidence_automation_example.py",
+        "rules": {k: meta.get(k, "") for k in ("title", "version", "last_updated", "sha256", "source")},
+    }, indent=2), encoding="utf-8")
+    print(f"Rules {meta.get('version')} recorded in {out / 'run.json'}")
+
+    if upload:
+        files, prefix = azure_evidence_store.stage_manifest(out, "fedramp20x-ksi-guidance", "local-example")
+        uri = azure_evidence_store.upload(out, files, prefix, azure_evidence_store.DEFAULT_ACCOUNT,
+                                          azure_evidence_store.DEFAULT_CONTAINER)
+        print(f"Stored and verified at {uri}")
 
 
 async def main():
     """Run all examples."""
+    parser = argparse.ArgumentParser(description="FedRAMP 20x KSI evidence automation examples")
+    parser.add_argument("--output-dir", default="ksi-guidance")
+    parser.add_argument("--upload", action="store_true",
+                        help="store the saved guidance in the evidence account (Entra auth, private network)")
+    args = parser.parse_args()
+
     print("\n" + "="*80)
     print("FEDRAMP 20x KSI EVIDENCE AUTOMATION EXAMPLES")
     print("="*80)
-    print("\nThis demonstrates the new evidence automation features that help")
-    print("organizations automate evidence collection for FedRAMP compliance.")
-    
-    # Run examples
+
     await example_iam_01_evidence_automation()
     await example_cna_01_evidence_automation()
-    await example_direct_analyzer_access()
-    await example_list_all_automation()
-    
+    await example_save_guidance_as_evidence(args.output_dir, args.upload)
+
     print("\n" + "="*80)
     print("EXAMPLES COMPLETE")
     print("="*80)
-    print("\nNext Steps:")
-    print("1. Use get_ksi_evidence_automation to get recommendations for your KSIs")
-    print("2. Use get_ksi_evidence_queries to get ready-to-use Azure queries")
-    print("3. Use get_ksi_evidence_artifacts to understand what to collect")
-    print("4. Use get_infrastructure_code_for_ksi to get Bicep/Terraform templates")
-    print("5. Use get_evidence_collection_code to get Python/C#/PowerShell code")
 
 
 if __name__ == "__main__":

@@ -1,236 +1,201 @@
-I'll guide you through the FedRAMP 20x quarterly review process.
+I'll guide you through the Quarterly Review and Ongoing Certification Report process under the FedRAMP Consolidated Rules for 2026 (CR26, CCM family).
 
-# Quarterly Review Checklist (FRR-CCM-QR)
+# Quarterly Review Checklist (CCM)
 
-## Pre-Review Preparation (Week Before)
+**Rules in scope:** CCM-OCR-AVL (Ongoing Certification Report every 3 months), CCM-OCR-NRD, CCM-OCR-FBM, CCM-OCR-AFS, CCM-OCR-LSI, CCM-OCR-SOR, CCM-QTR-MTG (Quarterly Review meeting: MAY for Class A, SHOULD for Class B, MUST for Class C and D), CCM-QTR-REG, CCM-QTR-NRD, CCM-QTR-NID, CCM-QTR-SAR, CCM-QTR-RTR.
 
-**Data Collection (FRR-CCM-QR-01 through QR-11)**
-- [ ] Pull KSI metrics for the quarter (all 72 indicators)
-- [ ] Generate vulnerability scan reports
-- [ ] Compile incident logs
-- [ ] Gather change notifications
-- [ ] Review POA&M status
-- [ ] Collect evidence from Authorization Data Sharing API
+## Pre-Review Preparation
+
+**Ongoing Certification Report content (CCM-OCR-AVL)**
+The report covers the entire period since the previous one, in a consistent human-readable format, with high-level summaries of (if applicable):
+- [ ] Changes to FedRAMP Certification Data
+- [ ] Planned changes to Certification Data during at least the next 3 months
+- [ ] Accepted vulnerabilities
+- [ ] Transformative changes
+- [ ] Updated recommendations or best practices for security, configuration or usage
+- [ ] A list of all agencies directly using the product
+- [ ] FedRAMP Reportable Incidents, or an attestation that none occurred
+- [ ] Lessons learned and changes planned or made as a result of Reportable Incidents
+
+**Meeting logistics**
+- [ ] Supply a registration link or downloadable calendar file (CCM-QTR-REG)
+- [ ] Publish the next review date (CCM-QTR-NRD) and next report date (CCM-OCR-NRD)
+- [ ] Schedule the review at least 3 business days after releasing the report and within 10 business days of release (CCM-QTR-SAR, SHOULD)
+- [ ] Do not irresponsibly disclose sensitive information (CCM-OCR-LSI, CCM-QTR-NID)
+- [ ] Avoid inviting third parties unless relevant (CCM-QTR-RTP)
 
 **FRR Compliance Review Tools:**
-- [ ] Run `analyze_all_frrs` to check compliance across all 199 FRRs
-- [ ] Use `list_frrs_by_family` to review VDR, CCM, ADS family status
-- [ ] Use `get_frr_implementation_status` to generate summary for quarterly report
+- [ ] Run `analyze_all_frrs` to check compliance across all CR26 FRR rules
+- [ ] Use `list_frrs_by_family` to review VDR, VER, CCM and CDS family status
+- [ ] Use `get_frr_implementation_status` to generate a summary for the report
 
 **Team Coordination**
-- [ ] Schedule review meeting with stakeholders
-- [ ] Notify authorizing agencies
+- [ ] Schedule the review with stakeholders
+- [ ] Notify agencies and other necessary parties
 - [ ] Prepare agenda
-- [ ] Assign action items from last quarter
+- [ ] Assign action items from the last quarter
 
 ## Quarterly Review Activities
 
-### 1. Key Security Indicators Review
+### 1. Key Security Indicators Review (46 KSIs, 10 families)
 
-**Authorization Framework (KSI-AFR-01 through AFR-11)**
-- [ ] Review assessment scope for changes
-- [ ] Validate KSI tracking is current
-- [ ] Check authorization data sharing functionality
-- [ ] Review vulnerability response metrics
-- [ ] Verify change notification compliance
-- [ ] Check continuous monitoring effectiveness
-- [ ] Validate secure configuration baselines
-- [ ] Review security inbox activity
-- [ ] Check persistent validation results
-- [ ] Review incident communications
-- [ ] Validate cryptographic module usage
+Review measures and metrics for each applicable KSI (SDR-CSX-KSI; historical metrics per SDR-CSX-KMT for 20x Class B, C, D).
 
-**Cybersecurity Education (KSI-CED-01 through CED-04)**
-- [ ] General education completion rates
-- [ ] Role-specific training completion
-- [ ] Development/engineering security training
-- [ ] Incident response training status
+**Cybersecurity Education (CED)**
+- [ ] KSI-CED-RAT: effectiveness of training reviewed, including role-specific and engineering training
 
-**Change Management (KSI-CMT-01 through CMT-05)**
-- [ ] Review all changes logged this quarter
-- [ ] Verify redeployment procedures followed
-- [ ] Check automated testing coverage
-- [ ] Validate change management procedures
-- [ ] Review change impacts
+**Change Management (CMT)**
+- [ ] KSI-CMT-LMC: changes logged and monitored
+- [ ] KSI-CMT-RMV: redeployment of version-controlled resources
+- [ ] KSI-CMT-VTD: automated validation throughout deployment
+- [ ] KSI-CMT-RVP: change procedures reviewed
 
-**Cloud Native Architecture (KSI-CNA-01 through CNA-08)**
-- [ ] Network traffic restrictions effective
-- [ ] Attack surface minimization progress
-- [ ] Traffic flow enforcement working
-- [ ] Immutable infrastructure compliance
-- [ ] Unwanted activity detection
-- [ ] High availability metrics
-- [ ] Best practices adherence
-- [ ] Persistent assessment results
+**Cloud Native Architecture (CNA)**
+- [ ] KSI-CNA-RNT: network traffic restrictions effective
+- [ ] KSI-CNA-ULN: logical networking and traffic flow
+- [ ] KSI-CNA-DFP: functionality and privileges strictly defined
+- [ ] KSI-CNA-MAT: attack surface minimized
+- [ ] KSI-CNA-OFA: availability optimization
+- [ ] KSI-CNA-IBP: best practices adherence
+- [ ] KSI-CNA-RVP: protection against denial of service and unwanted activity
+- [ ] KSI-CNA-EIS: intended state enforced
 
-**Identity & Access Management (KSI-IAM-01 through IAM-07)**
-- [ ] MFA usage (phishing-resistant)
-- [ ] Passwordless authentication adoption
-- [ ] Non-user account management
-- [ ] Just-in-time authorization usage
-- [ ] Least privilege validation
-- [ ] Suspicious activity detections
-- [ ] Automated account management effectiveness
+**Identity and Access Management (IAM)**
+- [ ] KSI-IAM-APM: passwordless or phishing-resistant MFA adoption
+- [ ] KSI-IAM-AAM: automated account management
+- [ ] KSI-IAM-ELP: least privilege validation
+- [ ] KSI-IAM-JIT: just-in-time authorization
+- [ ] KSI-IAM-SNU: non-user authentication
+- [ ] KSI-IAM-SUS: suspicious activity responses
 
-**Incident Response (KSI-INR-01 through INR-03)**
-- [ ] Review incident response procedures
-- [ ] Check incident logging completeness
-- [ ] Review after-action reports
+**Incident Response (INR)**
+- [ ] KSI-INR-RIR: procedures reviewed
+- [ ] KSI-INR-RPI: past incidents reviewed for patterns
+- [ ] KSI-INR-AAR: after action reports generated
 
-**Monitoring, Logging & Analysis (KSI-MLA-01 through MLA-08)**
-- [ ] SIEM operational status
-- [ ] Audit logging coverage
-- [ ] Infrastructure as Code usage
-- [ ] Event type coverage
-- [ ] Log data access controls
+**Monitoring, Logging, and Auditing (MLA)**
+- [ ] KSI-MLA-OSM: SIEM operating
+- [ ] KSI-MLA-RVL: logs reviewed
+- [ ] KSI-MLA-EVC: configurations (IaC) evaluated
+- [ ] KSI-MLA-LET: logged event types current
+- [ ] KSI-MLA-ALA: log access authorization
 
-**Proactive Investment (KSI-PIY-01 through PIY-08)**
-- [ ] Automated inventory accuracy
-- [ ] Security objectives progress
-- [ ] Vulnerability disclosure program status
-- [ ] CISA Secure by Design alignment
-- [ ] Implementation evaluation results
-- [ ] Security investment effectiveness
-- [ ] Supply chain risk management
-- [ ] Executive support validation
+**Policy and Inventory (PIY)**
+- [ ] KSI-PIY-GIV: inventories accurate
+- [ ] KSI-PIY-RVD: vulnerability disclosure program reviewed
+- [ ] KSI-PIY-RSD: security in the SDLC reviewed
+- [ ] KSI-PIY-RIS: security investments reviewed
+- [ ] KSI-PIY-RES: executive support reviewed
 
-**Recovery & Planning (KSI-RPL-01 through RPL-04)**
-- [ ] Recovery objectives current
-- [ ] Recovery plan tested this quarter
-- [ ] System backups validated
-- [ ] Recovery testing results
+**Recovery Planning (RPL)**
+- [ ] KSI-RPL-RRO: recovery objectives current
+- [ ] KSI-RPL-ABO: backups aligned
+- [ ] KSI-RPL-ARP: recovery plan aligned
+- [ ] KSI-RPL-TRC: recovery capability tested
 
-**Services (KSI-SVC-01 through SVC-10)**
-- [ ] Continuous improvement activities
-- [ ] Network encryption status
-- [ ] Configuration automation effectiveness
-- [ ] Resource integrity validation
-- [ ] Secret management review
-- [ ] Patching compliance rates
-- [ ] Shared resource security
-- [ ] Communication integrity
-- [ ] Data destruction procedures
+**Supply Chain Risk (SCR)**
+- [ ] KSI-SCR-MIT: supply chain risk mitigation
+- [ ] KSI-SCR-MON: upstream vulnerability monitoring
 
-**Third-Party Risk (KSI-TPR-01 through TPR-04)**
-- [ ] Supply chain risk management activities
-- [ ] Supply chain risk monitoring results
+**Service Configuration (SVC)**
+- [ ] KSI-SVC-ACM: configuration automation
+- [ ] KSI-SVC-ASM: secret management and rotation
+- [ ] KSI-SVC-EIS: evaluating and improving security
+- [ ] KSI-SVC-PRR: preventing residual risk
+- [ ] KSI-SVC-RUD: removing unwanted data
+- [ ] KSI-SVC-SIN: information encryption
+- [ ] KSI-SVC-VCM: communication validation
+- [ ] KSI-SVC-VRI: resource integrity validation
 
-### 2. Vulnerability Management Review (FRR-VDR)
+### 2. Vulnerability Management Review (VDR, VER)
 
-**Vulnerability Scanning**
-- [ ] Scan frequency maintained (continuous)
-- [ ] All systems/containers/code scanned
-- [ ] Scan coverage verification
+**Detection**
+- [ ] Detection cadence met for your Class (VDR-TFR-PDD, VDR-TFR-PCD, VDR-TFR-PSD)
+- [ ] Non-machine resources verified in the last 3 months (VDR-TFR-NMV)
+- [ ] Machine verification cadence met (VDR-TFR-MVX for 20x, VDR-TFR-MVF for Rev5)
 
-**Remediation Timeframes**
-- [ ] Critical/High within timeframes (7-15 days)
-- [ ] Medium within timeframes (30-90 days)
-- [ ] Low within timeframes (180 days)
-- [ ] Exceptions properly documented (FRR-VDR-EX)
+**Response timeframes**
+- [ ] Mitigation and remediation within VDR-TFR-PVR timeframes for your Class, N-rating and reachability
+- [ ] KEVs remediated by CISA due dates (VDR-TFR-KEV)
+- [ ] Evaluations done within VER-TFR-EVU
+- [ ] Vulnerabilities past 192 days since evaluation marked as accepted (VER-TFR-MAV) with VER-RPT-AVI information
 
 **Reporting**
-- [ ] Agency-specific vulnerabilities reported
-- [ ] Reporting timeframes met
-- [ ] Follow-up communications documented
+- [ ] Report at least monthly (VER-TFR-MHR)
+- [ ] Reports contain VER-RPT-VDT fields
 
-### 3. Significant Changes Review (FRR-SCN)
+### 3. Significant Changes Review (SCN)
+- [ ] Changes evaluated and classified (SCN-CSO-EVA)
+- [ ] Routine recurring changes handled without formal notification (SCN-RTR-NNR)
+- [ ] Adaptive changes notified within 10 business days after finishing (SCN-ADP-NTF)
+- [ ] Transformative changes notified at the SCN-TRF milestones
+- [ ] Audit records and 12 months of notifications available (SCN-CSO-MAR, SCN-CSO-HIS)
 
-**Change Categories**
-- [ ] Routine/recurring changes documented
-- [ ] Administrative changes tracked
-- [ ] Transformative changes assessed
-- [ ] Impact changes reported
-- [ ] Notifications sent to appropriate parties
-
-### 4. Authorization Boundary Review (FRR-MAS)
-
-- [ ] No unauthorized changes to boundary
-- [ ] New components added properly
-- [ ] Removed components documented
-- [ ] Third-party services reviewed
+### 4. Minimum Assessment Scope Review (MAS)
+- [ ] Scope reflects current information resources (MAS-CSO-IIR)
+- [ ] Information flows current (MAS-CSO-FLO)
+- [ ] Third-party resources reviewed (MAS-CSO-TPR)
 - [ ] Inventory accuracy validated
 
-### 5. Incident Review (FRR-ICP, FRR-FSI)
-
-**Incidents This Quarter**
-- [ ] All incidents logged
-- [ ] Communications followed procedures
-- [ ] Security Inbox used appropriately
-- [ ] Agency notifications completed
+### 5. Incident Review (IEC, AFC)
+- [ ] All incidents evaluated for reportability (IEC-CSO-EFR)
+- [ ] Reports sent on time for Class and N-rating (IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)
+- [ ] FedRAMP Security Inbox monitored and actions completed (AFC-CSO-INB, AFC-CSO-CRA)
 - [ ] Lessons learned documented
 
-### 6. Persistent Validation (FRR-PVA)
+### 5. Certification Data Sharing (CDS)
+- [ ] Trust center operational with programmatic access (CDS-CSO-UTC, CDS-TRC-PAC)
+- [ ] Public information current and formats consistent (CDS-CSO-PUB, CDS-CSO-CBF)
+- [ ] Snapshot aligned to this report retained (CDS-CSO-HAD)
+- [ ] Access logging and agency access inventory (CDS-TRC-ACL, CDS-TRC-AAI)
+- [ ] Agency access denials reported to FedRAMP within 5 business days (CDS-UTC-AAD)
 
-- [ ] Continuous validation operational
-- [ ] Results reviewed and analyzed
-- [ ] Issues addressed
-- [ ] Validation coverage adequate
-
-### 7. Authorization Data Sharing (FRR-ADS)
-
-**API Functionality**
-- [ ] API operational and accessible
-- [ ] Authentication working properly
-- [ ] Data current and accurate
-- [ ] Agencies able to query successfully
-- [ ] OSCAL format compliance
-
-**Data Shared**
-- [ ] System boundary information
-- [ ] Vulnerability data
-- [ ] KSI metrics
-- [ ] Incident data
-- [ ] Change notifications
-- [ ] POA&M status
+### 6. Cryptographic modules and configuration
+- [ ] Cryptographic module list current (CMU-CSO-CMD)
+- [ ] Secure Configuration Guide current (SCG-CSO-RSC)
 
 ## Post-Review Actions
 
 **Documentation**
-- [ ] Complete quarterly review report
-- [ ] Update POA&Ms with new findings
-- [ ] Document any exceptions or deviations
+- [ ] Anonymized summary of feedback, questions and answers added to this or the next report (CCM-OCR-AFS)
+- [ ] Record or transcribe the review where appropriate (CCM-QTR-RTR)
+- [ ] Update the Security Decision Record
 - [ ] Record decisions and action items
 
 **Communication**
-- [ ] Share results with authorizing agencies
-- [ ] Update Authorization Data Sharing API
-- [ ] Notify stakeholders of significant findings
-- [ ] Schedule follow-up meetings if needed
+- [ ] Share results with necessary parties
+- [ ] Update Certification Data in the trust center
+- [ ] Schedule follow-ups
 
 **Continuous Improvement**
-- [ ] Identify process improvements
-- [ ] Update procedures based on lessons learned
-- [ ] Address any gaps found
+- [ ] Identify process improvements and gaps
 - [ ] Plan next quarter's activities
 
 ## Deliverables Checklist
 
-- [ ] Quarterly Review Report
-- [ ] Updated KSI metrics dashboard
-- [ ] Vulnerability scan results summary
-- [ ] Incident summary report
-- [ ] POA&M updates
-- [ ] Change log for the quarter
-- [ ] Evidence package (via Authorization Data Sharing API)
-- [ ] Agency coordination notes
+- [ ] Ongoing Certification Report
+- [ ] Quarterly Review materials, registration info and next date
+- [ ] Updated KSI metrics
+- [ ] Vulnerability report (VER-RPT-PER)
+- [ ] Incident summary or no-incident attestation
+- [ ] Significant Change Notification summary
+- [ ] Certification Data snapshot (CDS-CSO-HAD)
 
 ## Red Flags to Escalate
 
-⚠ **Immediate escalation required if:**
-- Critical/High vulnerabilities past remediation deadline
-- Unauthorized boundary changes
-- Security incidents not properly reported
-- KSI metrics showing degradation
-- Authorization Data Sharing API unavailable
-- Required training completion below threshold
+- Vulnerabilities past their VDR-TFR-PVR timeframe or approaching 192 days
+- Scope changes not reflected in the Minimum Assessment Scope
+- Incidents not evaluated or not reported on time
+- KSI metrics degrading
+- Trust center or programmatic access unavailable
 - Significant changes not properly notified
+- Messages from FedRAMP not acted on (AFC-CSO-RCV)
 
 ## Next Quarter Planning
 
 - [ ] Review upcoming system changes
 - [ ] Plan security improvements
-- [ ] Schedule next quarterly review
+- [ ] Publish the next report and review dates
 - [ ] Assign preparatory tasks
-- [ ] Update calendar reminders
 
 Use search_requirements to find specific requirement details for any area needing deeper investigation.

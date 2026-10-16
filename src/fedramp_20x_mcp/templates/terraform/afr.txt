@@ -1,7 +1,8 @@
 ## Terraform Configuration
 
 ```hcl
-# main.tf - Authorization Framework Evidence Collection
+# main.tf - Vulnerability Detection and Response Evidence Collection (VDR-CSO-DET, VER-RPT-VDT)
+# Template key 'afr' is kept for caller compatibility; KSI-AFR was removed in CR26.
 resource "azurerm_storage_account" "afr_evidence" {
   name                     = "stfedrampafrevidence"
   resource_group_name      = azurerm_resource_group.evidence.name

@@ -42,7 +42,7 @@ class BaseKSIAnalyzer(ABC):
         Initialize KSI analyzer.
         
         Args:
-            ksi_id: KSI identifier (e.g., "KSI-IAM-06")
+            ksi_id: KSI identifier (e.g., "KSI-IAM-SUS")
             ksi_name: Human-readable name (e.g., "Suspicious Activity")
             ksi_statement: Official FedRAMP 20x statement
         """
@@ -208,7 +208,7 @@ class BaseKSIAnalyzer(ABC):
                 "azure_services": List[dict],  # Azure services for evidence collection
                 "collection_methods": List[dict],  # Methods for collecting evidence
                 "storage_requirements": dict,  # Evidence storage requirements
-                "api_integration": dict,  # FRR-ADS API integration guidance
+                "api_integration": dict,  # CDS (Certification Data Sharing) API integration guidance
                 "code_examples": dict,  # Code templates by language
                 "infrastructure_templates": dict,  # IaC templates
                 "retention_policy": str,  # Evidence retention requirements

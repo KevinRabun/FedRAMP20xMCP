@@ -1,63 +1,51 @@
-I'll help you establish a FedRAMP-compliant continuous monitoring program.
+I'll help you establish a FedRAMP-aligned continuous monitoring program under the FedRAMP Consolidated Rules for 2026 (CR26).
 
 **PRODUCTION-FIRST ASSUMPTION:** All monitoring, logging, and assessment configurations assume **PRODUCTION systems** unless explicitly stated otherwise. FedRAMP continuous monitoring requirements apply to production environments.
 
 **Continuous Monitoring Components**:
 
 **1. Collaborative Continuous Monitoring (CCM)**
-- Quarterly reviews with agencies
-- Continuous authorization maintenance
-- Agency-specific monitoring requirements
+- Ongoing Certification Report supplied to all necessary parties every 3 months (CCM-OCR-AVL), with the next report date shared publicly (CCM-OCR-NRD)
+- Asynchronous feedback mechanism and anonymized feedback summary (CCM-OCR-FBM, CCM-OCR-AFS)
+- Quarterly Review meeting every 3 months (CCM-QTR-MTG; MAY for Class A, SHOULD for Class B, MUST for Class C and D)
 
-**2. Persistent Validation & Assessment (PVA)**
-- Regular assessment schedules based on impact level
-- Validation procedures
-- Evidence collection and documentation
+**2. Persistent verification, validation and assessment**
+- Persistent machine verification and validation of machine-based information resources: VDR-TFR-MVX (20x, by class) or VDR-TFR-MVF (Rev5, by class)
+- Non-machine-based information resources verified and validated at least once every 3 months (VDR-TFR-NMV)
+- Annual independent assessment (IVV-CSO-FIA; KSIs for 20x per IVV-CSX-AIA, Rev5 controls per IVV-CSF-AIA)
+- Certification Package kept current (CPO-CSX-CPM for 20x, CPO-CSF-CPM for Rev5; frequency varies by class)
 
-**3. Key Security Indicators (KSI) Tracking**
-Track 72 indicators across 11 categories:
-- Authorization & Accreditation metrics
-- Cybersecurity Education completion
-- Commitment to security practices
-- Change Management effectiveness
-- Identity & Access Management
-- Information Resources management
-- Monitoring, Logging & Analysis
-- Privacy protection
-- Reporting compliance
-- Service Offerings documentation
-- Third Party Resources management
+**3. Key Security Indicators (KSI) tracking**
+Track 46 indicators across 10 families:
+- CED Cybersecurity Education
+- CMT Change Management
+- CNA Cloud Native Architecture
+- IAM Identity and Access Management
+- INR Incident Response
+- MLA Monitoring, Logging, and Auditing
+- PIY Policy and Inventory
+- RPL Recovery Planning
+- SCR Supply Chain Risk
+- SVC Service Configuration
 
-**4. Monitoring Schedule**:
+**4. Monitoring cadence (take values from the rules, they vary by class)**:
+- Vulnerability detection frequencies: VDR-TFR-PDD (drift-prone resources), VDR-TFR-PCD (other resources), VDR-TFR-PSD (representative samples)
+- Vulnerability reporting at least monthly in a consistent human-readable format (VER-TFR-MHR)
+- Ongoing Certification Report every 3 months (CCM-OCR-AVL)
+- Significant change evaluation as changes occur (SCN-CSO-EVA) with auditable records (SCN-CSO-MAR)
+- Incident evaluation promptly (IEC-CSO-EFR) with reports on the PAIN-based timeframes in IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR
 
-**Monthly Activities**:
-- [ ] Vulnerability scanning
-- [ ] Log review and analysis
-- [ ] Incident tracking and reporting
-- [ ] KSI metrics collection
-
-**Quarterly Activities**:
-- [ ] CCM reviews with agencies
-- [ ] Security posture assessment
-- [ ] Control effectiveness evaluation
-- [ ] Significant change review
-
-**Annual Activities**:
-- [ ] Full security assessment (based on impact level)
-- [ ] Authorization package update
-- [ ] Third-party assessment coordination
-
-**5. Reporting Requirements**:
-- Monthly vulnerability reports
-- Quarterly CCM deliverables
-- Incident notifications (as they occur)
-- Annual assessment reports
+**5. Reporting requirements**:
+- Vulnerability detection and response activity reports (VER-RPT-PER, VER-RPT-VDT, VER-RPT-AVI)
+- Ongoing Certification Reports (CCM-OCR-AVL)
+- Significant Change Notifications, kept available for 12 months (SCN-CSO-HIS)
+- FedRAMP Reportable Incident reports (IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR)
 
 **Setup Steps**:
-1. Use list_ksi to review all 72 Key Security Indicators
+1. Use list_ksi to review all 46 Key Security Indicators
 2. Use search_requirements with "monitoring" to find related requirements
-3. Use get_control for specific CCM and PVA requirements
+3. Use get_frr_metadata for specific CCM, VDR and VER rules
 4. Document your monitoring procedures and schedules
-5. Establish automated collection where possible
+5. Establish automated collection where possible (VDR-CSO-ADT, IEC-CSO-AIR)
 
 **Next Steps**: Would you like detailed requirements for a specific monitoring component?

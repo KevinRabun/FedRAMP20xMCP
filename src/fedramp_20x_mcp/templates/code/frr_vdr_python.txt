@@ -1,22 +1,33 @@
 """
-FRR-VDR Vulnerability Tracking and Reporting Module
+VDR and VER Vulnerability Tracking and Reporting Module
 
-This module implements FedRAMP 20x FRR-VDR (Vulnerability Detection and Response)
-requirements for automated vulnerability tracking, remediation monitoring, and
-compliance reporting.
+This module sketches automated vulnerability tracking, timeframe monitoring and
+reporting under the FedRAMP Consolidated Rules for 2026 (CR26): the VDR family
+(Vulnerability Detection and Response) and the VER family (Vulnerability
+Evaluation and Reporting). VDR and VER are required from 2026-12-07 (mandated by
+CISA BOD 26-04).
 
-FRR-VDR Requirements Implemented:
-- FRR-VDR-01: Vulnerability scanning and detection
-- FRR-VDR-08: Patch management tracking
-- FRR-VDR-11: Deviation approvals and exceptions
-- FRR-VDR-TF-01: Remediation timeframes (Critical=15d, High=30d, Moderate=90d)
-- FRR-VDR-TF-02: KEV (Known Exploited Vulnerabilities) prioritization
-- FRR-VDR-RP-01: Agency-specific vulnerability reporting
+Rules Implemented:
+- VDR-CSO-DET: Vulnerability detection
+- VDR-CSO-RES: Vulnerability response (track, evaluate, mitigate, remediate, report)
+- VER-EVA-ELX, VER-EVA-EIR, VER-EVA-EPA: Evaluate exploitability, internet-reachability,
+  and Potential Agency Impact N-rating
+- VDR-TFR-PVR: Mitigation and remediation expectations (days from evaluation, by
+  Certification Class, N-rating, internet-reachability and likely exploitability)
+- VDR-TFR-KEV: Known Exploited Vulnerabilities per CISA due dates (CISA BOD 26-04)
+- VER-TFR-MAV: A vulnerability not fully mitigated or remediated within 192 days of
+  evaluation is an accepted vulnerability
+- VER-RPT-VDT, VER-RPT-AVI, VER-RPT-PER: Report fields and persistent reporting
+- VER-TFR-MHR: Report at least monthly
 
-Related KSIs:
-- KSI-AFR-01: Asset discovery and inventory
-- KSI-AFR-04: Vulnerability detection and remediation
-- KSI-CED-01: Continuous evidence collection
+Related rules and KSIs:
+- MAS-CSO-IIR: Scope of information resources
+- KSI-PIY-GIV: Generating inventories
+- KSI-SCR-MON: Monitoring supply chain risk
+
+The VDR-TFR-PVR table below carries the values for each Certification Class from the
+rules data (version 2026.10.13.01). These are SHOULD-level expectations; re-check the
+rule when the rules data changes. N1 has no timeframe in the rule.
 
 Usage:
     python frr_vdr_tracker.py --scan-results /path/to/scan.json
@@ -36,7 +47,6 @@ from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
 from azure.keyvault.secrets import SecretClient
 from azure.monitor.query import LogsQueryClient
-from azure.mgmt.security import SecurityCenter
 
 # Configure logging
 logging.basicConfig(
@@ -45,41 +55,64 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Days from vulnerability evaluation, keyed by Certification Class -> N-rating -> bucket.
+# Buckets: "irv_lev" internet-reachable + likely exploitable, "nirv_lev" not internet-reachable
+# + likely exploitable, "nlev" not likely exploitable. Source: VDR-TFR-PVR.
+# Class D, N5 uses hours/days in the rule (12 hours, 1 day, 8 days), expressed here as timedelta.
+PVR_TIMEFRAMES: Dict[str, Dict[int, Dict[str, timedelta]]] = {
+    "A": {
+        2: {"irv_lev": timedelta(days=96), "nirv_lev": timedelta(days=160), "nlev": timedelta(days=192)},
+        3: {"irv_lev": timedelta(days=32), "nirv_lev": timedelta(days=64), "nlev": timedelta(days=192)},
+        4: {"irv_lev": timedelta(days=8), "nirv_lev": timedelta(days=32), "nlev": timedelta(days=64)},
+        5: {"irv_lev": timedelta(days=4), "nirv_lev": timedelta(days=8), "nlev": timedelta(days=32)},
+    },
+    "C": {
+        2: {"irv_lev": timedelta(days=48), "nirv_lev": timedelta(days=128), "nlev": timedelta(days=192)},
+        3: {"irv_lev": timedelta(days=16), "nirv_lev": timedelta(days=32), "nlev": timedelta(days=128)},
+        4: {"irv_lev": timedelta(days=4), "nirv_lev": timedelta(days=8), "nlev": timedelta(days=64)},
+        5: {"irv_lev": timedelta(days=2), "nirv_lev": timedelta(days=4), "nlev": timedelta(days=16)},
+    },
+    "D": {
+        2: {"irv_lev": timedelta(days=24), "nirv_lev": timedelta(days=96), "nlev": timedelta(days=192)},
+        3: {"irv_lev": timedelta(days=8), "nirv_lev": timedelta(days=16), "nlev": timedelta(days=64)},
+        4: {"irv_lev": timedelta(days=2), "nirv_lev": timedelta(days=8), "nlev": timedelta(days=32)},
+        5: {"irv_lev": timedelta(hours=12), "nirv_lev": timedelta(days=1), "nlev": timedelta(days=8)},
+    },
+}
+PVR_TIMEFRAMES["B"] = PVR_TIMEFRAMES["A"]  # Class B values match Class A in the rule
 
-class Severity(Enum):
-    """Vulnerability severity levels per FRR-VDR-TF-01"""
-    CRITICAL = "Critical"
-    HIGH = "High"
-    MODERATE = "Moderate"
-    LOW = "Low"
-    INFORMATIONAL = "Informational"
+# VER-TFR-MAV: accepted vulnerability threshold, days from evaluation
+ACCEPTED_VULNERABILITY_DAYS = 192
 
 
 class RemediationStatus(Enum):
-    """Remediation status per FRR-VDR-08"""
+    """Response status for tracking (VDR-CSO-RES)"""
     OPEN = "Open"
-    IN_PROGRESS = "In Progress"
+    PARTIALLY_MITIGATED = "Partially Mitigated"
+    FULLY_MITIGATED = "Fully Mitigated"
     REMEDIATED = "Remediated"
-    EXCEPTION_APPROVED = "Exception Approved"
+    ACCEPTED = "Accepted"
     FALSE_POSITIVE = "False Positive"
 
 
 @dataclass
 class Vulnerability:
-    """Vulnerability data structure per FRR-VDR-01"""
-    id: str
+    """Vulnerability record with fields following VER-RPT-VDT"""
+    id: str  # provider's internal tracking identifier
     cve_id: Optional[str]
     title: str
     description: str
-    severity: Severity
-    cvss_score: float
+    detection_source: str
     affected_resources: List[str]
-    detection_date: datetime
-    remediation_deadline: datetime
-    remediation_status: RemediationStatus
-    is_kev: bool  # FRR-VDR-TF-02: Known Exploited Vulnerability flag
-    deviation_approval: Optional[str] = None  # FRR-VDR-11 exception tracking
-    remediation_plan: Optional[str] = None
+    detected_at: datetime  # time of detection
+    evaluated_at: datetime  # time of completed evaluation (VER-EVA-*)
+    internet_reachable: bool  # VER-EVA-EIR
+    likely_exploitable: bool  # VER-EVA-ELX
+    n_rating: int  # Potential Agency Impact N-rating, 1 to 5 (VER-EVA-EPA)
+    target_date: Optional[datetime]  # from VDR-TFR-PVR; None for N1
+    status: RemediationStatus
+    is_kev: bool  # VDR-TFR-KEV flag
+    accepted_reason: Optional[str] = None  # VER-RPT-AVI explanation
     last_updated: datetime = None
 
     def __post_init__(self):
@@ -89,263 +122,260 @@ class Vulnerability:
 
 class VDRComplianceTracker:
     """
-    FRR-VDR Vulnerability Detection and Response Compliance Tracker
-    
-    Implements automated vulnerability tracking, remediation monitoring,
-    and compliance reporting per FedRAMP 20x FRR-VDR requirements.
+    Vulnerability response tracker for VDR and VER (CR26).
+
+    Tracks mitigation and remediation targets, accepted vulnerabilities
+    and reporting inputs.
     """
-    
-    # FRR-VDR-TF-01: Remediation timeframes
-    REMEDIATION_TIMEFRAMES = {
-        Severity.CRITICAL: timedelta(days=15),
-        Severity.HIGH: timedelta(days=30),
-        Severity.MODERATE: timedelta(days=90),
-        Severity.LOW: timedelta(days=180),
-        Severity.INFORMATIONAL: timedelta(days=365)
-    }
-    
+
     def __init__(
         self,
         storage_account_name: str,
         workspace_id: str,
-        key_vault_uri: str
+        key_vault_uri: str,
+        certification_class: str
     ):
         """
-        Initialize VDR compliance tracker
-        
+        Initialize the tracker
+
         Args:
             storage_account_name: Azure Storage account for evidence storage
             workspace_id: Log Analytics workspace ID for query operations
             key_vault_uri: Key Vault URI for credential management
+            certification_class: FedRAMP Certification Class, "A", "B", "C" or "D"
         """
+        if certification_class not in PVR_TIMEFRAMES:
+            raise ValueError("certification_class must be one of A, B, C, D")
+
         self.credential = DefaultAzureCredential()
         self.storage_account_name = storage_account_name
         self.workspace_id = workspace_id
-        
-        # Initialize Azure clients
+        self.certification_class = certification_class
+
         self.blob_client = BlobServiceClient(
             account_url=f"https://{storage_account_name}.blob.core.windows.net",
             credential=self.credential
         )
         self.logs_client = LogsQueryClient(credential=self.credential)
         self.kv_client = SecretClient(vault_url=key_vault_uri, credential=self.credential)
-        
-        logger.info("VDR Compliance Tracker initialized")
-    
-    def calculate_remediation_deadline(
+
+        logger.info("VDR/VER tracker initialized for Class %s", certification_class)
+
+    def calculate_target_date(
         self,
-        detection_date: datetime,
-        severity: Severity
-    ) -> datetime:
+        evaluated_at: datetime,
+        n_rating: int,
+        internet_reachable: bool,
+        likely_exploitable: bool
+    ) -> Optional[datetime]:
         """
-        Calculate remediation deadline per FRR-VDR-TF-01
-        
-        FRR-VDR-TF-01 Requirements:
-        - Critical: 15 calendar days
-        - High: 30 calendar days
-        - Moderate: 90 calendar days
-        
-        Args:
-            detection_date: Vulnerability detection timestamp
-            severity: Vulnerability severity level
-            
-        Returns:
-            Remediation deadline datetime
+        Calculate the mitigation/remediation target per VDR-TFR-PVR
+
+        Timeframes depend on the Certification Class, the Potential Agency Impact
+        N-rating, internet-reachability and likely exploitability. There are no fixed
+        severity buckets in CR26. Returns None for N1 (no timeframe in the rule).
         """
-        timeframe = self.REMEDIATION_TIMEFRAMES.get(severity, timedelta(days=90))
-        deadline = detection_date + timeframe
-        
-        logger.debug(f"Calculated remediation deadline: {deadline} for {severity.value}")
-        return deadline
-    
+        table = PVR_TIMEFRAMES[self.certification_class].get(n_rating)
+        if not table:
+            return None
+
+        if not likely_exploitable:
+            bucket = "nlev"
+        elif internet_reachable:
+            bucket = "irv_lev"
+        else:
+            bucket = "nirv_lev"
+
+        target = evaluated_at + table[bucket]
+        logger.debug("Target %s for N%d bucket %s", target, n_rating, bucket)
+        return target
+
+    def accepted_threshold(self, evaluated_at: datetime) -> datetime:
+        """VER-TFR-MAV: not fully mitigated or remediated by this date means accepted."""
+        return evaluated_at + timedelta(days=ACCEPTED_VULNERABILITY_DAYS)
+
     def check_kev_status(self, cve_id: str) -> bool:
         """
-        Check if CVE is in CISA KEV catalog (FRR-VDR-TF-02)
-        
-        FRR-VDR-TF-02: Known Exploited Vulnerabilities must be prioritized
-        for remediation and tracked separately.
-        
+        Check whether a CVE is in the CISA KEV catalog (VDR-TFR-KEV)
+
+        KEVs should be remediated by the CISA catalog due date (CISA BOD 26-04),
+        even if fully mitigated.
+
         Args:
-            cve_id: CVE identifier (e.g., CVE-2024-1234)
-            
+            cve_id: CVE identifier (for example CVE-2024-1234)
+
         Returns:
-            True if CVE is in KEV catalog, False otherwise
+            True if the CVE is in the KEV catalog, False otherwise
         """
         try:
-            # Query KEV catalog from storage or API
-            # Implementation: Integrate with CISA KEV API or local cache
             kev_secret = self.kv_client.get_secret("kev-catalog-url")
-            
-            # Placeholder: Replace with actual KEV API call
+
+            # Placeholder: replace with an actual KEV catalog lookup
             # import requests
             # response = requests.get(kev_secret.value)
             # kev_data = response.json()
-            # return cve_id in kev_data['vulnerabilities']
-            
-            logger.info(f"Checking KEV status for {cve_id}")
+            # return cve_id in {v["cveID"] for v in kev_data["vulnerabilities"]}
+
+            logger.info("Checking KEV status for %s", cve_id)
             return False  # Placeholder
-            
+
         except Exception as e:
-            logger.error(f"Error checking KEV status: {e}")
+            logger.error("Error checking KEV status: %s", e)
             return False
-    
+
     def ingest_scan_results(self, scan_results_path: str) -> List[Vulnerability]:
         """
-        Ingest vulnerability scan results (FRR-VDR-01)
-        
-        Supports multiple scan formats:
-        - Trivy JSON
-        - Qualys XML (converted to JSON)
-        - Tenable CSV (converted to JSON)
-        - Azure Defender JSON
-        
-        Args:
-            scan_results_path: Path to scan results file
-            
-        Returns:
-            List of Vulnerability objects
+        Ingest detection results (VDR-CSO-DET) and evaluate them (VER-EVA-*)
+
+        Supports multiple formats (Trivy JSON shown; Qualys XML, Tenable CSV and
+        Defender JSON can be converted to JSON first).
+
+        The N-rating, reachability and exploitability below are placeholders: real
+        evaluation needs your architecture context (VER-EVA-EIR, VER-EVA-ELX, VER-EVA-EPA).
         """
-        logger.info(f"Ingesting scan results from {scan_results_path}")
-        
+        logger.info("Ingesting scan results from %s", scan_results_path)
+
         with open(scan_results_path, 'r') as f:
             scan_data = json.load(f)
-        
+
         vulnerabilities = []
-        detection_date = datetime.utcnow()
-        
-        # Parse scan results (example: Trivy format)
+        now = datetime.utcnow()
+
         for result in scan_data.get('Results', []):
             for vuln in result.get('Vulnerabilities', []):
-                severity = Severity[vuln.get('Severity', 'INFORMATIONAL').upper()]
                 cve_id = vuln.get('VulnerabilityID')
-                
+
+                # Placeholder evaluation. Replace with your evaluation process.
+                internet_reachable = False
+                likely_exploitable = True  # VER-EVA-AIA: assume exploitation can be automated unless shown otherwise
+                n_rating = 3
+
                 vulnerability = Vulnerability(
                     id=f"{cve_id}_{result.get('Target', 'unknown')}",
                     cve_id=cve_id,
                     title=vuln.get('Title', 'Unknown'),
                     description=vuln.get('Description', ''),
-                    severity=severity,
-                    cvss_score=vuln.get('CVSS', {}).get('nvd', {}).get('V3Score', 0.0),
+                    detection_source="trivy",
                     affected_resources=[result.get('Target', 'unknown')],
-                    detection_date=detection_date,
-                    remediation_deadline=self.calculate_remediation_deadline(detection_date, severity),
-                    remediation_status=RemediationStatus.OPEN,
+                    detected_at=now,
+                    evaluated_at=now,
+                    internet_reachable=internet_reachable,
+                    likely_exploitable=likely_exploitable,
+                    n_rating=n_rating,
+                    target_date=self.calculate_target_date(
+                        now, n_rating, internet_reachable, likely_exploitable),
+                    status=RemediationStatus.OPEN,
                     is_kev=self.check_kev_status(cve_id)
                 )
-                
+
                 vulnerabilities.append(vulnerability)
-        
-        logger.info(f"Ingested {len(vulnerabilities)} vulnerabilities")
+
+        logger.info("Ingested %d vulnerabilities", len(vulnerabilities))
         return vulnerabilities
-    
+
     def store_vulnerabilities(
         self,
         vulnerabilities: List[Vulnerability],
         container_name: str = "vulnerability-scans"
     ) -> None:
         """
-        Store vulnerabilities in Azure Blob Storage (FRR-VDR-01, FRR-ADS-01)
-        
-        Creates machine-readable JSON evidence for FedRAMP compliance.
-        
-        Args:
-            vulnerabilities: List of Vulnerability objects
-            container_name: Blob container name
+        Store vulnerability records as JSON (VER-RPT-PER, VER-RPT-VDT)
+
+        Persistent vulnerability reports are FedRAMP Certification Data.
         """
         container_client = self.blob_client.get_container_client(container_name)
-        
+
         timestamp = datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
-        blob_name = f"{timestamp}-vulnerability-scan.json"
-        
-        # Convert vulnerabilities to machine-readable format
+        blob_name = f"{timestamp}-vulnerability-report.json"
+
+        def serialize(v: Vulnerability) -> Dict:
+            record = asdict(v)
+            record["status"] = v.status.value
+            for key in ("detected_at", "evaluated_at", "target_date", "last_updated"):
+                value = getattr(v, key)
+                record[key] = value.isoformat() if value else None
+            return record
+
         data = {
             "metadata": {
                 "timestamp": datetime.utcnow().isoformat(),
                 "version": "1.0",
-                "frr_requirements": ["FRR-VDR-01", "FRR-VDR-TF-01", "FRR-ADS-01"],
+                "rules": ["VDR-CSO-DET", "VER-RPT-PER", "VER-RPT-VDT", "VER-TFR-MHR"],
+                "certification_class": self.certification_class,
                 "total_vulnerabilities": len(vulnerabilities),
-                "critical_count": sum(1 for v in vulnerabilities if v.severity == Severity.CRITICAL),
-                "high_count": sum(1 for v in vulnerabilities if v.severity == Severity.HIGH),
+                "n4_or_n5_count": sum(1 for v in vulnerabilities if v.n_rating >= 4),
                 "kev_count": sum(1 for v in vulnerabilities if v.is_kev)
             },
-            "vulnerabilities": [
-                {
-                    **asdict(v),
-                    "severity": v.severity.value,
-                    "remediation_status": v.remediation_status.value,
-                    "detection_date": v.detection_date.isoformat(),
-                    "remediation_deadline": v.remediation_deadline.isoformat(),
-                    "last_updated": v.last_updated.isoformat()
-                }
-                for v in vulnerabilities
-            ]
+            "vulnerabilities": [serialize(v) for v in vulnerabilities]
         }
-        
+
         blob_client = container_client.get_blob_client(blob_name)
         blob_client.upload_blob(json.dumps(data, indent=2))
-        
-        logger.info(f"Stored vulnerabilities in {blob_name}")
-    
+
+        logger.info("Stored vulnerabilities in %s", blob_name)
+
     def check_overdue_remediation(self) -> List[Dict]:
         """
-        Check for vulnerabilities exceeding remediation timeframes (FRR-VDR-TF-01)
-        
+        Find vulnerabilities past their VDR-TFR-PVR target or past the
+        192-day accepted threshold (VER-TFR-MAV).
+
         Returns:
             List of overdue vulnerabilities with details
         """
-        logger.info("Checking for overdue remediations")
-        
-        # Query stored vulnerability data from blob storage
+        logger.info("Checking for overdue vulnerabilities")
+
         container_client = self.blob_client.get_container_client("vulnerability-scans")
-        
-        overdue_vulns = []
-        current_time = datetime.utcnow()
-        
-        # Get latest scan results
-        blobs = container_client.list_blobs()
+
+        overdue = []
+        now = datetime.utcnow()
+
+        blobs = list(container_client.list_blobs())
+        if not blobs:
+            return overdue
         latest_blob = sorted(blobs, key=lambda b: b.name, reverse=True)[0]
-        
+
         blob_client = container_client.get_blob_client(latest_blob.name)
-        scan_data = json.loads(blob_client.download_blob().readall())
-        
-        for vuln in scan_data.get('vulnerabilities', []):
-            deadline = datetime.fromisoformat(vuln['remediation_deadline'])
-            status = RemediationStatus[vuln['remediation_status'].upper().replace(' ', '_')]
-            
-            if deadline < current_time and status not in [RemediationStatus.REMEDIATED, RemediationStatus.EXCEPTION_APPROVED]:
-                days_overdue = (current_time - deadline).days
-                overdue_vulns.append({
+        report = json.loads(blob_client.download_blob().readall())
+
+        for vuln in report.get('vulnerabilities', []):
+            if vuln['status'] in (RemediationStatus.REMEDIATED.value, RemediationStatus.ACCEPTED.value,
+                                  RemediationStatus.FALSE_POSITIVE.value):
+                continue
+
+            evaluated_at = datetime.fromisoformat(vuln['evaluated_at'])
+            target = datetime.fromisoformat(vuln['target_date']) if vuln.get('target_date') else None
+            past_target = target is not None and target < now
+            past_accept = self.accepted_threshold(evaluated_at) < now
+
+            if past_target or past_accept:
+                overdue.append({
                     "id": vuln['id'],
                     "cve_id": vuln['cve_id'],
-                    "severity": vuln['severity'],
-                    "deadline": deadline.isoformat(),
-                    "days_overdue": days_overdue,
+                    "n_rating": vuln['n_rating'],
+                    "target_date": vuln.get('target_date'),
+                    "past_pvr_target": past_target,
+                    "must_mark_accepted": past_accept,  # VER-TFR-MAV, report per VER-RPT-AVI
                     "affected_resources": vuln['affected_resources']
                 })
-        
-        logger.info(f"Found {len(overdue_vulns)} overdue vulnerabilities")
-        return overdue_vulns
-    
-    def generate_monthly_kev_report(self) -> Dict:
+
+        logger.info("Found %d overdue vulnerabilities", len(overdue))
+        return overdue
+
+    def generate_monthly_report(self) -> Dict:
         """
-        Generate monthly KEV tracking report (FRR-VDR-TF-01, FRR-VDR-TF-02)
-        
-        FRR-VDR-TF-01 requires monthly reporting of KEV vulnerabilities
-        to the authorizing agency.
-        
-        Returns:
-            KEV report dictionary
+        Generate the periodic vulnerability report (VER-TFR-MHR: at least monthly)
+
+        Reports summarize ALL activity since the previous report (VER-RPT-PER) and
+        should not irresponsibly disclose sensitive details (VER-RPT-NID).
         """
-        logger.info("Generating monthly KEV report")
-        
-        container_client = self.blob_client.get_container_client("vulnerability-scans")
-        
-        # Aggregate KEV data from last 30 days
-        kev_data = {
+        logger.info("Generating monthly vulnerability report")
+
+        report = {
             "report_date": datetime.utcnow().isoformat(),
-            "reporting_period": "Last 30 days",
-            "frr_requirement": "FRR-VDR-TF-01, FRR-VDR-TF-02",
+            "rules": ["VER-TFR-MHR", "VER-RPT-PER", "VDR-TFR-KEV"],
+            "certification_class": self.certification_class,
             "kev_vulnerabilities": [],
+            "accepted_vulnerabilities": [],  # fields per VER-RPT-AVI
             "summary": {
                 "total_kev": 0,
                 "remediated": 0,
@@ -354,44 +384,41 @@ class VDRComplianceTracker:
                 "overdue": 0
             }
         }
-        
-        # Implementation: Query and aggregate KEV data
-        # Store report in remediation-tracking container
-        
-        logger.info("KEV report generated")
-        return kev_data
+
+        # Implementation: query stored records since the previous report and aggregate.
+        # Store the report in the remediation-tracking container.
+
+        logger.info("Monthly report generated")
+        return report
 
 
 def main():
     """Main execution function"""
-    
-    # Configuration from environment variables
+
     storage_account = os.getenv('EVIDENCE_STORAGE_ACCOUNT', 'vdrevidence')
     workspace_id = os.getenv('LOG_ANALYTICS_WORKSPACE_ID')
     key_vault_uri = os.getenv('KEY_VAULT_URI')
-    
-    # Initialize tracker
+    certification_class = os.getenv('FEDRAMP_CERTIFICATION_CLASS', 'B')
+
     tracker = VDRComplianceTracker(
         storage_account_name=storage_account,
         workspace_id=workspace_id,
-        key_vault_uri=key_vault_uri
+        key_vault_uri=key_vault_uri,
+        certification_class=certification_class
     )
-    
-    # Example: Ingest scan results
+
     scan_results_path = os.getenv('SCAN_RESULTS_PATH', './scan-results.json')
     if os.path.exists(scan_results_path):
         vulnerabilities = tracker.ingest_scan_results(scan_results_path)
         tracker.store_vulnerabilities(vulnerabilities)
-    
-    # Check overdue remediations
+
     overdue = tracker.check_overdue_remediation()
     if overdue:
-        logger.warning(f"{len(overdue)} vulnerabilities are overdue for remediation")
-        # Send alert per FRR-VDR-TF-01
-    
-    # Generate monthly KEV report
-    kev_report = tracker.generate_monthly_kev_report()
-    logger.info("KEV report generated and stored")
+        logger.warning("%d vulnerabilities are past a VDR/VER threshold", len(overdue))
+        # Send alert
+
+    tracker.generate_monthly_report()
+    logger.info("Report generated")
 
 
 if __name__ == "__main__":

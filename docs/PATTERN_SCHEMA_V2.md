@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines the extended YAML pattern schema that enables patterns to provide comprehensive guidance for all FedRAMP 20x requirements (199 FRRs + 72 KSIs + 50 FRDs = 321 total).
+This document defines the extended YAML pattern schema that enables patterns to provide comprehensive guidance for the FedRAMP Consolidated Rules for 2026 (CR26, version 2026.10.13.01): 17 FRR families, 46 KSIs across 10 categories, and the FRD definitions.
 
 **Goal:** Provide pattern-driven architecture that maintains accuracy and completeness of guidance across 14 supported languages with a unified analysis engine.
 
@@ -28,7 +28,8 @@ finding:
   
 tags: ["tag1", "tag2"]
 nist_controls: ["control-1", "control-2"]
-related_ksis: ["KSI-XXX-01"]
+related_ksis: ["KSI-IAM-APM"]
+related_frrs: ["VDR-CSO-DET"]
 ```
 
 ### V2 Schema (Extended - Full Replacement)
@@ -63,7 +64,7 @@ evidence_collection:
   azure_monitor_kql:
     - query: "SecurityRecommendation | where ..."
       description: "Monthly vulnerability trends"
-      retention_days: 365
+      retention_days: 365  # example evidence retention, not a FedRAMP requirement
   azure_cli:
     - command: "az security pricing list ..."
       description: "Defender for Cloud configuration"
@@ -161,8 +162,8 @@ ssp_mapping:
 # EXISTING: Metadata
 tags: ["mfa", "authentication", "phishing-resistant"]
 nist_controls: ["ia-2", "ia-2.1", "ia-2.2", "ia-2.8"]
-related_ksis: ["KSI-IAM-01", "KSI-IAM-02"]
-related_frrs: ["FRR-ADS-AC-01"]
+related_ksis: ["KSI-IAM-APM", "KSI-IAM-APM"]
+related_frrs: ["CDS-CSO-UTC"]
 
 # NEW: Azure-specific guidance
 azure_guidance:
@@ -191,7 +192,7 @@ azure_guidance:
 # NEW: Compliance framework mapping
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: "KSI-IAM-01"
+    requirement_id: "KSI-IAM-APM"
     requirement_name: "Phishing-Resistant MFA"
     impact_levels: ["Low", "Moderate"]
     
@@ -343,22 +344,22 @@ testing:
 ### Code-Detectable Patterns
 - Must include: `languages`, `finding`, `testing`
 - Should include: `evidence_collection`, `automation`, `implementation`
-- Example: KSI-IAM-01 (Phishing-Resistant MFA detection in code)
+- Example: KSI-IAM-APM (Phishing-Resistant MFA detection in code)
 
 ### Process-Based Patterns
 - Must include: `implementation`, `evidence_artifacts`, `ssp_mapping`
 - Should NOT include: `languages` (no code detection)
-- Example: KSI-CED-01 (Training program - documentation only)
+- Example: KSI-CED-RAT (Training program - documentation only)
 
 ### Infrastructure Patterns (Bicep/Terraform)
 - Must include: `languages.bicep`, `languages.terraform`, `finding`
 - Should include: `evidence_collection`, `azure_guidance`
-- Example: FRR-VDR-01 (Defender for Cloud configuration)
+- Example: VDR-CSO-DET (Defender for Cloud configuration)
 
 ### CI/CD Patterns
 - Must include: `languages.github_actions` or `languages.azure_pipelines`
 - Should include: `automation`, `implementation.steps`
-- Example: FRR-VDR-01 (Vulnerability scanning in pipeline)
+- Example: VDR-CSO-DET (Vulnerability scanning in pipeline)
 
 ## Migration Path
 
@@ -375,14 +376,12 @@ testing:
 - [ ] Add SSP mapping
 - [ ] Add testing section
 
-### Phase 3: Create FRR Patterns (199 patterns)
-- [ ] Generate pattern files for all FRRs
-- [ ] Populate from frr_metadata.json
+### Phase 3: Create FRR Patterns (one per CR26 rule where useful)
+- [ ] Generate pattern files for CR26 rules from fedramp-consolidated-rules.json
 
-### Phase 4: Complete Pattern Coverage (321 total requirements)
-- [ ] Verify all 199 FRRs have patterns
-- [ ] Verify all 72 KSIs have patterns
-- [ ] Document coverage for 50 FRDs (definitions are reference data, not analyzed)
+### Phase 4: Complete Pattern Coverage
+- [ ] Verify CR26 FRR families have patterns (all 46 KSIs are currently covered)
+- [ ] Document coverage for FRDs (definitions are reference data, not analyzed)
 - [ ] Extract evidence methods from traditional analyzers
 - [ ] Add FRR-specific guidance
 

@@ -261,8 +261,8 @@ def manual_inventory_check():
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
         assert len(violations) > 0, "KSI-PIY-01 should flag manual inventory tracking"
     
-    def test_ksi_piy_02_positive(self, factory):
-        """KSI-PIY-02 Positive: Security Objectives and Requirements - Documented requirements"""
+    def test_ksi_svc_sin_positive(self, factory):
+        """KSI-SVC-SIN Positive: Security Objectives and Requirements - Documented requirements"""
         code = """
 # Compliant: Security objectives documented with resources
 resource "azurerm_storage_account" "main" {
@@ -287,11 +287,11 @@ resource "azurerm_storage_account" "main" {
   allow_nested_items_to_be_public = false
 }
 """
-        result = asyncio.run(factory.analyze("KSI-PIY-02", code, "terraform"))
-        assert len(result.findings) > 0, "KSI-PIY-02 should detect documented security objectives"
+        result = asyncio.run(factory.analyze("KSI-SVC-SIN", code, "terraform"))
+        assert len(result.findings) > 0, "KSI-SVC-SIN should detect documented security objectives"
     
-    def test_ksi_piy_02_negative(self, factory):
-        """KSI-PIY-02 Negative: Security Objectives and Requirements - No requirements documented"""
+    def test_ksi_svc_sin_negative(self, factory):
+        """KSI-SVC-SIN Negative: Security Objectives and Requirements - No requirements documented"""
         code = """
 # NON-COMPLIANT: No security objectives or requirements documented
 resource "azurerm_storage_account" "main" {
@@ -309,11 +309,11 @@ resource "azurerm_virtual_network" "main" {
   resource_group_name = azurerm_resource_group.main.name
 }
 """
-        result = asyncio.run(factory.analyze("KSI-PIY-02", code, "terraform"))
+        result = asyncio.run(factory.analyze("KSI-SVC-SIN", code, "terraform"))
         # Should detect lack of security objectives/requirements documentation
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH]]
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
-        assert len(violations) > 0, "KSI-PIY-02 should flag missing security objectives"
+        assert len(violations) > 0, "KSI-SVC-SIN should flag missing security objectives"
     
     # ==========================================================================
     # CNA Family Tests (Cloud-Native Architecture)
@@ -650,8 +650,8 @@ def process_request(request):
     # VDR Family Tests (Vulnerability Detection and Response)
     # ==========================================================================
     
-    def test_ksi_vdr_01_positive(self, factory):
-        """KSI-VDR-01 Positive: Vulnerability Scanning - Defender for Cloud"""
+    def test_ksi_scr_mon_positive(self, factory):
+        """KSI-SCR-MON Positive: Vulnerability Scanning - Defender for Cloud"""
         code = """
 # Compliant: Automated vulnerability scanning with Defender for Cloud
 resource "azurerm_security_center_subscription_pricing" "vms" {
@@ -678,11 +678,11 @@ resource "azurerm_security_center_assessment" "vulnerabilities" {
   }
 }
 """
-        result = asyncio.run(factory.analyze("KSI-VDR-01", code, "terraform"))
-        assert len(result.findings) > 0, "KSI-VDR-01 should detect vulnerability scanning config"
+        result = asyncio.run(factory.analyze("KSI-SCR-MON", code, "terraform"))
+        assert len(result.findings) > 0, "KSI-SCR-MON should detect vulnerability scanning config"
     
-    def test_ksi_vdr_01_negative(self, factory):
-        """KSI-VDR-01 Negative: Vulnerability Scanning - No scanning configured"""
+    def test_ksi_scr_mon_negative(self, factory):
+        """KSI-SCR-MON Negative: Vulnerability Scanning - No scanning configured"""
         code = """
 # NON-COMPLIANT: VM deployed with no vulnerability scanning
 resource "azurerm_virtual_machine" "main" {
@@ -700,10 +700,10 @@ resource "azurerm_virtual_machine" "main" {
   }
 }
 """
-        result = asyncio.run(factory.analyze("KSI-VDR-01", code, "terraform"))
+        result = asyncio.run(factory.analyze("KSI-SCR-MON", code, "terraform"))
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH]]
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
-        assert len(violations) > 0, "KSI-VDR-01 should flag missing vulnerability scanning"
+        assert len(violations) > 0, "KSI-SCR-MON should flag missing vulnerability scanning"
     
     # ==========================================================================
     # CMT Family Tests (Configuration Management and Tracking)
@@ -2547,8 +2547,8 @@ resource "azurerm_app_service_plan" "fixed" {
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
         assert len(violations) > 0, "KSI-SVC-05 should flag missing capacity planning"
 
-    def test_ksi_svc_07_positive(self, factory):
-        """KSI-SVC-07 Positive: Disaster Recovery - Multi-region DR with automated failover"""
+    def test_ksi_rpl_arp_positive(self, factory):
+        """KSI-RPL-ARP Positive: Disaster Recovery - Multi-region DR with automated failover"""
         code = """
 # Compliant: Multi-region disaster recovery with Traffic Manager
 resource "azurerm_traffic_manager_profile" "dr" {
@@ -2620,11 +2620,11 @@ resource "azurerm_cosmosdb_account" "main" {
   }
 }
 """
-        result = asyncio.run(factory.analyze("KSI-SVC-07", code, "terraform"))
-        assert len(result.findings) > 0, "KSI-SVC-07 should detect disaster recovery configuration"
+        result = asyncio.run(factory.analyze("KSI-RPL-ARP", code, "terraform"))
+        assert len(result.findings) > 0, "KSI-RPL-ARP should detect disaster recovery configuration"
 
-    def test_ksi_svc_07_negative(self, factory):
-        """KSI-SVC-07 Negative: Disaster Recovery - Single region, no DR plan"""
+    def test_ksi_rpl_arp_negative(self, factory):
+        """KSI-RPL-ARP Negative: Disaster Recovery - Single region, no DR plan"""
         code = """
 # NON-COMPLIANT: Single region deployment with no DR
 resource "azurerm_app_service" "single_region" {
@@ -2638,10 +2638,10 @@ resource "azurerm_app_service" "single_region" {
   # Regional failure = complete outage
 }
 """
-        result = asyncio.run(factory.analyze("KSI-SVC-07", code, "terraform"))
+        result = asyncio.run(factory.analyze("KSI-RPL-ARP", code, "terraform"))
         violations = [f for f in result.findings if f.severity in [Severity.HIGH, Severity.CRITICAL]]
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
-        assert len(violations) > 0, "KSI-SVC-07 should flag missing disaster recovery"
+        assert len(violations) > 0, "KSI-RPL-ARP should flag missing disaster recovery"
 
     def test_ksi_svc_08_positive(self, factory):
         """KSI-SVC-08 Positive: Backup and Recovery - Automated backups with testing"""
@@ -2895,47 +2895,6 @@ resource "azurerm_virtual_machine" "untagged" {
     # ============================================================================
     # AFR (Assessment and FedRAMP Requirements) Family - Remaining Tests
     # ============================================================================
-
-    def test_ksi_afr_02_positive(self, factory):
-        """KSI-AFR-02 Positive: Set security goals with automated validation"""
-        code = """
-# COMPLIANT: Security goals with automated KSI validation
-resource "azurerm_monitor_metric_alert" "ksi_compliance" {
-  name                = "ksi-compliance-monitoring"
-  resource_group_name = azurerm_resource_group.main.name
-  scopes              = [azurerm_application_insights.main.id]
-  description         = "Track KSI compliance progress"
-  
-  criteria {
-    metric_namespace = "Microsoft.Insights/components"
-    metric_name      = "SecurityGoalCompliance"
-    aggregation      = "Average"
-    operator         = "LessThan"
-    threshold        = 95
-  }
-  
-  tags = {
-    Purpose     = "KSI Compliance Monitoring"
-    Automated   = "true"
-    KSI         = "KSI-AFR-02"
-  }
-}
-"""
-        result = asyncio.run(factory.analyze("KSI-AFR-02", code, "terraform"))
-        assert len(result.findings) > 0, "KSI-AFR-02 should analyze security goal monitoring"
-
-    def test_ksi_afr_02_negative(self, factory):
-        """KSI-AFR-02 Negative: No automated validation of security goals"""
-        code = """
-# NON-COMPLIANT: No automated monitoring of security goals
-# Security goals exist but no validation mechanism
-# Manual tracking only
-# No automated alerts
-# No progress dashboards
-"""
-        result = asyncio.run(factory.analyze("KSI-AFR-02", code, "python"))
-        # This is process-based, so code detection is limited
-        assert len(result.findings) > 0, "KSI-AFR-02 should complete analysis"
 
     def test_ksi_afr_03_positive(self, factory):
         """KSI-AFR-03 Positive: Authorization data sharing process"""
@@ -3473,8 +3432,8 @@ jobs:
         result = asyncio.run(factory.analyze("KSI-PIY-04", code, "python"))
         assert len(result.findings) > 0, "KSI-PIY-04 should complete analysis"
 
-    def test_ksi_piy_05_positive(self, factory):
-        """KSI-PIY-05 Positive: Document evaluation methods"""
+    def test_ksi_svc_eis_positive(self, factory):
+        """KSI-SVC-EIS Positive: Document evaluation methods"""
         code = """
 # COMPLIANT: Documented evaluation methodology
 # docs/EVALUATION_METHODOLOGY.md
@@ -3496,11 +3455,11 @@ jobs:
 - Automated evidence collection
 - Continuous compliance monitoring
 """
-        result = asyncio.run(factory.analyze("KSI-PIY-05", code, "markdown"))
-        assert len(result.findings) > 0, "KSI-PIY-05 should analyze evaluation methods"
+        result = asyncio.run(factory.analyze("KSI-SVC-EIS", code, "markdown"))
+        assert len(result.findings) > 0, "KSI-SVC-EIS should analyze evaluation methods"
 
-    def test_ksi_piy_05_negative(self, factory):
-        """KSI-PIY-05 Negative: No documented evaluation methods"""
+    def test_ksi_svc_eis_negative(self, factory):
+        """KSI-SVC-EIS Negative: No documented evaluation methods"""
         code = """
 # NON-COMPLIANT: No evaluation methodology
 # Ad-hoc testing
@@ -3508,8 +3467,8 @@ jobs:
 # Inconsistent approach
 # No validation criteria
 """
-        result = asyncio.run(factory.analyze("KSI-PIY-05", code, "python"))
-        assert len(result.findings) > 0, "KSI-PIY-05 should complete analysis"
+        result = asyncio.run(factory.analyze("KSI-SVC-EIS", code, "python"))
+        assert len(result.findings) > 0, "KSI-SVC-EIS should complete analysis"
 
     def test_ksi_piy_06_positive(self, factory):
         """KSI-PIY-06 Positive: Monitor security investment effectiveness"""
@@ -3543,8 +3502,8 @@ resource "azurerm_application_insights" "security_metrics" {
         result = asyncio.run(factory.analyze("KSI-PIY-06", code, "python"))
         assert len(result.findings) > 0, "KSI-PIY-06 should complete analysis"
 
-    def test_ksi_piy_07_positive(self, factory):
-        """KSI-PIY-07 Positive: Document supply chain risk decisions"""
+    def test_ksi_scr_mit_positive(self, factory):
+        """KSI-SCR-MIT Positive: Document supply chain risk decisions"""
         code = """
 # COMPLIANT: Supply chain security documentation
 # docs/SUPPLY_CHAIN_SECURITY.md
@@ -3568,11 +3527,11 @@ resource "azurerm_application_insights" "security_metrics" {
 - Malicious package injection
 - Build system compromise
 """
-        result = asyncio.run(factory.analyze("KSI-PIY-07", code, "markdown"))
-        assert len(result.findings) > 0, "KSI-PIY-07 should analyze supply chain documentation"
+        result = asyncio.run(factory.analyze("KSI-SCR-MIT", code, "markdown"))
+        assert len(result.findings) > 0, "KSI-SCR-MIT should analyze supply chain documentation"
 
-    def test_ksi_piy_07_negative(self, factory):
-        """KSI-PIY-07 Negative: No supply chain security documentation"""
+    def test_ksi_scr_mit_negative(self, factory):
+        """KSI-SCR-MIT Negative: No supply chain security documentation"""
         code = """
 # NON-COMPLIANT: Undocumented dependency choices
 import random_npm_package  # No security review
@@ -3581,8 +3540,8 @@ import random_npm_package  # No security review
 # No provenance
 # No risk assessment
 """
-        result = asyncio.run(factory.analyze("KSI-PIY-07", code, "python"))
-        assert len(result.findings) > 0, "KSI-PIY-07 should complete analysis"
+        result = asyncio.run(factory.analyze("KSI-SCR-MIT", code, "python"))
+        assert len(result.findings) > 0, "KSI-SCR-MIT should complete analysis"
 
     def test_ksi_piy_08_positive(self, factory):
         """KSI-PIY-08 Positive: Measure executive support for security"""

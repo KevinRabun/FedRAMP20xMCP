@@ -49,7 +49,7 @@ nist_controls:
 - sc-8
 - sc-28
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -204,7 +204,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -294,7 +294,7 @@ nist_controls:
 - sc-8
 - sc-13
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -449,7 +449,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -536,7 +536,7 @@ languages:
     regex_fallback: express\(
 finding:
   title_template: HSTS not configured
-  description_template: Web application does not enforce HTTPS via HSTS. KSI-SVC-02 (Network Encryption) requires HSTS with preload.
+  description_template: Web application does not enforce HTTPS via HSTS. KSI-SVC-SIN (Network Encryption) requires HSTS with preload.
   remediation_template: "Enable HSTS:\n\nPython (Flask):\nfrom flask_talisman import Talisman\nTalisman(app, force_https=True, \n         strict_transport_security=True,\n         strict_transport_security_max_age=31536000,\n         strict_transport_security_include_subdomains=True)\n\nC# (ASP.NET Core):\napp.UseHsts();\nservices.AddHsts(options => {\n    options.MaxAge = TimeSpan.FromDays(365);\n    options.IncludeSubDomains = true;\n    options.Preload = true;\n});\n"
 requires_absence:
 - svc.security.flask_security_headers
@@ -549,7 +549,7 @@ nist_controls:
 - sc-8
 - sc-13
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -706,7 +706,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -793,7 +793,7 @@ nist_controls:
 - si-10
 - si-15
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -952,7 +952,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -1022,7 +1022,7 @@ nist_controls:
 - sc-12
 - sc-13
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'AzureDiagnostics
@@ -1177,7 +1177,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -1241,7 +1241,7 @@ languages:
     regex_fallback: soft_delete_enabled.*=.*false|purge_protection_enabled.*=.*false
 finding:
   title_template: Key Vault soft-delete or purge protection disabled
-  description_template: Key Vault does not have soft-delete and purge protection enabled. KSI-SVC-02 requires both for FedRAMP.
+  description_template: Key Vault does not have soft-delete and purge protection enabled. KSI-SVC-SIN requires both for FedRAMP.
   remediation_template: "Enable protections:\n\nBicep:\nproperties: {\n  enableSoftDelete: true\n  enablePurgeProtection: true\n  softDeleteRetentionInDays: 90\n}\n\nTerraform:\nsoft_delete_enabled = true\npurge_protection_enabled = true\nsoft_delete_retention_days = 90\n"
 tags:
 - secrets
@@ -1251,7 +1251,7 @@ nist_controls:
 - sc-12
 - au-11
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -1408,7 +1408,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -1507,7 +1507,7 @@ languages:
     - SecretClient
 finding:
   title_template: Azure Key Vault secret management detected
-  description_template: Code uses Azure Key Vault for secret management, compliant with KSI-SVC-06 requirements.
+  description_template: Code uses Azure Key Vault for secret management, compliant with KSI-SVC-ASM requirements.
   remediation_template: N/A - Positive finding
 tags:
 - secrets
@@ -1517,11 +1517,11 @@ nist_controls:
 - ia-5
 - sc-12
 related_ksis:
-- KSI-SVC-02
-- KSI-SVC-06
+- KSI-SVC-SIN
+- KSI-SVC-ASM
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-06
+    requirement_id: KSI-SVC-ASM
     requirement_name: Secret Management
     impact_levels:
     - Low
@@ -1592,7 +1592,7 @@ languages:
     - apiKey =
 finding:
   title_template: Hardcoded secret detected
-  description_template: Secrets are hardcoded in source code. KSI-SVC-06 requires all secrets in Key Vault or managed identity.
+  description_template: Secrets are hardcoded in source code. KSI-SVC-ASM requires all secrets in Key Vault or managed identity.
   remediation_template: 'Use Key Vault:
 
 
@@ -1624,8 +1624,8 @@ nist_controls:
 - ia-5
 - sc-12
 related_ksis:
-- KSI-SVC-02
-- KSI-SVC-06
+- KSI-SVC-SIN
+- KSI-SVC-ASM
 evidence_collection:
   azure_monitor_kql:
   - query: 'AzureDiagnostics
@@ -1782,7 +1782,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -1843,7 +1843,7 @@ languages:
     regex_fallback: azurerm_storage_account
 finding:
   title_template: Storage encryption not using customer-managed keys
-  description_template: Storage account uses Microsoft-managed keys. KSI-SVC-04 recommends customer-managed keys (CMK) for FedRAMP High.
+  description_template: Storage account uses Microsoft-managed keys. KSI-SVC-ACM recommends customer-managed keys (CMK) for FedRAMP High.
   remediation_template: "Enable CMK:\n\nBicep:\nproperties: {\n  encryption: {\n    keySource: 'Microsoft.KeyVault'\n    keyvaultproperties: {\n      keyname: 'storage-key'\n      keyvaulturi: 'https://myvault.vault.azure.net'\n    }\n  }\n}\n"
 tags:
 - encryption
@@ -1853,7 +1853,7 @@ nist_controls:
 - sc-13
 - sc-28
 related_ksis:
-- KSI-SVC-04
+- KSI-SVC-ACM
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -2008,7 +2008,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-04
+    requirement_id: KSI-SVC-ACM
     requirement_name: Configuration Automation
     impact_levels:
     - Low
@@ -2066,7 +2066,7 @@ languages:
     regex_fallback: azurerm_mssql_database
 finding:
   title_template: SQL Transparent Data Encryption disabled
-  description_template: SQL database does not have TDE enabled. KSI-SVC-04 requires encryption at rest for all databases.
+  description_template: SQL database does not have TDE enabled. KSI-SVC-ACM requires encryption at rest for all databases.
   remediation_template: "Enable TDE:\n\nBicep:\nresource tde 'Microsoft.Sql/servers/databases/transparentDataEncryption@2021-11-01' = {\n  parent: database\n  name: 'current'\n  properties: {\n    state: 'Enabled'\n  }\n}\n"
 tags:
 - encryption
@@ -2076,7 +2076,7 @@ nist_controls:
 - sc-13
 - sc-28
 related_ksis:
-- KSI-SVC-04
+- KSI-SVC-ACM
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -2231,7 +2231,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-04
+    requirement_id: KSI-SVC-ACM
     requirement_name: Configuration Automation
     impact_levels:
     - Low
@@ -2294,7 +2294,7 @@ languages:
     regex_fallback: source_address_prefix.*=.*"\*"
 finding:
   title_template: NSG rule allows traffic from any source
-  description_template: Network Security Group allows inbound traffic from 0.0.0.0/0 (Internet). KSI-SVC-02 requires least privilege network access.
+  description_template: Network Security Group allows inbound traffic from 0.0.0.0/0 (Internet). KSI-SVC-SIN requires least privilege network access.
   remediation_template: 'Restrict source:
 
     - Use specific IP ranges or service tags
@@ -2314,7 +2314,7 @@ nist_controls:
 - ac-4
 - sc-7
 related_ksis:
-- KSI-SVC-06
+- KSI-SVC-ASM
 evidence_collection:
   azure_monitor_kql:
   - query: "Resources\n| where type == 'microsoft.network/networksecuritygroups'\n| extend AllowAllRules = properties.securityRules\n| mvexpand AllowAllRules\n| where AllowAllRules.properties.access == 'Allow'\n  and (AllowAllRules.properties.sourceAddressPrefix == '*' or AllowAllRules.properties.sourceAddressPrefix == '0.0.0.0/0')\n  and (AllowAllRules.properties.destinationPortRange == '*' or AllowAllRules.properties.destinationPortRanges contains '*')\n| project name, resourceGroup, ruleName=AllowAllRules.name, source=AllowAllRules.properties.sourceAddressPrefix, ports=AllowAllRules.properties.destinationPortRange\n"
@@ -2460,7 +2460,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-06
+    requirement_id: KSI-SVC-ASM
     requirement_name: Secret Management
     impact_levels:
     - Low
@@ -2526,7 +2526,7 @@ nist_controls:
 - sc-7
 - ac-4
 related_ksis:
-- KSI-SVC-06
+- KSI-SVC-ASM
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -2680,7 +2680,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-06
+    requirement_id: KSI-SVC-ASM
     requirement_name: Secret Management
     impact_levels:
     - Low
@@ -2740,7 +2740,7 @@ languages:
     regex_fallback: min_tls_version
 finding:
   title_template: TLS version less than 1.2
-  description_template: Resource allows TLS {version}. KSI-SVC-07 requires TLS 1.2 minimum (TLS 1.3 recommended).
+  description_template: Resource allows TLS {version}. Use TLS 1.2 minimum (TLS 1.3 recommended) to encrypt information in transit (KSI-SVC-SIN).
   remediation_template: "Set minimum TLS version:\n\nBicep:\nproperties: {\n  minimumTlsVersion: 'TLS1_2'  // Use TLS1_3 when available\n}\n\nTerraform:\nmin_tls_version = \"1.2\"\n"
 tags:
 - tls
@@ -2750,7 +2750,7 @@ nist_controls:
 - sc-8
 - sc-13
 related_ksis:
-- KSI-SVC-07
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -2905,7 +2905,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-07
+    requirement_id: KSI-SVC-SIN
     requirement_name: Patching
     impact_levels:
     - Low
@@ -2983,7 +2983,7 @@ nist_controls:
 - si-3
 - si-4
 related_ksis:
-- KSI-SVC-09
+- KSI-SVC-VCM
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -3136,7 +3136,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-09
+    requirement_id: KSI-SVC-VCM
     requirement_name: Communication Integrity
     impact_levels:
     - Moderate
@@ -3174,7 +3174,7 @@ languages:
     regex_fallback: (password|secret|apiKey|connectionString)\s*=\s*['"][^'"]+['"]
 finding:
   title_template: Secrets not managed via Key Vault
-  description_template: Resource or code contains secrets that should be managed via Azure Key Vault. KSI-SVC-06 (Secret Management) requires secure secret management with rotation capabilities.
+  description_template: Resource or code contains secrets that should be managed via Azure Key Vault. KSI-SVC-ASM (Secret Management) requires secure secret management with rotation capabilities.
   remediation_template: "Use Azure Key Vault for secret management:\n\nBicep:\nresource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {\n  name: 'myKeyVault'\n}\nsecret: keyVault.getSecret('secretName')\n\nPython:\nfrom azure.identity import DefaultAzureCredential\nfrom azure.keyvault.secrets import SecretClient\ncredential = DefaultAzureCredential()\nclient = SecretClient(vault_url='https://myvault.vault.azure.net/', credential=credential)\nsecret = client.get_secret('secretName').value\n"
 tags:
 - secrets
@@ -3185,7 +3185,7 @@ nist_controls:
 - sc-12
 - sc-13
 related_ksis:
-- KSI-SVC-06
+- KSI-SVC-ASM
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -3341,7 +3341,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-06
+    requirement_id: KSI-SVC-ASM
     requirement_name: Secret Management
     impact_levels:
     - Low
@@ -3399,7 +3399,7 @@ languages:
     regex_fallback: (azurerm_storage_account)(?!.*enable_https_traffic_only.*=.*true)
 finding:
   title_template: Storage account allows unencrypted HTTP traffic
-  description_template: Storage account does not enforce HTTPS-only traffic. KSI-SVC-02 requires all network traffic to be encrypted.
+  description_template: Storage account does not enforce HTTPS-only traffic. KSI-SVC-SIN requires all network traffic to be encrypted.
   remediation_template: "Enable HTTPS-only traffic:\n\nBicep:\nproperties: {\n  supportsHttpsTrafficOnly: true\n  minimumTlsVersion: 'TLS1_2'\n}\n\nTerraform:\nenable_https_traffic_only = true\nmin_tls_version          = \"TLS1_2\"\n"
 tags:
 - encryption
@@ -3410,7 +3410,7 @@ nist_controls:
 - sc-8.1
 - sc-13
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -3566,7 +3566,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -3651,7 +3651,7 @@ languages:
     - Tls13
 finding:
   title_template: Database server does not enforce minimum TLS 1.2
-  description_template: Database server allows older TLS versions. KSI-SVC-02 requires TLS 1.2 or higher for all network encryption.
+  description_template: Database server allows older TLS versions. KSI-SVC-SIN requires TLS 1.2 or higher for all network encryption.
   remediation_template: "Set minimum TLS version to 1.2:\n\nBicep:\nproperties: {\n  minimalTlsVersion: '1.2'\n}\n\nTerraform:\nminimum_tls_version = \"1.2\"\n"
 tags:
 - encryption
@@ -3663,7 +3663,7 @@ nist_controls:
 - sc-8.1
 - sc-13
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -3819,7 +3819,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-02
+    requirement_id: KSI-SVC-SIN
     requirement_name: Network Encryption
     impact_levels:
     - Low
@@ -3877,7 +3877,7 @@ languages:
     regex_fallback: (azurerm_storage_account)(?!.*network_rules)|(network_rules.*default_action.*Allow)
 finding:
   title_template: Storage account allows public network access
-  description_template: Storage account does not restrict network access via ACLs. KSI-SVC-10 requires network isolation for sensitive resources.
+  description_template: Storage account does not restrict network access via ACLs. KSI-SVC-RUD requires network isolation for sensitive resources.
   remediation_template: "Configure network ACLs with default deny:\n\nBicep:\nproperties: {\n  networkAcls: {\n    defaultAction: 'Deny'\n    virtualNetworkRules: [\n      {\n        id: subnet.id\n        action: 'Allow'\n      }\n    ]\n    ipRules: []\n  }\n}\n\nTerraform:\nnetwork_rules {\n  default_action             = \"Deny\"\n  virtual_network_subnet_ids = [azurerm_subnet.example.id]\n  ip_rules                   = []\n}\n"
 tags:
 - network
@@ -3888,7 +3888,7 @@ nist_controls:
 - sc-7
 - sc-7.5
 related_ksis:
-- KSI-SVC-10
+- KSI-SVC-RUD
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -4041,7 +4041,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-10
+    requirement_id: KSI-SVC-RUD
     requirement_name: Data Destruction
     impact_levels:
     - Moderate
@@ -4060,7 +4060,7 @@ testing:
 ---
 pattern_id: svc.compliance.ksi_svc_05
 name: Resource Integrity Detection
-description: Detects compliance indicators for KSI-SVC-05 - Resource Integrity
+description: Detects compliance indicators for KSI-SVC-VRI - Resource Integrity
 family: SVC
 severity: MEDIUM
 pattern_type: configuration
@@ -4071,8 +4071,8 @@ languages:
     regex_fallback: .*
 finding:
   title_template: Resource Integrity compliance check
-  description_template: Configuration may not fully implement KSI-SVC-05 - Resource Integrity
-  remediation_template: Review and implement KSI-SVC-05 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-SVC-VRI - Resource Integrity
+  remediation_template: Review and implement KSI-SVC-VRI requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -4087,31 +4087,31 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-SVC-05
+- KSI-SVC-VRI
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-SVC-05 compliance configuration
+  name: KSI-SVC-VRI compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-SVC-05 compliance report
+  name: KSI-SVC-VRI compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-SVC-05 compliance enforcement
-    implementation: "# Azure Policy for KSI-SVC-05 compliance\n# GitHub Actions\n- name: KSI-SVC-05 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.compliance.ksi_svc_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-SVC-05 Validation'\n  inputs:\n    script: |\n      # Validate KSI-SVC-05 compliance\n      python validate.py --pattern svc.compliance.ksi_svc_05\n"
+    description: Azure Policy for KSI-SVC-VRI compliance enforcement
+    implementation: "# Azure Policy for KSI-SVC-VRI compliance\n# GitHub Actions\n- name: KSI-SVC-VRI Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.compliance.ksi_svc_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-SVC-VRI Validation'\n  inputs:\n    script: |\n      # Validate KSI-SVC-VRI compliance\n      python validate.py --pattern svc.compliance.ksi_svc_05\n"
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-SVC-05
-    implementation: '# Azure Monitor for KSI-SVC-05 continuous monitoring
+    description: Continuous monitoring for KSI-SVC-VRI
+    implementation: '# Azure Monitor for KSI-SVC-VRI continuous monitoring
 
       # Log Analytics Query
 
@@ -4119,7 +4119,7 @@ automation:
 
       | where CategoryValue == "Policy"
 
-      | where OperationNameValue contains "KSI-SVC-05"
+      | where OperationNameValue contains "KSI-SVC-VRI"
 
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
 
@@ -4133,7 +4133,7 @@ impact_levels:
 ---
 pattern_id: svc.compliance.ksi_svc_08
 name: Shared Resources Detection
-description: Detects compliance indicators for KSI-SVC-08 - Shared Resources
+description: Detects compliance indicators for KSI-SVC-PRR - Shared Resources
 family: SVC
 severity: MEDIUM
 pattern_type: configuration
@@ -4144,8 +4144,8 @@ languages:
     regex_fallback: .*
 finding:
   title_template: Shared Resources compliance check
-  description_template: Configuration may not fully implement KSI-SVC-08 - Shared Resources
-  remediation_template: Review and implement KSI-SVC-08 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-SVC-PRR - Shared Resources
+  remediation_template: Review and implement KSI-SVC-PRR requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -4160,31 +4160,31 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-SVC-08
+- KSI-SVC-PRR
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-SVC-08 compliance configuration
+  name: KSI-SVC-PRR compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-SVC-08 compliance report
+  name: KSI-SVC-PRR compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-SVC-08 compliance enforcement
-    implementation: "# Azure Policy for KSI-SVC-08 compliance\n# GitHub Actions\n- name: KSI-SVC-08 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.compliance.ksi_svc_08 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-SVC-08 Validation'\n  inputs:\n    script: |\n      # Validate KSI-SVC-08 compliance\n      python validate.py --pattern svc.compliance.ksi_svc_08\n"
+    description: Azure Policy for KSI-SVC-PRR compliance enforcement
+    implementation: "# Azure Policy for KSI-SVC-PRR compliance\n# GitHub Actions\n- name: KSI-SVC-PRR Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.compliance.ksi_svc_08 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-SVC-PRR Validation'\n  inputs:\n    script: |\n      # Validate KSI-SVC-PRR compliance\n      python validate.py --pattern svc.compliance.ksi_svc_08\n"
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-SVC-08
-    implementation: '# Azure Monitor for KSI-SVC-08 continuous monitoring
+    description: Continuous monitoring for KSI-SVC-PRR
+    implementation: '# Azure Monitor for KSI-SVC-PRR continuous monitoring
 
       # Log Analytics Query
 
@@ -4192,7 +4192,7 @@ automation:
 
       | where CategoryValue == "Policy"
 
-      | where OperationNameValue contains "KSI-SVC-08"
+      | where OperationNameValue contains "KSI-SVC-PRR"
 
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
 
@@ -4219,13 +4219,13 @@ languages:
     - Log Change Approval
 finding:
   title_template: Change Management Workflow Detected
-  description_template: "Change management with approval workflow and audit trail, compliant with KSI-SVC-02"
+  description_template: "Change management with approval workflow and audit trail, compliant with KSI-SVC-SIN"
   remediation_template: "N/A - Positive finding"
 tags:
 - change_management
 - positive
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 ---
 pattern_id: svc.change_mgmt.no_approval
 name: No Change Management Approval
@@ -4249,7 +4249,7 @@ tags:
 - change_management
 - negative
 related_ksis:
-- KSI-SVC-02
+- KSI-SVC-SIN
 ---
 pattern_id: svc.sla.monitoring_alerts
 name: SLA Monitoring with Automated Alerts
@@ -4267,13 +4267,13 @@ languages:
     - AvailabilityPercent
 finding:
   title_template: SLA Monitoring Detected
-  description_template: "SLA monitoring configured with automated availability tracking and alerting, compliant with KSI-SVC-04"
+  description_template: "SLA monitoring configured with automated availability tracking and alerting, compliant with KSI-SVC-ACM"
   remediation_template: "N/A - Positive finding"
 tags:
 - sla_monitoring
 - positive
 related_ksis:
-- KSI-SVC-04
+- KSI-SVC-ACM
 ---
 pattern_id: svc.sla.no_monitoring
 name: No SLA Monitoring
@@ -4297,7 +4297,7 @@ tags:
 - sla_monitoring
 - negative
 related_ksis:
-- KSI-SVC-04
+- KSI-SVC-ACM
 ---
 pattern_id: svc.disaster_recovery.multi_region
 name: Multi-Region Disaster Recovery
@@ -4315,13 +4315,13 @@ languages:
     - failover_priority
 finding:
   title_template: Multi-Region Disaster Recovery Detected
-  description_template: "Disaster recovery configured with multi-region deployment, Traffic Manager failover, and geo-replication, compliant with KSI-SVC-07"
+  description_template: "Disaster recovery configured with multi-region deployment, Traffic Manager failover, and geo-replication, compliant with KSI-RPL-ARP"
   remediation_template: "N/A - Positive finding"
 tags:
 - disaster_recovery
 - positive
 related_ksis:
-- KSI-SVC-07
+- KSI-RPL-ARP
 ---
 pattern_id: svc.disaster_recovery.no_dr
 name: No Disaster Recovery
@@ -4345,7 +4345,7 @@ tags:
 - disaster_recovery
 - negative
 related_ksis:
-- KSI-SVC-07
+- KSI-RPL-ARP
 ---
 pattern_id: svc.performance.monitoring
 name: Application Performance Monitoring
@@ -4415,13 +4415,13 @@ languages:
     - startSpan
 finding:
   title_template: Application Performance Monitoring Detected
-  description_template: "Comprehensive performance monitoring with OpenTelemetry tracing and metrics, compliant with KSI-SVC-09"
+  description_template: "Comprehensive performance monitoring with OpenTelemetry tracing and metrics, compliant with KSI-SVC-VCM"
   remediation_template: "N/A - Positive finding"
 tags:
 - performance_monitoring
 - positive
 related_ksis:
-- KSI-SVC-09
+- KSI-SVC-VCM
 ---
 pattern_id: svc.performance.no_monitoring
 name: No Performance Monitoring
@@ -4471,7 +4471,7 @@ tags:
 - performance_monitoring
 - negative
 related_ksis:
-- KSI-SVC-09
+- KSI-SVC-VCM
 ---
 pattern_id: svc.tagging.comprehensive
 name: Comprehensive Resource Tagging
@@ -4489,13 +4489,13 @@ languages:
     - require-tagging
 finding:
   title_template: Comprehensive Resource Tagging Detected
-  description_template: "Resources tagged with comprehensive strategy (Environment, Owner, Compliance, DataClassification) with policy enforcement, compliant with KSI-SVC-10"
+  description_template: "Resources tagged with comprehensive strategy (Environment, Owner, Compliance, DataClassification) with policy enforcement, compliant with KSI-SVC-RUD"
   remediation_template: "N/A - Positive finding"
 tags:
 - resource_tagging
 - positive
 related_ksis:
-- KSI-SVC-10
+- KSI-SVC-RUD
 ---
 pattern_id: svc.tagging.no_tags
 name: No Resource Tags
@@ -4519,4 +4519,4 @@ tags:
 - resource_tagging
 - negative
 related_ksis:
-- KSI-SVC-10
+- KSI-SVC-RUD

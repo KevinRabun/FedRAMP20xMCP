@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-16
+
+### FedRAMP Consolidated Rules for 2026 (CR26), version 2026.10.13.01
+
+Moves the server from the pre-2026 FedRAMP 20x data (v0.9.43-beta) to CR26. See [docs/CR26-MIGRATION.md](docs/CR26-MIGRATION.md) and [docs/CI-CD-INTEGRATION.md](docs/CI-CD-INTEGRATION.md).
+
+### Added
+
+- **CR26 data source**: rules load from `fedramp-consolidated-rules.json` in `FedRAMP/rules`; 245 rules in 17 FRR families, 46 KSIs in 10 families, 80 definitions
+- **Bundled rules snapshot** (`rules_data/fedramp-consolidated-rules.json`) as the offline fallback; every load records source, version, `last_updated` and sha256
+- **Legacy-ID crosswalk** (`rules_data/legacy-crosswalk.json`, built by `scripts/build_rules_crosswalk.py`): old IDs resolve in the lookup tools, each entry records its derivation basis and confidence; `scripts/migrate_rule_ids.py` and `scripts/update_rules_snapshot.py` for repo-wide ID migration and snapshot updates
+- **CTL parsing**: FedRAMP control parameters and guidance from the rules file, and the new `get_control_parameters` tool (49 tools in total)
+- **Documentation source move**: documentation tools read `content/` from `FedRAMP/2026`, keyed by relative path
+- **Environment variables**: `FEDRAMP_RULES_OFFLINE`, `FEDRAMP_RULES_FILE`, `FEDRAMP_RULES_URL`; `GITHUB_TOKEN` is honored for rules and documentation fetches
+- **`fedramp-20x-scan` command** (`ci.py`): scans a path with the pattern library and writes `findings.json`, `report.md` and `run.json` (rules version and sha256), with a `--fail-on` severity gate
+- **Azure DevOps templates** `.azuredevops/templates/fedramp-scan-steps.yml` and `evidence-upload-steps.yml` (Entra-only, no overwrite, verified upload, sha256 manifest)
+- **Example pipelines** `examples/azure-devops/scan-and-store-evidence.yml` and `ksi-evidence-collection.yml` (with `collect_ksi_evidence.py`), and `examples/azure_evidence_store.py` for storing evidence outside a pipeline
+- **`tests/test_rules_alignment.py`**: fails on cited IDs that are not in the bundled snapshot, bad crosswalk targets, an evidence template that can overwrite or use keys/SAS, or a scanner that stops recording rules version and sha256
+
+### Changed
+
+- **IaC evidence templates** (Bicep and Terraform) rebuilt on a WORM baseline: Entra-only access, private networking, customer-managed keys, container immutability
+- **Pattern library migrated to CR26**: 463 to 452 patterns; files renamed to CR26 families (`cds`, `afc`, `cmu`, `ivv`, `iec`, `scg`, `scr`, `cross_family`), and the `ksi` pattern file removed into `cross_family`
+- **Prompts rewritten against CR26** (no fixed KSI counts, retired families or fixed remediation buckets); `vulnerability_remediation_timeline` now points to VDR-TFR-PVR
+- **Dependency pin**: `mcp>=1.2.0,<2`, because mcp 2.x renamed FastMCP
+- **CI workflows** (`.azuredevops/fedramp-compliance-pipeline.yml`, GitHub Actions) run the scanner and publish its output
+- **README, CONTRIBUTING and docs** updated for CR26; the repository is now a fork maintained locally, with upstream attribution kept
+
+### Fixed
+
+- **Loader failure**: FedRAMP removed `FRMR.documentation.json` from `FedRAMP/docs` and redirected the repo; the loader did not follow the redirect and, with an empty cache, every rules tool failed. It now follows redirects, reads CR26, and falls back to the bundled snapshot
+- **KSI and FRR evidence-automation tools** failed for every ID; they now work against CR26 IDs
+- **Family extraction** for CR26 IDs, which have a different shape from the old IDs
+- **`varies_by_class` rendering** for rules whose content differs by Certification Class
+- **Regex finding line numbers**: `_check_regex` passed its arguments positionally into the wrong slots, so every regex finding reported the matched text as its line number
+- **Legacy IDs in analyzer filters**: `ksi_ids` now resolves legacy IDs through the crosswalk, and `families` maps retired codes (ADS to CDS and so on), so older callers still select the right patterns
+- **Scanner noise**: catch-all patterns (`regex_fallback: ".*"`) are reported once per rule as review reminders instead of one medium issue per file
+- **Stale requirement claims**: about 6,300 citations of 320 non-existent rule IDs across patterns, prompts, templates and tools were rewritten, and invented numeric log retention periods and severity-bucket remediation deadlines were removed
+
+### Removed
+
+- Retired families as current content: ADS, FSI, ICP, PVA, RSC, UCM, and the KSI-AFR and KSI-TPR families (see the crosswalk for successors)
+- The 72-KSI and 199-FRR figures, fixed log-retention values and 7/15/30/90-day remediation buckets from the README and prompts
+- Upstream-invented numbered KSI-VDR and MAS-AY pattern IDs that never existed in a FedRAMP release
+
 ## [1.3.0] - 2026-02-13
 
 ### 🎯 Context-Aware False Positive Reduction

@@ -64,7 +64,7 @@ jobs:
           
           The daily validation of the FedRAMP 20x data structure has failed.
           This could indicate:
-          - Schema changes in the FedRAMP/docs repository
+          - Schema changes in the FedRAMP/rules repository (fedramp-consolidated-rules.json)
           - Network connectivity issues to GitHub API
           - Breaking changes to the data format
           
@@ -73,7 +73,7 @@ jobs:
           
           ### Action Required
           1. Check the workflow logs for specific validation failures
-          2. Review recent changes to the [FedRAMP/docs repository](https://github.com/FedRAMP/docs)
+          2. Review recent changes to the [FedRAMP/rules repository](https://github.com/FedRAMP/rules)
           3. Update the data loader and validation tests if schema has changed
           
           /cc @${context.actor}`;

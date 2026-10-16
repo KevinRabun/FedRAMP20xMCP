@@ -30,12 +30,15 @@ class TestAllKSIsLoaded:
         return loader
     
     def test_minimum_ksis_present(self, data_loader):
-        """Verify minimum KSIs are present in loaded data (at least 50)"""
+        """Verify the CR26 KSI set is loaded: 46 KSIs across 10 families"""
         ksi_data = data_loader.list_all_ksi()
         loaded_ksi_ids = {ksi['id'] for ksi in ksi_data}
         
-        # Verify we have at least 50 KSIs
-        assert len(ksi_data) >= 50, f"Expected at least 50 KSIs, got {len(ksi_data)}"
+        # CR26 (2026.10.13.01) defines exactly 46 KSIs in 10 families
+        assert len(ksi_data) == 46, f"Expected 46 KSIs, got {len(ksi_data)}"
+        families = {i.split('-')[1] for i in loaded_ksi_ids}
+        assert families == {"CED", "CMT", "CNA", "IAM", "INR", "MLA", "PIY", "RPL", "SCR", "SVC"}
+        assert not any(i.startswith(("KSI-AFR", "KSI-TPR", "KSI-VDR")) for i in loaded_ksi_ids)
         
         # Verify all have required fields
         for ksi in ksi_data:
@@ -49,11 +52,15 @@ class TestAllKSIsLoaded:
             ksi_id = ksi['id']
             assert 'id' in ksi, f"{ksi_id} missing 'id' field"
             
-            # KSIs can have either 'statement' or 'varies_by_level' for level-specific statements
+            # CR26: a KSI has a top-level 'statement' or only class-specific
+            # statements under 'varies_by_class' (some have neither, see below)
             has_statement = 'statement' in ksi and ksi['statement']
-            has_varies = 'varies_by_level' in ksi and ksi['varies_by_level']
+            has_varies = 'varies_by_class' in ksi and ksi['varies_by_class']
             
-            assert has_statement or has_varies, f"{ksi_id} missing 'statement' field"
+            if not (has_statement or has_varies):
+                # A few CR26 KSIs carry no statement text at all (name and controls only)
+                assert ksi.get('name'), f"{ksi_id} has neither statement nor name"
+                continue
             
             # If has regular statement (not varies_by_level), verify it's valid
             if has_statement:
@@ -77,12 +84,12 @@ class TestAllFRRsLoaded:
     
     def test_all_frr_families_present(self, data_loader):
         """Verify all FRR families are loaded"""
-        # In the new format, FRR requirements have IDs like VDR-AGM-DRE
-        # They are stored in families by the first part (VDR, ADS, etc.)
+        # CR26 rules have IDs like VDR-CSO-DET, stored in families by the first segment
         families = list(data_loader._data_cache["families"].keys())
         
-        # Expected FRR families (new format uses family codes without FRR- prefix)
-        expected_families = ['VDR', 'ADS', 'CCM', 'FSI', 'ICP', 'MAS', 'PVA', 'SCG', 'SCN', 'UCM']
+        # The 17 CR26 FRR families (ADS->CDS, FSI->AFC, UCM->CMU, PVA->IVV, ICP->IEC, RSC->SCG)
+        expected_families = ['AFC', 'AGU', 'CCM', 'CDS', 'CMU', 'CPO', 'FRC', 'IEC', 'IVV',
+                             'MAS', 'MKT', 'REC', 'SCG', 'SCN', 'SDR', 'VDR', 'VER']
         
         for family in expected_families:
             assert family in families, f"FRR family {family} not loaded. Found: {families}"
@@ -90,21 +97,23 @@ class TestAllFRRsLoaded:
     def test_frr_statements_loaded(self, data_loader):
         """Verify FRR statements are loaded from authoritative source"""
         # Get requirements that belong to FRR families
-        frr_families = ['VDR', 'ADS', 'CCM', 'FSI', 'ICP', 'MAS', 'PVA', 'SCG', 'SCN', 'UCM']
+        frr_families = ['AFC', 'AGU', 'CCM', 'CDS', 'CMU', 'CPO', 'FRC', 'IEC', 'IVV',
+                        'MAS', 'MKT', 'REC', 'SCG', 'SCN', 'SDR', 'VDR', 'VER']
         frr_data = []
         
         for family in frr_families:
             frr_data.extend(data_loader.get_family_controls(family))
         
-        assert len(frr_data) > 0, "No FRR requirements loaded"
+        assert len(frr_data) == 245, f"Expected 245 CR26 FRRs, got {len(frr_data)}"
         
         for frr in frr_data:
             frr_id = frr['id']
             assert 'id' in frr, f"{frr_id} missing 'id' field"
             
-            # FRRs can have either 'statement' or 'varies_by_level' for level-specific statements
+            # CR26 rules have a top-level 'statement' or only class-specific
+            # statements under 'varies_by_class'
             has_statement = 'statement' in frr and frr['statement']
-            has_varies = 'varies_by_level' in frr and frr['varies_by_level']
+            has_varies = 'varies_by_class' in frr and frr['varies_by_class']
             
             assert has_statement or has_varies, f"{frr_id} missing 'statement' field"
             
@@ -131,7 +140,9 @@ class TestRequirementAccuracy:
         # KSI-PIY-GIV (fka KSI-PIY-01) - inventories
         ("KSI-PIY-GIV", "inventories of all information resources"),
         # KSI-SVC-EIS (fka KSI-SVC-01) - evaluating and improving security
-        ("KSI-SVC-EIS", "evaluation of information resources for opportunities to improve security"),
+        # CR26 statement text: "Information resources are persistently evaluated for
+        # opportunities to improve security and those improvements are persistently made."
+        ("KSI-SVC-EIS", "persistently evaluated for opportunities to improve security"),
         # KSI-SVC-ASM (fka KSI-SVC-06) - automating secret management
         ("KSI-SVC-ASM", "management, protection, and regular rotation of digital keys"),
     ])
@@ -141,14 +152,10 @@ class TestRequirementAccuracy:
         
         assert ksi is not None, f"{ksi_id} not found"
         
-        # Get statement (either direct or from varies_by_level)
+        # Get statement (either direct or from varies_by_class)
         statement = ksi.get('statement', '')
-        if not statement and 'varies_by_level' in ksi:
-            varies = ksi.get('varies_by_level', {})
-            if 'moderate' in varies:
-                statement = varies['moderate'].get('statement', '')
-            elif 'low' in varies:
-                statement = varies['low'].get('statement', '')
+        if not statement and ksi.get('varies_by_class'):
+            statement = ' '.join(v.get('statement', '') for v in ksi['varies_by_class'].values())
         
         assert expected_statement_fragment.lower() in statement.lower(), \
             f"{ksi_id} statement doesn't contain expected fragment:\n" \

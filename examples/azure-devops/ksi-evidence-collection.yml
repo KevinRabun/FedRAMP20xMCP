@@ -1,0 +1,88 @@
+# Example: scheduled KSI configuration evidence from Azure Resource Graph,
+# stored in the WORM evidence account.
+#
+# Two identities, on purpose:
+#   collectorServiceConnection  read-only (Reader) on the subscriptions in
+#                               scope; runs the Resource Graph queries
+#   evidence-writer             write-only to the evidence containers; cannot
+#                               read subscriptions, so it cannot collect
+# Keeping them apart means the identity that produces evidence cannot also
+# rewrite where it is stored, and the writer cannot see what it stores.
+#
+# Layout: intellievidence/vdr-reports/fedramp20x-ksi-evidence/<yyyy-MM-dd>/<buildId>-<attempt>/
+#   <KSI-ID>/{query.kql,result.json,summary.json}  run.json  pipeline-run.json
+#   sha256-manifest.txt
+#
+# IntelliGRC ADO project only (see evidence-upload-steps.yml).
+
+trigger: none
+pr: none
+
+schedules:
+- cron: '0 7 * * *'
+  displayName: 'Daily KSI evidence'
+  branches:
+    include: [main]
+  always: true
+
+parameters:
+- name: collectorServiceConnection
+  displayName: 'Read-only (Reader) ARM service connection for collection'
+  type: string
+- name: subscriptions
+  displayName: 'Comma-separated subscription ids (empty = all the connection can read)'
+  type: string
+  default: ' '
+- name: ksis
+  displayName: 'KSIs to collect'
+  type: object
+  default: [KSI-SVC-SIN, KSI-SVC-ASM, KSI-CNA-RNT, KSI-IAM-ELP]
+- name: dryRun
+  displayName: 'Evidence dry run (collect, stage and list; no upload)'
+  type: boolean
+  default: false
+
+resources:
+  repositories:
+  - repository: fedramp
+    type: git
+    name: IntelliGRC/fedramp-20x-mcp
+    ref: refs/heads/main
+
+jobs:
+- job: collect_and_store
+  # Collection and upload in one job on the private pool: the collector output
+  # never leaves the agent until it is written to WORM storage.
+  pool: intelli-pool-1
+  steps:
+  - checkout: fedramp
+    path: s/fedramp
+
+  - bash: |
+      set -euo pipefail
+      python3 -m venv "$(Agent.TempDirectory)/venv"
+      "$(Agent.TempDirectory)/venv/bin/python" -m pip install --quiet -e "$(Pipeline.Workspace)/s/fedramp"
+    displayName: 'Install fedramp-20x-mcp'
+
+  - task: AzureCLI@2
+    displayName: 'Collect KSI evidence (read-only)'
+    inputs:
+      azureSubscription: '${{ parameters.collectorServiceConnection }}'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        set -euo pipefail
+        az extension add --name resource-graph --only-show-errors --yes 2>/dev/null || true
+        ksis=( ${{ join(' ', parameters.ksis) }} )
+        args=( --output-dir "$(Agent.TempDirectory)/ksi-evidence" )
+        for k in "${ksis[@]}"; do args+=( --ksi "$k" ); done
+        subs="$(echo '${{ parameters.subscriptions }}' | tr -d ' ')"
+        [ -z "$subs" ] || args+=( --subscriptions "$subs" )
+        "$(Agent.TempDirectory)/venv/bin/python" \
+          "$(Pipeline.Workspace)/s/fedramp/examples/azure-devops/collect_ksi_evidence.py" "${args[@]}"
+
+  - template: .azuredevops/templates/evidence-upload-steps.yml@fedramp
+    parameters:
+      sourceDir: '$(Agent.TempDirectory)/ksi-evidence'
+      reportName: 'fedramp20x-ksi-evidence'
+      dryRun: ${{ parameters.dryRun }}

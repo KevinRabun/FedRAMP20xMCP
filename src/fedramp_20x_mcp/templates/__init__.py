@@ -16,7 +16,7 @@ def load_template(category: str, name: str) -> str:
     
     Args:
         category: Template category (bicep, terraform, code)
-        name: Template name (iam, mla, afr, cna, rpl, svc, generic)
+        name: Template name (iam, mla, afr, cna, rpl, svc, generic; "afr" is a legacy key kept for callers and now holds VDR evidence infrastructure because KSI-AFR was removed in CR26)
     
     Returns:
         Template content as string
@@ -37,7 +37,7 @@ def get_infrastructure_template(ksi_family: str, infra_type: str) -> str:
     Get infrastructure template for a KSI family.
     
     Args:
-        ksi_family: KSI family code (iam, mla, afr, cna, rpl, svc)
+        ksi_family: KSI family code (iam, mla, cna, rpl, svc, or legacy "afr"; other CR26 families fall back to generic)
         infra_type: Infrastructure type (bicep, terraform)
     
     Returns:
@@ -57,7 +57,7 @@ def get_code_template(ksi_family: str, language: str) -> str:
     Get code generation template for a KSI family.
     
     Args:
-        ksi_family: KSI family code (iam, mla, afr, cna, rpl, svc)  
+        ksi_family: KSI family code (iam, mla, cna, rpl, svc, or legacy "afr"; other CR26 families fall back to generic)  
         language: Programming language (python, csharp, powershell, java, typescript)
     
     Returns:

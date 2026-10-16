@@ -12,111 +12,78 @@ Pattern libraries enable data-driven code analysis by separating detection logic
 
 ## Pattern Libraries
 
-### Phase 1: Core Families (52 patterns)
+Patterns are aligned to the FedRAMP Consolidated Rules for 2026 (CR26), version 2026.10.13.01.
+Every pattern maps to at least one real CR26 rule or KSI ID (`related_ksis` for `KSI-*` IDs,
+`related_frrs` for rule IDs such as `VDR-CSO-DET`). The source of truth is
+`src/fedramp_20x_mcp/rules_data/fedramp-consolidated-rules.json`; legacy IDs are resolved with
+`src/fedramp_20x_mcp/rules_data/legacy-crosswalk.json`.
 
-1. **iam_patterns.yaml** - Identity and Access Management (10 patterns)
-   - Phishing-resistant MFA detection (KSI-IAM-01)
-   - FIDO2, WebAuthn, Azure AD integrations
-   - RBAC and least privilege (KSI-IAM-02)
-   - Session management (KSI-IAM-05)
+Two kinds of pattern exist:
 
-2. **mla_patterns.yaml** - Monitoring, Logging, and Alerting (11 patterns)
-   - Centralized logging to SIEM (KSI-MLA-01)
-   - Azure Monitor, Sentinel integration
-   - Log retention policies (KSI-MLA-02)
-   - Security event monitoring (KSI-MLA-05)
-   - Real-time alerting (KSI-MLA-07)
+- **Detection patterns** (262): code, IaC and pipeline checks (AST first, regex fallback), mapped to KSIs and rules.
+- **Compliance patterns** (190, `pattern_type: compliance`, ids `*.frr.*`): one placeholder per CR26 rule used for evidence and checklist guidance.
 
-3. **svc_patterns.yaml** - Service Configuration (13 patterns)
-   - Continuous improvement (KSI-SVC-01)
-   - Network encryption (KSI-SVC-02)
-   - Configuration automation (KSI-SVC-04)
-   - Secret management - Key Vault (KSI-SVC-06)
-   - Patching (KSI-SVC-07)
+### CR26 families used by `family:`
 
-4. **vdr_patterns.yaml** - Vulnerability Detection and Remediation (10 patterns)
-   - Microsoft Defender for Cloud (KSI-VDR-01)
-   - CI/CD security scanning (SAST, container scanning) (KSI-VDR-01, KSI-VDR-02)
-   - Patch management (KSI-VDR-03)
-   - Dependency vulnerability tracking (KSI-VDR-04)
+| Family | Meaning | Source |
+|--------|---------|--------|
+| AFC | Addressing FedRAMP Communication | was FSI |
+| AGU | Agency Use of FedRAMP Certified Cloud Services | |
+| CCM | Collaborative Continuous Monitoring | |
+| CDS | Certification Data Sharing | was ADS |
+| CMU | Cryptographic Module Use | was UCM |
+| FRC | FedRAMP Certification | |
+| IEC | Incident Evaluation and Communication | was ICP |
+| IVV | Independent Verification and Validation | was PVA |
+| MAS | Minimum Assessment Scope | |
+| SCG | Secure Configuration Guide | was RSC |
+| SCN | Significant Change Notification | |
+| SDR | Security Decision Record | |
+| VDR | Vulnerability Detection and Response | |
+| VER | Vulnerability Evaluation and Reporting | split out of VDR |
+| CED CMT CNA IAM INR MLA PIY RPL SCR SVC | KSI categories (SCR was TPR) | |
+| COMMON | Cross-cutting Azure governance checks | not a FedRAMP family |
 
-5. **common_patterns.yaml** - Cross-Cutting Concerns (8 patterns)
-   - Environment configuration
-   - Error handling
-   - Input validation
-   - Documentation
+There is no `KSI-AFR` family (its items became FRR families) and no `KSI-VDR` family.
 
-### Phase 2: Extended Families (68 patterns)
+### Files (452 patterns, 25 family values)
 
-6. **ads_patterns.yaml** - Audit Data System (10 patterns)
-   - Machine-readable formats (JSON/XML export)
-   - REST API for audit data access
-   - Structured logging with required fields
-   - Azure Monitor data export
-   - Log Analytics workspace configuration
+| File | Patterns | Contents |
+|------|----------|----------|
+| afc_patterns.yaml | 16 | Addressing FedRAMP Communication (compliance) |
+| ccm_patterns.yaml | 25 | Collaborative Continuous Monitoring (compliance) |
+| cds_patterns.yaml | 28 | Certification Data Sharing: JSON/XML export, trust center access, Azure Monitor export |
+| ced_patterns.yaml | 12 | Training (KSI-CED-RAT) |
+| cmt_patterns.yaml | 25 | Change management: Git, PR approval, deployment gates, rollback (KSI-CMT-*) |
+| cmu_patterns.yaml | 4 | Cryptographic Module Use (compliance) |
+| cna_patterns.yaml | 33 | Cloud native architecture, network, containers, resource limits and quotas (KSI-CNA-*) |
+| common_patterns.yaml | 8 | Cross-cutting Azure governance |
+| cross_family_patterns.yaml | 25 | Cross-rule detections and compliance (was afr and ksi files); `family:` is set per pattern |
+| iam_patterns.yaml | 34 | MFA, RBAC, least privilege, managed identity (KSI-IAM-*) |
+| iec_patterns.yaml | 9 | Incident Evaluation and Communication (compliance) |
+| inr_patterns.yaml | 9 | Incident response (KSI-INR-*) |
+| ivv_patterns.yaml | 22 | Independent Verification and Validation (compliance, includes VDR-TFR-MVX/NMV) |
+| mas_patterns.yaml | 9 | Minimum Assessment Scope (compliance) |
+| mla_patterns.yaml | 17 | Logging, SIEM, alerting (KSI-MLA-*) |
+| piy_patterns.yaml | 21 | Policy and inventory, SDLC, vulnerability disclosure (KSI-PIY-*) |
+| rpl_patterns.yaml | 9 | Backup and recovery (KSI-RPL-*) |
+| scg_patterns.yaml | 10 | Secure Configuration Guide (compliance) |
+| scn_patterns.yaml | 19 | Significant Change Notifications (compliance) |
+| scr_patterns.yaml | 8 | Supply chain risk: dependency scanning, SBOM (KSI-SCR-MIT, KSI-SCR-MON) |
+| svc_patterns.yaml | 30 | Encryption, secrets, configuration automation (KSI-SVC-*) |
+| vdr_patterns.yaml | 79 | Vulnerability detection (SAST, SCA, container, IaC, DAST scanning, patching) plus VDR/VER compliance patterns |
 
-7. **ucm_patterns.yaml** - User Capability Management (11 patterns)
-   - RBAC role definitions and enforcement
-   - Authorization decorators/attributes
-   - Explicit capability checks
-   - Session timeout configuration
-   - Azure Managed Identity and RBAC assignments
-   - Key Vault access policies
+Notes:
 
-8. **cna_patterns.yaml** - Cloud Native Architecture (11 patterns)
-   - Network Security Groups (NSGs)
-   - Azure Firewall configuration
-   - Container images and AKS clusters
-   - Azure Container Registry
-   - Service mesh and API Gateway
-   - Container build and IaC validation
+- Pattern ids keep their historical prefix (for example `ads.machine_readable.json_export`, `ucm.rbac.role_definition`, `rsc.allocation.resource_limits`). The id is a stable key; the `family:` field and the related rule IDs are authoritative.
+- Pattern ids prefixed `scn.` (scanning), `ucm.` (RBAC), `rsc.` (resource limits) and `ccm.` (change management) that are detections now live under the KSI family that matches their intent (VDR, IAM, CNA, CMT).
+- The upstream-invented IDs (the old numbered KSI-VDR and MAS-AY series) never existed in a FedRAMP release and were remapped by intent or removed.
 
-9. **ccm_patterns.yaml** - Configuration Change Management (12 patterns)
-   - Git version control usage
-   - Change audit logging
-   - Pull request approval workflows
-   - Automated testing before deployment
-   - Rollback capabilities
-   - ARM/Bicep/Terraform validation
-   - Deployment gates and configuration backup
+### Coverage
 
-10. **rsc_patterns.yaml** - Resource Management (11 patterns)
-    - Resource limits configuration (CPU, memory)
-    - Resource metrics monitoring
-    - Autoscaling configuration
-    - Namespace resource quotas
-    - Cost budget alerts
-    - App Service Plans and VM sizing
-    - Reserved instance usage
-
-11. **scn_patterns.yaml** - Security Scanning (13 patterns)
-    - SAST tool integration (CodeQL, SonarQube, Snyk)
-    - Software Composition Analysis (SCA)
-    - Container image scanning (Trivy, Aqua, Clair)
-    - IaC security scanning (Checkov, TFSec, Terrascan)
-    - Secrets scanning (GitLeaks, TruffleHog)
-    - DAST integration
-    - Microsoft Defender for Cloud
-    - Azure Policy assignments
-    - Security scan gates
-
-### Total Coverage
-- **120 patterns** across **11 families**
-- **100% FedRAMP 20x family coverage**
-- Multi-language support: Python, C#, Java, TypeScript/JavaScript
-- IaC support: Bicep, Terraform
-- CI/CD support: GitHub Actions, Azure Pipelines, GitLab CI
-
-5. **common_patterns.yaml** - Cross-Cutting Patterns
-   - Azure resource tagging
-   - Diagnostic settings for all resources
-   - Managed identity usage
-   - Public network access restrictions
-   - Azure Policy assignments
-   - Resource locks
-   - Backup configuration
-   - Geo-redundancy
-   - 8 patterns applicable across all families
+- **452 patterns**, 25 `family:` values.
+- **46 of 46** CR26 KSIs and **142** CR26 rule IDs are referenced by at least one pattern.
+- Languages (pattern count per language key): Bicep 285, Terraform 292, Python/C#/Java/TypeScript 103 each, GitHub Actions 35, Azure Pipelines 29, GitLab CI 23.
 
 ## Pattern Structure
 
@@ -127,7 +94,7 @@ Each pattern follows this YAML schema:
 pattern_id: "family.category.specific_check"
 name: "Human-Readable Pattern Name"
 description: "What this pattern detects"
-family: "IAM|MLA|SVC|VDR|COMMON"
+family: "CR26 family code, for example IAM, VDR, VER, CDS, SCG, COMMON"
 severity: "INFO|MEDIUM|HIGH|CRITICAL"
 pattern_type: "import|function_call|configuration|decorator|resource|pipeline"
 
@@ -154,7 +121,8 @@ finding:
 
 tags: ["tag1", "tag2", "tag3"]
 nist_controls: ["ia-2", "au-3", "sc-8"]
-related_ksis: ["KSI-IAM-01", "KSI-MLA-01"]
+related_ksis: ["KSI-IAM-APM", "KSI-MLA-OSM"]   # KSI-* IDs from the CR26 rules JSON
+related_frrs: ["VDR-CSO-DET"]                    # CR26 rule IDs (<FAMILY>-<GROUP>-<RULE>)
 
 # Pattern relationships (optional)
 requires_all: ["pattern_id_1", "pattern_id_2"]  # All must match
@@ -229,27 +197,7 @@ conflicts_with: ["svc.security.missing_hsts"]
 
 ## Statistics
 
-### Total Patterns: 65
-
-| Library | Patterns | KSIs Covered | Focus Areas |
-|---------|----------|--------------|-------------|
-| IAM     | 12       | 3            | MFA, RBAC, session management |
-| MLA     | 15       | 7            | Logging, monitoring, alerting |
-| SVC     | 18       | 8            | Security, secrets, encryption |
-| VDR     | 12       | 5            | Vulnerability scanning, patching |
-| Common  | 8        | -            | Cross-cutting governance patterns |
-
-### Language Coverage
-
-- **Python**: 55 patterns (85%)
-- **C#**: 48 patterns (74%)
-- **Java**: 12 patterns (18%)
-- **TypeScript**: 18 patterns (28%)
-- **Bicep**: 38 patterns (58%)
-- **Terraform**: 38 patterns (58%)
-- **GitHub Actions**: 8 patterns (12%)
-- **Azure Pipelines**: 8 patterns (12%)
-- **GitLab CI**: 4 patterns (6%)
+See "Coverage" above. Recompute counts from the YAML after any change; do not hand-maintain them.
 
 ## Usage
 
@@ -309,7 +257,7 @@ languages:
 
 ### Creating New Patterns
 
-1. **Identify requirement**: Start with FedRAMP requirement (KSI/FRR)
+1. **Identify requirement**: Start with a CR26 rule or KSI ID that exists in `fedramp-consolidated-rules.json` (never invent IDs; CR26 sets no numeric log retention rule and no severity-bucket remediation deadlines)
 2. **Research detection**: Analyze existing code for detection logic
 3. **Define AST queries**: Use tree-sitter for primary detection
 4. **Add regex fallback**: Ensure compatibility if AST fails
@@ -338,7 +286,7 @@ Phase 2 continuation:
 1. **Implement pattern engine** (`src/fedramp_20x_mcp/analyzers/pattern_engine.py`)
 2. **Implement pattern compiler** (`src/fedramp_20x_mcp/analyzers/pattern_compiler.py`)
 3. **Create test suite** for pattern matching
-4. **Expand patterns** to remaining families (AFR, CNA, PIY, RPL, etc.)
+4. **Expand patterns** for CR26 families with no detection coverage
 5. **Integrate with existing analyzers** for backward compatibility
 
 ## References

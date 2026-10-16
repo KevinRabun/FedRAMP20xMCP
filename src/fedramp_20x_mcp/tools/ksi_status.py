@@ -10,6 +10,41 @@ from typing import Dict, Any, List
 from ..analyzers.ksi.factory import get_factory
 
 
+async def build_ksi_rows(data_loader=None) -> List[Dict[str, Any]]:
+    """
+    Build one status row per CR26 KSI.
+
+    The KSI list, names and families come from the loaded CR26 rules. Pattern
+    coverage (code detectability and implementation status) comes from the
+    pattern-based analyzer factory, intersected with the CR26 KSI ids so stale
+    pattern ids never inflate the numbers.
+    """
+    covered = set()
+    try:
+        covered = set(get_factory().list_ksis())
+    except Exception:
+        covered = set()
+
+    rows: List[Dict[str, Any]] = []
+    ksis = data_loader.list_all_ksi() if data_loader else []
+    for ksi in sorted(ksis, key=lambda k: k.get("id", "")):
+        ksi_id = ksi.get("id", "")
+        has_patterns = ksi_id in covered
+        parts = ksi_id.split("-")
+        family = ksi.get("category_id") or (parts[1] if len(parts) > 1 else "UNKNOWN")
+        rows.append({
+            "id": ksi_id,
+            "name": ksi.get("name", ksi_id),
+            "family": family,
+            "family_name": ksi.get("category", family),
+            "retired": str(ksi.get("status", "")).lower() in ("retired", "removed"),
+            "code_detectable": has_patterns,
+            "implementation_status": "IMPLEMENTED" if has_patterns else "NOT_IMPLEMENTED",
+            "controls": ksi.get("controls", []),
+        })
+    return rows
+
+
 async def get_ksi_implementation_status_impl(data_loader=None) -> Dict[str, Any]:
     """
     Get comprehensive status of all KSI implementations.
@@ -27,15 +62,14 @@ async def get_ksi_implementation_status_impl(data_loader=None) -> Dict[str, Any]
     Returns:
         Dictionary with complete KSI status information organized by family
     """
-    factory = get_factory()
-    
-    # Sync with authoritative data if data_loader provided
     if data_loader:
-        await factory.sync_with_authoritative_data(data_loader)
-    
-    ksi_ids = factory.list_ksis()
-    
+        await data_loader.load_data()
+    rows = await build_ksi_rows(data_loader)
+    ksi_ids = [r["id"] for r in rows]
+    row_by_id = {r["id"]: r for r in rows}
+
     status = {
+        "rules_version": data_loader.get_rules_metadata().get("version") if data_loader else None,
         "total_ksis": len(ksi_ids),
         "active_ksis": 0,
         "retired_ksis": 0,
@@ -47,20 +81,19 @@ async def get_ksi_implementation_status_impl(data_loader=None) -> Dict[str, Any]
     }
     
     for ksi_id in ksi_ids:
-        analyzer = factory.get_analyzer(ksi_id)
-        if not analyzer:
-            continue
-        
-        # Get KSI properties
-        is_retired = getattr(analyzer, 'RETIRED', False)
-        code_detectable = getattr(analyzer, 'CODE_DETECTABLE', True)
-        impl_status = getattr(analyzer, 'IMPLEMENTATION_STATUS', 'NOT_IMPLEMENTED')
-        family = getattr(analyzer, 'FAMILY', 'UNKNOWN')
-        family_name = getattr(analyzer, 'FAMILY_NAME', 'Unknown')
-        ksi_name = getattr(analyzer, 'KSI_NAME', 'Unknown')
-        impact_low = getattr(analyzer, 'IMPACT_LOW', False)
-        impact_moderate = getattr(analyzer, 'IMPACT_MODERATE', False)
-        nist_controls = getattr(analyzer, 'NIST_CONTROLS', [])
+        row = row_by_id[ksi_id]
+
+        # Get KSI properties (CR26 rules data plus pattern coverage)
+        is_retired = row["retired"]
+        code_detectable = row["code_detectable"]
+        impl_status = row["implementation_status"]
+        family = row["family"]
+        family_name = row["family_name"]
+        ksi_name = row["name"]
+        # CR26 no longer defines per-KSI impact levels
+        impact_low = False
+        impact_moderate = False
+        nist_controls = row["controls"]
         
         # Update counters
         if is_retired:
@@ -145,16 +178,15 @@ async def get_ksi_family_status_impl(family: str, data_loader=None) -> Dict[str,
     Returns:
         Dictionary with family-specific status information
     """
-    factory = get_factory()
-    
-    # Sync with authoritative data if data_loader provided
     if data_loader:
-        await factory.sync_with_authoritative_data(data_loader)
-    
-    ksi_ids = factory.list_ksis()
-    
+        await data_loader.load_data()
+    rows = await build_ksi_rows(data_loader)
+    row_by_id = {r["id"]: r for r in rows}
+    ksi_ids = list(row_by_id.keys())
+
     family_status = {
         "family": family.upper(),
+        "rules_version": data_loader.get_rules_metadata().get("version") if data_loader else None,
         "total_ksis": 0,
         "active_ksis": 0,
         "retired_ksis": 0,
@@ -165,19 +197,15 @@ async def get_ksi_family_status_impl(family: str, data_loader=None) -> Dict[str,
     }
     
     for ksi_id in ksi_ids:
-        analyzer = factory.get_analyzer(ksi_id)
-        if not analyzer:
+        row = row_by_id[ksi_id]
+        if row["family"].upper() != family.upper():
             continue
-        
-        ksi_family = getattr(analyzer, 'FAMILY', '')
-        if ksi_family.upper() != family.upper():
-            continue
-        
+
         # Get KSI properties
-        is_retired = getattr(analyzer, 'RETIRED', False)
-        code_detectable = getattr(analyzer, 'CODE_DETECTABLE', True)
-        impl_status = getattr(analyzer, 'IMPLEMENTATION_STATUS', 'NOT_IMPLEMENTED')
-        ksi_name = getattr(analyzer, 'KSI_NAME', 'Unknown')
+        is_retired = row["retired"]
+        code_detectable = row["code_detectable"]
+        impl_status = row["implementation_status"]
+        ksi_name = row["name"]
         
         family_status["total_ksis"] += 1
         

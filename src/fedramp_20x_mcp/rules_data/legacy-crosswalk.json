@@ -1,0 +1,4383 @@
+{
+  "info": {
+    "description": "Legacy FedRAMP 20x rule and KSI IDs mapped to the FedRAMP Consolidated Rules for 2026. Legacy-to-2025 links come from FRMR 'fka' fields (authoritative); 2025-to-2026 links are derived and reviewed, not published by FedRAMP. basis=related means no single successor exists.",
+    "generated_by": "scripts/build_rules_crosswalk.py",
+    "legacy_source": {
+      "url": "https://raw.githubusercontent.com/FedRAMP/docs/a06fa8f9b1/FRMR.documentation.json",
+      "version": "0.9.43-beta",
+      "sha256": "bbb734e9acb5a7ad48dafd6b2f442178f2b507c78c46b897cc4b1852c746c7c4"
+    },
+    "current_source": {
+      "version": "2026.10.13.01",
+      "last_updated": "2026-10-13",
+      "sha256": "fb48d677a85d77fb72735a325de2c1945a1e0ceab1d2e655292fe9ebe3e4e0b4"
+    },
+    "entry_count": 372
+  },
+  "crosswalk": {
+    "ADS-CSL-LRE": {
+      "current_ids": [
+        "CDS-CSF-TCM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Legacy Repository Exception",
+      "current_names": [
+        "Trust Center Migration"
+      ]
+    },
+    "ADS-CSL-TCM": {
+      "current_ids": [
+        "CDS-CSF-TCM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Trust Center Migration",
+      "current_names": [
+        "Trust Center Migration"
+      ]
+    },
+    "ADS-CSL-UCP": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "USDA Connect",
+      "current_names": [
+        "Use Trust Centers"
+      ]
+    },
+    "ADS-CSL-UTC": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Use Trust Centers",
+      "current_names": [
+        "Use Trust Centers"
+      ]
+    },
+    "ADS-CSO-AAD": {
+      "current_ids": [
+        "CDS-UTC-AAD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Agency Access Denial",
+      "current_names": [
+        "Agency Access Denial"
+      ],
+      "via": "ADS-UTC-AAD"
+    },
+    "ADS-CSO-AGA": {
+      "current_ids": [
+        "CDS-UTC-AGA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Agency Access",
+      "current_names": [
+        "Agency Access"
+      ],
+      "via": "ADS-UTC-AGA"
+    },
+    "ADS-CSO-CBF": {
+      "current_ids": [
+        "CDS-CSO-CBF"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Consistency Between Formats",
+      "current_names": [
+        "Consistency Between Formats"
+      ]
+    },
+    "ADS-CSO-HAD": {
+      "current_ids": [
+        "CDS-CSO-HAD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Historical Authorization Data",
+      "current_names": [
+        "Historical FedRAMP Certification Data"
+      ]
+    },
+    "ADS-CSO-PGD": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Public Guidance",
+      "current_names": [
+        "Use Trust Centers"
+      ],
+      "via": "ADS-UTC-PGD"
+    },
+    "ADS-CSO-PUB": {
+      "current_ids": [
+        "CDS-CSO-PUB"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Public Information",
+      "current_names": [
+        "Public Information"
+      ]
+    },
+    "ADS-CSO-RIS": {
+      "current_ids": [
+        "CDS-CSO-RIS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Information Sharing",
+      "current_names": [
+        "Responsible Information Sharing"
+      ]
+    },
+    "ADS-CSO-SVC": {
+      "current_ids": [
+        "CDS-CSO-SVC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Service List",
+      "current_names": [
+        "Public Service List"
+      ]
+    },
+    "ADS-CSX-UTC": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Use Trust Centers",
+      "current_names": [
+        "Use Trust Centers"
+      ]
+    },
+    "ADS-TRC-AAI": {
+      "current_ids": [
+        "CDS-TRC-AAI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Agency Access Inventory",
+      "current_names": [
+        "Agency Access Inventory"
+      ]
+    },
+    "ADS-TRC-ACL": {
+      "current_ids": [
+        "CDS-TRC-ACL"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Access Logging",
+      "current_names": [
+        "Access Logging"
+      ]
+    },
+    "ADS-TRC-HMR": {
+      "current_ids": [
+        "CDS-TRC-HMR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Human and Machine-Readable",
+      "current_names": [
+        "Human and Machine-Readable Certification Data"
+      ]
+    },
+    "ADS-TRC-PAC": {
+      "current_ids": [
+        "CDS-TRC-PAC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Programmatic Access",
+      "current_names": [
+        "Programmatic Access"
+      ]
+    },
+    "ADS-TRC-RSP": {
+      "current_ids": [
+        "CDS-TRC-USH"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Responsive Performance",
+      "current_names": [
+        "Uninterrupted Sharing"
+      ]
+    },
+    "ADS-TRC-SSM": {
+      "current_ids": [
+        "CDS-TRC-SSM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Self-Service Access Management",
+      "current_names": [
+        "Self-Service Access Management"
+      ]
+    },
+    "ADS-TRC-USH": {
+      "current_ids": [
+        "CDS-TRC-USH"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Uninterrupted Sharing",
+      "current_names": [
+        "Uninterrupted Sharing"
+      ]
+    },
+    "ADS-UTC-AAD": {
+      "current_ids": [
+        "CDS-UTC-AAD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Agency Access Denial",
+      "current_names": [
+        "Agency Access Denial"
+      ]
+    },
+    "ADS-UTC-AGA": {
+      "current_ids": [
+        "CDS-UTC-AGA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Agency Access",
+      "current_names": [
+        "Agency Access"
+      ]
+    },
+    "ADS-UTC-PGD": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Public Guidance",
+      "current_names": [
+        "Use Trust Centers"
+      ]
+    },
+    "CCM-AGM-NAR": {
+      "current_ids": [
+        "AGU-AGC-NAR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "No Additional Requirements",
+      "current_names": [
+        "No Additional Security Requirements"
+      ]
+    },
+    "CCM-AGM-NFA": {
+      "current_ids": [
+        "AGU-AGC-NAI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notify FedRAMP After Requests",
+      "current_names": [
+        "Notify Additional Information Requests"
+      ]
+    },
+    "CCM-AGM-NFR": {
+      "current_ids": [
+        "AGU-USE-NFC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notify FedRAMP of Concerns",
+      "current_names": [
+        "Notify FedRAMP of Monitoring Concerns"
+      ]
+    },
+    "CCM-AGM-NPC": {
+      "current_ids": [
+        "AGU-USE-NPC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notify Provider of Concerns",
+      "current_names": [
+        "Notify Provider of Concerns"
+      ]
+    },
+    "CCM-AGM-SSR": {
+      "current_ids": [
+        "AGU-USE-DSO"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Senior Security Reviewer",
+      "current_names": [
+        "Designate Senior Official"
+      ]
+    },
+    "CCM-OAR-AFS": {
+      "current_ids": [
+        "CCM-OCR-AFS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Anonymized Feedback Summary",
+      "current_names": [
+        "Anonymized Feedback Summary"
+      ]
+    },
+    "CCM-OAR-AVL": {
+      "current_ids": [
+        "CCM-OCR-AVL"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Report Availability",
+      "current_names": [
+        "Report Availability"
+      ]
+    },
+    "CCM-OAR-FBM": {
+      "current_ids": [
+        "CCM-OCR-FBM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Feedback Mechanism",
+      "current_names": [
+        "Feedback Mechanism"
+      ]
+    },
+    "CCM-OAR-LSI": {
+      "current_ids": [
+        "CCM-OCR-LSI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Limit Sensitive Information",
+      "current_names": [
+        "Limit Sensitive Information"
+      ]
+    },
+    "CCM-OAR-NRD": {
+      "current_ids": [
+        "CCM-OCR-NRD"
+      ],
+      "basis": "renamed-by-text",
+      "confidence": "medium",
+      "legacy_name": "Next Report Date",
+      "current_names": [
+        "Next Report Date"
+      ]
+    },
+    "CCM-OAR-RPS": {
+      "current_ids": [
+        "CCM-OCR-RPS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Public Sharing",
+      "current_names": [
+        "Responsible Public Certification Report Sharing"
+      ]
+    },
+    "CCM-OAR-SOR": {
+      "current_ids": [
+        "CCM-OCR-SOR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Spread Out Reports",
+      "current_names": [
+        "Spread Out Reports"
+      ]
+    },
+    "FRR-ADS-01": {
+      "current_ids": [
+        "CDS-CSO-PUB"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Public Information",
+      "current_names": [
+        "Public Information"
+      ],
+      "via": "ADS-CSO-PUB"
+    },
+    "FRR-ADS-02": {
+      "current_ids": [
+        "CDS-CSO-CBF"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Consistency Between Formats",
+      "current_names": [
+        "Consistency Between Formats"
+      ],
+      "via": "ADS-CSO-CBF"
+    },
+    "FRR-ADS-03": {
+      "current_ids": [
+        "CDS-CSO-SVC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Service List",
+      "current_names": [
+        "Public Service List"
+      ],
+      "via": "ADS-CSO-SVC"
+    },
+    "FRR-ADS-04": {
+      "current_ids": [
+        "CDS-TRC-USH"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Uninterrupted Sharing",
+      "current_names": [
+        "Uninterrupted Sharing"
+      ],
+      "via": "ADS-TRC-USH"
+    },
+    "FRR-ADS-05": {
+      "current_ids": [
+        "CDS-CSO-RIS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Information Sharing",
+      "current_names": [
+        "Responsible Information Sharing"
+      ],
+      "via": "ADS-CSO-RIS"
+    },
+    "FRR-ADS-06": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "USDA Connect",
+      "current_names": [
+        "Use Trust Centers"
+      ],
+      "via": "ADS-CSL-UCP"
+    },
+    "FRR-ADS-07": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Use Trust Centers",
+      "current_names": [
+        "Use Trust Centers"
+      ],
+      "via": "ADS-CSX-UTC"
+    },
+    "FRR-ADS-08": {
+      "current_ids": [
+        "CDS-CSF-TCM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Trust Center Migration",
+      "current_names": [
+        "Trust Center Migration"
+      ],
+      "via": "ADS-CSL-TCM"
+    },
+    "FRR-ADS-09": {
+      "current_ids": [
+        "CDS-CSO-HAD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Historical Authorization Data",
+      "current_names": [
+        "Historical FedRAMP Certification Data"
+      ],
+      "via": "ADS-CSO-HAD"
+    },
+    "FRR-ADS-AC-01": {
+      "current_ids": [
+        "CDS-CSO-UTC"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Public Guidance",
+      "current_names": [
+        "Use Trust Centers"
+      ],
+      "via": "ADS-UTC-PGD"
+    },
+    "FRR-ADS-AC-02": {
+      "current_ids": [
+        "CDS-UTC-AGA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Agency Access",
+      "current_names": [
+        "Agency Access"
+      ],
+      "via": "ADS-UTC-AGA"
+    },
+    "FRR-ADS-EX-01": {
+      "current_ids": [
+        "CDS-CSF-TCM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Legacy Repository Exception",
+      "current_names": [
+        "Trust Center Migration"
+      ],
+      "via": "ADS-CSL-LRE"
+    },
+    "FRR-ADS-TC-02": {
+      "current_ids": [
+        "CDS-TRC-HMR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Human and Machine-Readable",
+      "current_names": [
+        "Human and Machine-Readable Certification Data"
+      ],
+      "via": "ADS-TRC-HMR"
+    },
+    "FRR-ADS-TC-03": {
+      "current_ids": [
+        "CDS-TRC-PAC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Programmatic Access",
+      "current_names": [
+        "Programmatic Access"
+      ],
+      "via": "ADS-TRC-PAC"
+    },
+    "FRR-ADS-TC-04": {
+      "current_ids": [
+        "CDS-TRC-SSM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Self-Service Access Management",
+      "current_names": [
+        "Self-Service Access Management"
+      ],
+      "via": "ADS-TRC-SSM"
+    },
+    "FRR-ADS-TC-05": {
+      "current_ids": [
+        "CDS-TRC-AAI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Agency Access Inventory",
+      "current_names": [
+        "Agency Access Inventory"
+      ],
+      "via": "ADS-TRC-AAI"
+    },
+    "FRR-ADS-TC-06": {
+      "current_ids": [
+        "CDS-TRC-ACL"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Access Logging",
+      "current_names": [
+        "Access Logging"
+      ],
+      "via": "ADS-TRC-ACL"
+    },
+    "FRR-ADS-TC-07": {
+      "current_ids": [
+        "CDS-TRC-USH"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Responsive Performance",
+      "current_names": [
+        "Uninterrupted Sharing"
+      ],
+      "via": "ADS-TRC-RSP"
+    },
+    "FRR-CCM-01": {
+      "current_ids": [
+        "CCM-OCR-AVL"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Report Availability",
+      "current_names": [
+        "Report Availability"
+      ],
+      "via": "CCM-OAR-AVL"
+    },
+    "FRR-CCM-02": {
+      "current_ids": [
+        "CCM-OCR-SOR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Spread Out Reports",
+      "current_names": [
+        "Spread Out Reports"
+      ],
+      "via": "CCM-OAR-SOR"
+    },
+    "FRR-CCM-03": {
+      "current_ids": [
+        "CCM-OCR-NRD"
+      ],
+      "basis": "renamed-by-text",
+      "confidence": "medium",
+      "legacy_name": "Next Report Date",
+      "current_names": [
+        "Next Report Date"
+      ],
+      "via": "CCM-OAR-NRD"
+    },
+    "FRR-CCM-04": {
+      "current_ids": [
+        "CCM-OCR-FBM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Feedback Mechanism",
+      "current_names": [
+        "Feedback Mechanism"
+      ],
+      "via": "CCM-OAR-FBM"
+    },
+    "FRR-CCM-05": {
+      "current_ids": [
+        "CCM-OCR-AFS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Anonymized Feedback Summary",
+      "current_names": [
+        "Anonymized Feedback Summary"
+      ],
+      "via": "CCM-OAR-AFS"
+    },
+    "FRR-CCM-06": {
+      "current_ids": [
+        "CCM-OCR-LSI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Limit Sensitive Information",
+      "current_names": [
+        "Limit Sensitive Information"
+      ],
+      "via": "CCM-OAR-LSI"
+    },
+    "FRR-CCM-07": {
+      "current_ids": [
+        "CCM-OCR-RPS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Public Sharing",
+      "current_names": [
+        "Responsible Public Certification Report Sharing"
+      ],
+      "via": "CCM-OAR-RPS"
+    },
+    "FRR-CCM-AG-01": {
+      "current_ids": [
+        "CCM-AGM-ROR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Review Ongoing Reports",
+      "current_names": [
+        "Review Ongoing Reports"
+      ],
+      "via": "CCM-AGM-ROR"
+    },
+    "FRR-CCM-AG-02": {
+      "current_ids": [
+        "CCM-AGM-CSC"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Consider Security Category",
+      "current_names": [
+        "Consider Security Category"
+      ],
+      "via": "CCM-AGM-CSC"
+    },
+    "FRR-CCM-AG-03": {
+      "current_ids": [
+        "AGU-USE-DSO"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Senior Security Reviewer",
+      "current_names": [
+        "Designate Senior Official"
+      ],
+      "via": "CCM-AGM-SSR"
+    },
+    "FRR-CCM-AG-04": {
+      "current_ids": [
+        "AGU-USE-NPC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notify Provider of Concerns",
+      "current_names": [
+        "Notify Provider of Concerns"
+      ],
+      "via": "CCM-AGM-NPC"
+    },
+    "FRR-CCM-AG-05": {
+      "current_ids": [
+        "AGU-USE-NFC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notify FedRAMP of Concerns",
+      "current_names": [
+        "Notify FedRAMP of Monitoring Concerns"
+      ],
+      "via": "CCM-AGM-NFR"
+    },
+    "FRR-CCM-AG-06": {
+      "current_ids": [
+        "AGU-AGC-NAR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "No Additional Requirements",
+      "current_names": [
+        "No Additional Security Requirements"
+      ],
+      "via": "CCM-AGM-NAR"
+    },
+    "FRR-CCM-AG-07": {
+      "current_ids": [
+        "AGU-AGC-NAI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notify FedRAMP After Requests",
+      "current_names": [
+        "Notify Additional Information Requests"
+      ],
+      "via": "CCM-AGM-NFA"
+    },
+    "FRR-CCM-QR-01": {
+      "current_ids": [
+        "CCM-QTR-MTG"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Quarterly Review Meeting",
+      "current_names": [
+        "Quarterly Review Meeting"
+      ],
+      "via": "CCM-QTR-MTG"
+    },
+    "FRR-CCM-QR-02": {
+      "current_ids": [
+        "CCM-QTR-MTG"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Quarterly Review Meeting",
+      "current_names": [
+        "Quarterly Review Meeting"
+      ],
+      "via": "CCM-QTR-MTG"
+    },
+    "FRR-CCM-QR-03": {
+      "current_ids": [
+        "CCM-QTR-SAR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Schedule Around Reports",
+      "current_names": [
+        "Schedule Around Reports"
+      ],
+      "via": "CCM-QTR-SAR"
+    },
+    "FRR-CCM-QR-04": {
+      "current_ids": [
+        "CCM-QTR-NID"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "No Irresponsible Disclosure",
+      "current_names": [
+        "No Irresponsible Disclosure"
+      ],
+      "via": "CCM-QTR-NID"
+    },
+    "FRR-CCM-QR-05": {
+      "current_ids": [
+        "CCM-QTR-REG"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Meeting Registration Info",
+      "current_names": [
+        "Meeting Registration Info"
+      ],
+      "via": "CCM-QTR-REG"
+    },
+    "FRR-CCM-QR-06": {
+      "current_ids": [
+        "CCM-QTR-NRD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Next Review Date",
+      "current_names": [
+        "Next Review Date"
+      ],
+      "via": "CCM-QTR-NRD"
+    },
+    "FRR-CCM-QR-07": {
+      "current_ids": [
+        "CCM-QTR-ACT"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Additional Content",
+      "current_names": [
+        "Additional Content"
+      ],
+      "via": "CCM-QTR-ACT"
+    },
+    "FRR-CCM-QR-08": {
+      "current_ids": [
+        "CCM-QTR-RTP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Restrict Third Parties",
+      "current_names": [
+        "Restrict Third Parties"
+      ],
+      "via": "CCM-QTR-RTP"
+    },
+    "FRR-CCM-QR-09": {
+      "current_ids": [
+        "CCM-QTR-RTR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Record/Transcribe Reviews",
+      "current_names": [
+        "Record/Transcribe Reviews"
+      ],
+      "via": "CCM-QTR-RTR"
+    },
+    "FRR-CCM-QR-10": {
+      "current_ids": [
+        "CCM-QTR-SRR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Share Recordings Responsibly",
+      "current_names": [
+        "Share Recordings Responsibly"
+      ],
+      "via": "CCM-QTR-SRR"
+    },
+    "FRR-CCM-QR-11": {
+      "current_ids": [
+        "CCM-QTR-SCR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Share Content Responsibly",
+      "current_names": [
+        "Share Content Responsibly"
+      ],
+      "via": "CCM-QTR-SCR"
+    },
+    "FRR-FSI-01": {
+      "current_ids": [
+        "AFC-FRP-VRE"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Verified Emails",
+      "current_names": [
+        "Verified Emails"
+      ],
+      "via": "FSI-FRP-VRE"
+    },
+    "FRR-FSI-02": {
+      "current_ids": [
+        "AFC-FRP-CDS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Criticality Designators",
+      "current_names": [
+        "Criticality Designators"
+      ],
+      "via": "FSI-FRP-CDS"
+    },
+    "FRR-FSI-03": {
+      "current_ids": [
+        "AFC-FRP-UFS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Use FedRAMP_Security Email in Emergencies",
+      "current_names": [
+        "Use FedRAMP_Security Email in Emergencies"
+      ],
+      "via": "FSI-FRP-UFS"
+    },
+    "FRR-FSI-04": {
+      "current_ids": [
+        "AFC-FRP-PNT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Public Notice of Emergency Tests",
+      "current_names": [
+        "Public Notice of Emergency Tests"
+      ],
+      "via": "FSI-FRP-PNT"
+    },
+    "FRR-FSI-05": {
+      "current_ids": [
+        "AFC-FRP-RQA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Required Actions",
+      "current_names": [
+        "Required Actions"
+      ],
+      "via": "FSI-FRP-RQA"
+    },
+    "FRR-FSI-06": {
+      "current_ids": [
+        "AFC-FRP-ERT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Elevated Reaction Timeframes",
+      "current_names": [
+        "Elevated Reaction Timeframes"
+      ],
+      "via": "FSI-FRP-ERT"
+    },
+    "FRR-FSI-07": {
+      "current_ids": [
+        "AFC-FRP-COR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Explain Corrective Actions",
+      "current_names": [
+        "Explain Corrective Actions"
+      ],
+      "via": "FSI-FRP-COR"
+    },
+    "FRR-FSI-08": {
+      "current_ids": [
+        "AFC-FRP-RPM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Reaction Metrics",
+      "current_names": [
+        "Reaction Metrics"
+      ],
+      "via": "FSI-FRP-RPM"
+    },
+    "FRR-FSI-09": {
+      "current_ids": [
+        "AFC-CSO-INB"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Maintain a FedRAMP Security Inbox",
+      "current_names": [
+        "Maintain a FedRAMP Security Inbox"
+      ],
+      "via": "FSI-CSO-INB"
+    },
+    "FRR-FSI-10": {
+      "current_ids": [
+        "AFC-CSO-TFG"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Trust @fedramp.gov and @gsa.gov",
+      "current_names": [
+        "Trust @fedramp.gov and @gsa.gov"
+      ],
+      "via": "FSI-CSO-TFG"
+    },
+    "FRR-FSI-11": {
+      "current_ids": [
+        "AFC-CSO-RCV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Receive Email Without Disruption",
+      "current_names": [
+        "Receive Email Without Disruption"
+      ],
+      "via": "FSI-CSO-RCV"
+    },
+    "FRR-FSI-12": {
+      "current_ids": [
+        "AFC-CSO-NOC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notification of Changes",
+      "current_names": [
+        "Notification of Changes"
+      ],
+      "via": "FSI-CSO-NOC"
+    },
+    "FRR-FSI-13": {
+      "current_ids": [
+        "AFC-CSO-ACK"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Acknowledge Receipt",
+      "current_names": [
+        "Acknowledge Receipt"
+      ],
+      "via": "FSI-CSO-ACK"
+    },
+    "FRR-FSI-14": {
+      "current_ids": [
+        "AFC-CSO-CRA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Complete Required Actions",
+      "current_names": [
+        "Complete Required Actions"
+      ],
+      "via": "FSI-CSO-CRA"
+    },
+    "FRR-FSI-15": {
+      "current_ids": [
+        "AFC-CSO-EMR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Emergency Message Routing",
+      "current_names": [
+        "Emergency Message Routing"
+      ],
+      "via": "FSI-CSO-EMR"
+    },
+    "FRR-FSI-16": {
+      "current_ids": [
+        "AFC-CSO-IMA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Important Message Actions",
+      "current_names": [
+        "Important Message Actions"
+      ],
+      "via": "FSI-CSO-IMA"
+    },
+    "FRR-ICP-01": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Reporting to FedRAMP",
+      "current_names": [
+        "Initial Incident Report"
+      ],
+      "via": "ICP-CSX-IRF"
+    },
+    "FRR-ICP-02": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Reporting to Agencies",
+      "current_names": [
+        "Initial Incident Report"
+      ],
+      "via": "ICP-CSX-IRA"
+    },
+    "FRR-ICP-03": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Reporting to CISA",
+      "current_names": [
+        "Initial Incident Report"
+      ],
+      "via": "ICP-CSX-IRC"
+    },
+    "FRR-ICP-04": {
+      "current_ids": [
+        "IEC-CSO-OIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Incident Updates",
+      "current_names": [
+        "Ongoing Incident Reports"
+      ],
+      "via": "ICP-CSX-ICU"
+    },
+    "FRR-ICP-05": {
+      "current_ids": [
+        "IEC-CSO-FIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Report Availability",
+      "current_names": [
+        "Final Incident Report"
+      ],
+      "via": "ICP-CSX-RPT"
+    },
+    "FRR-ICP-06": {
+      "current_ids": [
+        "VER-RPT-NID"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Responsible Disclosure",
+      "current_names": [
+        "Responsible Disclosure"
+      ],
+      "via": "ICP-CSX-RSD"
+    },
+    "FRR-ICP-07": {
+      "current_ids": [
+        "IEC-CSO-FIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Final Incident Report",
+      "current_names": [
+        "Final Incident Report"
+      ],
+      "via": "ICP-CSX-FIR"
+    },
+    "FRR-ICP-08": {
+      "current_ids": [
+        "IEC-CSO-AIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Automated Reporting",
+      "current_names": [
+        "Automated Incident Reporting"
+      ],
+      "via": "ICP-CSX-AUR"
+    },
+    "FRR-ICP-09": {
+      "current_ids": [
+        "IEC-CSO-AIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Human and Machine-Readable",
+      "current_names": [
+        "Automated Incident Reporting"
+      ],
+      "via": "ICP-CSX-HRM"
+    },
+    "FRR-KSI-01": {
+      "current_ids": [
+        "FRC-CSX-MAS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Application within MAS",
+      "current_names": [
+        "Application within MAS"
+      ],
+      "via": "KSI-CSX-MAS"
+    },
+    "FRR-KSI-02": {
+      "current_ids": [
+        "SDR-CSX-KSI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Implementation Summaries",
+      "current_names": [
+        "Key Security Indicators"
+      ],
+      "via": "KSI-CSX-SUM"
+    },
+    "FRR-MAS-01": {
+      "current_ids": [
+        "MAS-CSO-IIR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Identify Information Resources",
+      "current_names": [
+        "Identify Information Resources"
+      ],
+      "via": "MAS-CSO-IIR"
+    },
+    "FRR-MAS-02": {
+      "current_ids": [
+        "MAS-CSO-TPR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Third-Party Information Resources",
+      "current_names": [
+        "Third-Party Information Resources"
+      ],
+      "via": "MAS-CSO-TPR"
+    },
+    "FRR-MAS-03": {
+      "current_ids": [
+        "MAS-CSO-TPR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Third-Party Information Resources",
+      "current_names": [
+        "Third-Party Information Resources"
+      ],
+      "via": "MAS-CSO-TPR"
+    },
+    "FRR-MAS-04": {
+      "current_ids": [
+        "MAS-CSO-MDI"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Metadata Inclusion",
+      "current_names": [
+        "Metadata Inclusion"
+      ],
+      "via": "MAS-CSO-MDI"
+    },
+    "FRR-MAS-05": {
+      "current_ids": [
+        "MAS-CSO-FLO"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Information Flows and Security Objectives",
+      "current_names": [
+        "Information Flows and Security Categories"
+      ],
+      "via": "MAS-CSO-FLO"
+    },
+    "FRR-MAS-EX-01": {
+      "current_ids": [
+        "MAS-CSO-SUP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Supplemental Information",
+      "current_names": [
+        "Supplemental Information"
+      ],
+      "via": "MAS-CSO-SUP"
+    },
+    "FRR-PVA-01": {
+      "current_ids": [
+        "VDR-TFR-MVX"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Persistent Validation",
+      "current_names": [
+        "Persistent Machine Verification and Validation for 20x"
+      ],
+      "via": "PVA-CSX-VAL"
+    },
+    "FRR-PVA-02": {
+      "current_ids": [
+        "VDR-CSO-FAV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Issues As Vulnerabilities",
+      "current_names": [
+        "Failures Are Vulnerabilities"
+      ],
+      "via": "PVA-CSX-FAV"
+    },
+    "FRR-PVA-03": {
+      "current_ids": [
+        "VER-RPT-PER"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Report Persistent Validation",
+      "current_names": [
+        "Persistent Reporting"
+      ],
+      "via": "PVA-CSX-RPV"
+    },
+    "FRR-PVA-05": {
+      "current_ids": [
+        "IVV-CSO-FIA"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Independent Verification and Validation",
+      "current_names": [
+        "FedRAMP Independent Assessments"
+      ],
+      "via": "PVA-CSX-IVV"
+    },
+    "FRR-PVA-07": {
+      "current_ids": [
+        "IVV-CSO-STE"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Provide Technical Evidence",
+      "current_names": [
+        "Supply Technical Explanations"
+      ],
+      "via": "PVA-CSX-PTE"
+    },
+    "FRR-PVA-08": {
+      "current_ids": [
+        "IVV-CSO-RAA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Receiving Advice",
+      "current_names": [
+        "Receiving Assessor Advice"
+      ],
+      "via": "PVA-CSX-RAD"
+    },
+    "FRR-PVA-09": {
+      "current_ids": [
+        "IVV-IAS-SHA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Sharing Advice",
+      "current_names": [
+        "Sharing Advice"
+      ],
+      "via": "PVA-TPX-SHA"
+    },
+    "FRR-PVA-10": {
+      "current_ids": [
+        "IVV-IAS-VIM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Underlying Processes",
+      "current_names": [
+        "Verify Implementation"
+      ],
+      "via": "PVA-TPX-UNP"
+    },
+    "FRR-PVA-11": {
+      "current_ids": [
+        "IVV-IAS-VIM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Processes Derived from Key Security Indicators",
+      "current_names": [
+        "Verify Implementation"
+      ],
+      "via": "PVA-TPX-PDK"
+    },
+    "FRR-PVA-12": {
+      "current_ids": [
+        "IVV-IAS-VEF"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Outcome Consistency",
+      "current_names": [
+        "Validate Effectiveness"
+      ],
+      "via": "PVA-TPX-OUC"
+    },
+    "FRR-PVA-13": {
+      "current_ids": [
+        "IVV-IAS-VEF"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Mixed Methods Evaluation",
+      "current_names": [
+        "Validate Effectiveness"
+      ],
+      "via": "PVA-TPX-MME"
+    },
+    "FRR-PVA-14": {
+      "current_ids": [
+        "IVV-IAS-EPX"
+      ],
+      "basis": "renamed-by-text",
+      "confidence": "medium",
+      "legacy_name": "Provider Experts",
+      "current_names": [
+        "Engage Provider Experts"
+      ],
+      "via": "PVA-TPX-PEX"
+    },
+    "FRR-PVA-15": {
+      "current_ids": [
+        "IVV-CSO-SEI"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Static Evidence",
+      "current_names": [
+        "Supply Evidence of Implementation"
+      ],
+      "via": "PVA-TPX-STE"
+    },
+    "FRR-PVA-16": {
+      "current_ids": [
+        "IVV-IAS-VIM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Procedure Adherence",
+      "current_names": [
+        "Verify Implementation"
+      ],
+      "via": "PVA-TPX-PAD"
+    },
+    "FRR-PVA-17": {
+      "current_ids": [
+        "IVV-IAS-SUM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Assessment Summary",
+      "current_names": [
+        "Assessment Summary"
+      ],
+      "via": "PVA-TPX-SUM"
+    },
+    "FRR-PVA-18": {
+      "current_ids": [
+        "IVV-IAS-SUM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "No Overall Recommendation",
+      "current_names": [
+        "Assessment Summary"
+      ],
+      "via": "PVA-TPX-NOR"
+    },
+    "FRR-PVA-TF-LO-01": {
+      "current_ids": [
+        "VDR-TFR-NMV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Non-Machine Validation",
+      "current_names": [
+        "Non-Machine Verification and Validation"
+      ],
+      "via": "PVA-CSX-NMV"
+    },
+    "FRR-PVA-TF-LO-02": {
+      "current_ids": [
+        "VDR-TFR-MVX"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Persistent Machine Validation",
+      "current_names": [
+        "Persistent Machine Verification and Validation for 20x"
+      ],
+      "via": "PVA-CSX-PMV"
+    },
+    "FRR-PVA-TF-MO-01": {
+      "current_ids": [
+        "VDR-TFR-NMV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Non-Machine Validation",
+      "current_names": [
+        "Non-Machine Verification and Validation"
+      ],
+      "via": "PVA-CSX-NMV"
+    },
+    "FRR-PVA-TF-MO-02": {
+      "current_ids": [
+        "VDR-TFR-MVX"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Persistent Machine Validation",
+      "current_names": [
+        "Persistent Machine Verification and Validation for 20x"
+      ],
+      "via": "PVA-CSX-PMV"
+    },
+    "FRR-RSC-01": {
+      "current_ids": [
+        "SCG-CSO-RSC"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Recommended Secure Configuration",
+      "current_names": [
+        "Recommended Secure Configuration"
+      ],
+      "via": "SCG-CSO-RSC"
+    },
+    "FRR-RSC-02": {
+      "current_ids": [
+        "SCG-CSO-RSC"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Recommended Secure Configuration",
+      "current_names": [
+        "Recommended Secure Configuration"
+      ],
+      "via": "SCG-CSO-RSC"
+    },
+    "FRR-RSC-03": {
+      "current_ids": [
+        "SCG-CSO-RSC"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Recommended Secure Configuration",
+      "current_names": [
+        "Recommended Secure Configuration"
+      ],
+      "via": "SCG-CSO-RSC"
+    },
+    "FRR-RSC-04": {
+      "current_ids": [
+        "SCG-CSO-SDF"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Secure Defaults",
+      "current_names": [
+        "Secure Defaults"
+      ],
+      "via": "SCG-CSO-SDF"
+    },
+    "FRR-RSC-05": {
+      "current_ids": [
+        "SCG-ENH-CMP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Comparison Capability",
+      "current_names": [
+        "Comparison Capability"
+      ],
+      "via": "SCG-ENH-CMP"
+    },
+    "FRR-RSC-06": {
+      "current_ids": [
+        "SCG-ENH-EXP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Export Capability",
+      "current_names": [
+        "Export Capability"
+      ],
+      "via": "SCG-ENH-EXP"
+    },
+    "FRR-RSC-07": {
+      "current_ids": [
+        "SCG-ENH-API"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "API Capability",
+      "current_names": [
+        "API Capability"
+      ],
+      "via": "SCG-ENH-API"
+    },
+    "FRR-RSC-08": {
+      "current_ids": [
+        "SCG-ENH-MRG"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Machine-Readable Guidance",
+      "current_names": [
+        "Machine-Readable Guidance"
+      ],
+      "via": "SCG-ENH-MRG"
+    },
+    "FRR-RSC-09": {
+      "current_ids": [
+        "SCG-CSO-PUB"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Public Guidance",
+      "current_names": [
+        "Public Secure Configuration Guidance"
+      ],
+      "via": "SCG-CSO-PUB"
+    },
+    "FRR-RSC-10": {
+      "current_ids": [
+        "SCG-ENH-VRH"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Versioning and Release History",
+      "current_names": [
+        "Versioning and Release History"
+      ],
+      "via": "SCG-ENH-VRH"
+    },
+    "FRR-SCN-01": {
+      "current_ids": [
+        "SCN-CSO-EVA"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Evaluate Changes",
+      "current_names": [
+        "Evaluate Changes"
+      ],
+      "via": "SCN-CSO-EVA"
+    },
+    "FRR-SCN-02": {
+      "current_ids": [
+        "SCN-CSO-EVA"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Evaluate Changes",
+      "current_names": [
+        "Evaluate Changes"
+      ],
+      "via": "SCN-CSO-EVA"
+    },
+    "FRR-SCN-03": {
+      "current_ids": [
+        "SCN-CSO-EVA"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Evaluate Changes",
+      "current_names": [
+        "Evaluate Changes"
+      ],
+      "via": "SCN-CSO-EVA"
+    },
+    "FRR-SCN-04": {
+      "current_ids": [
+        "SCN-CSO-MAR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Maintain Audit Records",
+      "current_names": [
+        "Maintain Audit Records"
+      ],
+      "via": "SCN-CSO-MAR"
+    },
+    "FRR-SCN-05": {
+      "current_ids": [
+        "SCN-CSO-HIS"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Historical Notifications",
+      "current_names": [
+        "Historical Notifications"
+      ],
+      "via": "SCN-CSO-HIS"
+    },
+    "FRR-SCN-07": {
+      "current_ids": [
+        "SCN-CSO-NOM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Notification Mechanisms",
+      "current_names": [
+        "Notification Mechanisms"
+      ],
+      "via": "SCN-CSO-NOM"
+    },
+    "FRR-SCN-08": {
+      "current_ids": [
+        "SCN-CSO-HRM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Human and Machine-Readable",
+      "current_names": [
+        "Human and Machine-Readable Notifications"
+      ],
+      "via": "SCN-CSO-HRM"
+    },
+    "FRR-SCN-09": {
+      "current_ids": [
+        "SCN-CSO-INF"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Required Information",
+      "current_names": [
+        "Required Information"
+      ],
+      "via": "SCN-CSO-INF"
+    },
+    "FRR-SCN-10": {
+      "current_ids": [
+        "SCN-CSO-ARI"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Additional Relevant Information",
+      "current_names": [
+        "Additional Relevant Information"
+      ],
+      "via": "SCN-CSO-ARI"
+    },
+    "FRR-SCN-AD-01": {
+      "current_ids": [
+        "SCN-ADP-NTF"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Notification Requirements",
+      "current_names": [
+        "Notification Requirements"
+      ],
+      "via": "SCN-ADP-NTF"
+    },
+    "FRR-SCN-EX-01": {
+      "current_ids": [
+        "SCN-FRP-CAP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Corrective Action Plan Conditions",
+      "current_names": [
+        "Corrective Action Plan Conditions"
+      ],
+      "via": "SCN-FRP-CAP"
+    },
+    "FRR-SCN-EX-02": {
+      "current_ids": [
+        "SCN-CSO-EMG"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Emergency Changes",
+      "current_names": [
+        "Emergency Changes"
+      ],
+      "via": "SCN-CSO-EMG"
+    },
+    "FRR-SCN-RR-01": {
+      "current_ids": [
+        "SCN-RTR-NNR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "No Notification Requirements",
+      "current_names": [
+        "No Notification Requirements"
+      ],
+      "via": "SCN-RTR-NNR"
+    },
+    "FRR-SCN-TR-01": {
+      "current_ids": [
+        "SCN-TRF-TPR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Third-Party Review",
+      "current_names": [
+        "Third-Party Review"
+      ],
+      "via": "SCN-TRF-TPR"
+    },
+    "FRR-SCN-TR-02": {
+      "current_ids": [
+        "SCN-TRF-NIP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Notification of Initial Plans",
+      "current_names": [
+        "Notification of Initial Plans"
+      ],
+      "via": "SCN-TRF-NIP"
+    },
+    "FRR-SCN-TR-03": {
+      "current_ids": [
+        "SCN-TRF-NFP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Notification of Final Plans",
+      "current_names": [
+        "Notification of Final Plans"
+      ],
+      "via": "SCN-TRF-NFP"
+    },
+    "FRR-SCN-TR-04": {
+      "current_ids": [
+        "SCN-TRF-NAF"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Notification After Finishing",
+      "current_names": [
+        "Notification After Finishing"
+      ],
+      "via": "SCN-TRF-NAF"
+    },
+    "FRR-SCN-TR-05": {
+      "current_ids": [
+        "SCN-TRF-NAV"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Notification After Verification",
+      "current_names": [
+        "Notification After Verification"
+      ],
+      "via": "SCN-TRF-NAV"
+    },
+    "FRR-SCN-TR-06": {
+      "current_ids": [
+        "SCN-TRF-UPD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Update Documentation",
+      "current_names": [
+        "Update Documentation"
+      ],
+      "via": "SCN-TRF-UPD"
+    },
+    "FRR-UCM-01": {
+      "current_ids": [
+        "CMU-CSO-CMD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Cryptographic Module Documentation",
+      "current_names": [
+        "Cryptographic Module Documentation"
+      ],
+      "via": "UCM-CSX-CMD"
+    },
+    "FRR-UCM-02": {
+      "current_ids": [
+        "CMU-CSO-CAT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Configuration of Agency Tenants",
+      "current_names": [
+        "Configuration of Agency Tenants"
+      ],
+      "via": "UCM-CSX-CAT"
+    },
+    "FRR-UCM-03": {
+      "current_ids": [
+        "CMU-CSO-UVM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Using Validated Cryptographic Modules",
+      "current_names": [
+        "Using Validated Cryptographic Modules"
+      ],
+      "via": "UCM-CSX-UVM"
+    },
+    "FRR-UCM-04": {
+      "current_ids": [
+        "CMU-CSO-UVM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Using Validated Cryptographic Modules",
+      "current_names": [
+        "Using Validated Cryptographic Modules"
+      ],
+      "via": "UCM-CSX-UVM"
+    },
+    "FRR-VDR-01": {
+      "current_ids": [
+        "VDR-CSO-DET"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Vulnerability Detection",
+      "current_names": [
+        "Vulnerability Detection"
+      ],
+      "via": "VDR-CSO-DET"
+    },
+    "FRR-VDR-02": {
+      "current_ids": [
+        "VDR-CSO-RES"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Vulnerability Response",
+      "current_names": [
+        "Vulnerability Response"
+      ],
+      "via": "VDR-CSO-RES"
+    },
+    "FRR-VDR-04": {
+      "current_ids": [
+        "VDR-CSO-SIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Sampling",
+      "current_names": [
+        "Sampling"
+      ],
+      "via": "VDR-BST-SIR"
+    },
+    "FRR-VDR-05": {
+      "current_ids": [
+        "VER-EVA-GRV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Group Vulnerabilities",
+      "current_names": [
+        "Group Vulnerabilities"
+      ],
+      "via": "VDR-EVA-GRV"
+    },
+    "FRR-VDR-06": {
+      "current_ids": [
+        "VER-EVA-EFP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate False Positives",
+      "current_names": [
+        "Evaluate False Positives"
+      ],
+      "via": "VDR-EVA-EFP"
+    },
+    "FRR-VDR-07": {
+      "current_ids": [
+        "VER-EVA-ELX"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Exploitability",
+      "current_names": [
+        "Evaluate Exploitability"
+      ],
+      "via": "VDR-EVA-ELX"
+    },
+    "FRR-VDR-08": {
+      "current_ids": [
+        "VER-EVA-EIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Internet-Reachability",
+      "current_names": [
+        "Evaluate Internet-Reachability"
+      ],
+      "via": "VDR-EVA-EIR"
+    },
+    "FRR-VDR-09": {
+      "current_ids": [
+        "VER-EVA-EPA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Estimate Potential Adverse Impact",
+      "current_names": [
+        "Estimate Potential Agency Impact"
+      ],
+      "via": "VDR-EVA-EPA"
+    },
+    "FRR-VDR-10": {
+      "current_ids": [
+        "VER-EVA-EFA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluation Factors",
+      "current_names": [
+        "Evaluation Factors"
+      ],
+      "via": "VDR-EVA-EFA"
+    },
+    "FRR-VDR-11": {
+      "current_ids": [
+        "VER-RPT-HLO"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Documentation for Recommendations",
+      "current_names": [
+        "High-Level Overviews"
+      ],
+      "via": "VDR-CSO-DOC"
+    },
+    "FRR-VDR-AG-01": {
+      "current_ids": [
+        "VER-AGM-RVR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Review Vulnerability Reports",
+      "current_names": [
+        "Review Vulnerability Reports"
+      ],
+      "via": "VDR-AGM-RVR"
+    },
+    "FRR-VDR-AG-02": {
+      "current_ids": [
+        "VER-AGM-MAP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Maintain Agency POA&M",
+      "current_names": [
+        "Maintain Agency Plans of Action and Milestones"
+      ],
+      "via": "VDR-AGM-MAP"
+    },
+    "FRR-VDR-AG-03": {
+      "current_ids": [
+        "AGU-AGC-NAR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Do Not Request Extra Info",
+      "current_names": [
+        "No Additional Security Requirements"
+      ],
+      "via": "VDR-AGM-DRE"
+    },
+    "FRR-VDR-AG-04": {
+      "current_ids": [
+        "AGU-AGC-NAI"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Notify FedRAMP",
+      "current_names": [
+        "Notify Additional Information Requests"
+      ],
+      "via": "VDR-AGM-NFR"
+    },
+    "FRR-VDR-AY-02": {
+      "current_ids": [
+        "VDR-CSO-DFR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Design For Resilience",
+      "current_names": [
+        "Design For Resilience"
+      ],
+      "via": "VDR-BST-DFR"
+    },
+    "FRR-VDR-AY-03": {
+      "current_ids": [
+        "VDR-CSO-ADT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Automate Detection",
+      "current_names": [
+        "Automate Detection"
+      ],
+      "via": "VDR-BST-ADT"
+    },
+    "FRR-VDR-AY-04": {
+      "current_ids": [
+        "VDR-CSO-DAC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Detect After Changes",
+      "current_names": [
+        "Detect After Changes"
+      ],
+      "via": "VDR-BST-DAC"
+    },
+    "FRR-VDR-AY-05": {
+      "current_ids": [
+        "VDR-CSO-MSP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Maintain Security",
+      "current_names": [
+        "Maintain Security"
+      ],
+      "via": "VDR-BST-MSP"
+    },
+    "FRR-VDR-AY-06": {
+      "current_ids": [
+        "VDR-CSO-AKE"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Avoid KEVs",
+      "current_names": [
+        "Avoid KEVs"
+      ],
+      "via": "VDR-BST-AKE"
+    },
+    "FRR-VDR-EX-01": {
+      "current_ids": [
+        "VER-FRP-ARP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Additional Requirements",
+      "current_names": [
+        "Additional Requirements"
+      ],
+      "via": "VDR-FRP-ARP"
+    },
+    "FRR-VDR-EX-02": {
+      "current_ids": [
+        "VER-FRP-ADV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Sensitive Details",
+      "current_names": [
+        "Sensitive Details"
+      ],
+      "via": "VDR-FRP-ADV"
+    },
+    "FRR-VDR-RP-01": {
+      "current_ids": [
+        "VER-RPT-PER"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Persistent Reporting",
+      "current_names": [
+        "Persistent Reporting"
+      ],
+      "via": "VDR-RPT-PER"
+    },
+    "FRR-VDR-RP-02": {
+      "current_ids": [
+        "VER-RPT-HLO"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "High-Level Overviews",
+      "current_names": [
+        "High-Level Overviews"
+      ],
+      "via": "VDR-RPT-HLO"
+    },
+    "FRR-VDR-RP-03": {
+      "current_ids": [
+        "VER-RPT-NID"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Disclosure",
+      "current_names": [
+        "Responsible Disclosure"
+      ],
+      "via": "VDR-RPT-NID"
+    },
+    "FRR-VDR-RP-04": {
+      "current_ids": [
+        "VER-RPT-RPD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Public Disclosure",
+      "current_names": [
+        "Responsible Public Disclosure"
+      ],
+      "via": "VDR-RPT-RPD"
+    },
+    "FRR-VDR-RP-05": {
+      "current_ids": [
+        "VER-RPT-VDT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Vulnerability Details",
+      "current_names": [
+        "Vulnerability Details"
+      ],
+      "via": "VDR-RPT-VDT"
+    },
+    "FRR-VDR-RP-06": {
+      "current_ids": [
+        "VER-RPT-AVI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Accepted Vulnerability Info",
+      "current_names": [
+        "Accepted Vulnerability Info"
+      ],
+      "via": "VDR-RPT-AVI"
+    },
+    "FRR-VDR-TF-01": {
+      "current_ids": [
+        "VER-TFR-MHR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Monthly Activity Report",
+      "current_names": [
+        "Monthly Activity Report"
+      ],
+      "via": "VDR-TFR-MHR"
+    },
+    "FRR-VDR-TF-02": {
+      "current_ids": [
+        "VDR-TFR-KEV"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Remediate KEVs",
+      "current_names": [
+        "Remediate KEVs"
+      ],
+      "via": "VDR-TFR-KEV"
+    },
+    "FRR-VDR-TF-03": {
+      "current_ids": [
+        "VER-TFR-MAV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Mark Accepted Vulnerabilities",
+      "current_names": [
+        "Mark Accepted Vulnerabilities"
+      ],
+      "via": "VDR-TFR-MAV"
+    },
+    "FRR-VDR-TF-HI-01": {
+      "current_ids": [
+        "VER-TFR-MRH"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Historical Activity",
+      "current_names": [
+        "Historical Activity"
+      ],
+      "via": "VDR-TFR-MRH"
+    },
+    "FRR-VDR-TF-HI-02": {
+      "current_ids": [
+        "VDR-TFR-PSD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Persistent Sample Detection",
+      "current_names": [
+        "Persistent Sample Detection"
+      ],
+      "via": "VDR-TFR-PSD"
+    },
+    "FRR-VDR-TF-HI-03": {
+      "current_ids": [
+        "VDR-TFR-PDD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Persistent Drift Detection",
+      "current_names": [
+        "Persistent Drift Detection"
+      ],
+      "via": "VDR-TFR-PDD"
+    },
+    "FRR-VDR-TF-HI-05": {
+      "current_ids": [
+        "VER-TFR-EVU"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Vulnerabilities Quickly",
+      "current_names": [
+        "Evaluate Vulnerabilities Quickly"
+      ],
+      "via": "VDR-TFR-EVU"
+    },
+    "FRR-VDR-TF-HI-06": {
+      "current_ids": [
+        "VER-TFR-IRI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Internet-Reachable Incidents",
+      "current_names": [
+        "Internet-Reachable Incidents"
+      ],
+      "via": "VDR-TFR-IRI"
+    },
+    "FRR-VDR-TF-HI-07": {
+      "current_ids": [
+        "VER-TFR-NRI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Non-Internet-Reachable Incidents",
+      "current_names": [
+        "Non-Internet-Reachable Incidents"
+      ],
+      "via": "VDR-TFR-NRI"
+    },
+    "FRR-VDR-TF-HI-08": {
+      "current_ids": [
+        "VDR-TFR-PVR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Mitigation and Remediation Expectations",
+      "current_names": [
+        "Mitigation and Remediation Expectations"
+      ],
+      "via": "VDR-TFR-PVR"
+    },
+    "FRR-VDR-TF-HI-09": {
+      "current_ids": [
+        "VDR-TFR-RMN"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Remaining Vulnerabilities",
+      "current_names": [
+        "Remaining Vulnerabilities"
+      ],
+      "via": "VDR-TFR-RMN"
+    },
+    "FRR-VDR-TF-LO-01": {
+      "current_ids": [
+        "VER-TFR-MRH"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Historical Activity",
+      "current_names": [
+        "Historical Activity"
+      ],
+      "via": "VDR-TFR-MRH"
+    },
+    "FRR-VDR-TF-LO-02": {
+      "current_ids": [
+        "VDR-TFR-PSD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Persistent Sample Detection",
+      "current_names": [
+        "Persistent Sample Detection"
+      ],
+      "via": "VDR-TFR-PSD"
+    },
+    "FRR-VDR-TF-LO-03": {
+      "current_ids": [
+        "VDR-TFR-PDD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Persistent Drift Detection",
+      "current_names": [
+        "Persistent Drift Detection"
+      ],
+      "via": "VDR-TFR-PDD"
+    },
+    "FRR-VDR-TF-LO-04": {
+      "current_ids": [
+        "VDR-TFR-PCD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Persistent Complete Detection",
+      "current_names": [
+        "Persistently Complete Detection"
+      ],
+      "via": "VDR-TFR-PCD"
+    },
+    "FRR-VDR-TF-LO-05": {
+      "current_ids": [
+        "VER-TFR-EVU"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Vulnerabilities Quickly",
+      "current_names": [
+        "Evaluate Vulnerabilities Quickly"
+      ],
+      "via": "VDR-TFR-EVU"
+    },
+    "FRR-VDR-TF-LO-06": {
+      "current_ids": [
+        "VDR-TFR-PVR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Mitigation and Remediation Expectations",
+      "current_names": [
+        "Mitigation and Remediation Expectations"
+      ],
+      "via": "VDR-TFR-PVR"
+    },
+    "FRR-VDR-TF-LO-07": {
+      "current_ids": [
+        "VDR-TFR-RMN"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Remaining Vulnerabilities",
+      "current_names": [
+        "Remaining Vulnerabilities"
+      ],
+      "via": "VDR-TFR-RMN"
+    },
+    "FRR-VDR-TF-MO-01": {
+      "current_ids": [
+        "VER-TFR-MRH"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Historical Activity",
+      "current_names": [
+        "Historical Activity"
+      ],
+      "via": "VDR-TFR-MRH"
+    },
+    "FRR-VDR-TF-MO-02": {
+      "current_ids": [
+        "VDR-TFR-PSD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Persistent Sample Detection",
+      "current_names": [
+        "Persistent Sample Detection"
+      ],
+      "via": "VDR-TFR-PSD"
+    },
+    "FRR-VDR-TF-MO-03": {
+      "current_ids": [
+        "VDR-TFR-PDD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Persistent Drift Detection",
+      "current_names": [
+        "Persistent Drift Detection"
+      ],
+      "via": "VDR-TFR-PDD"
+    },
+    "FRR-VDR-TF-MO-05": {
+      "current_ids": [
+        "VER-TFR-EVU"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Vulnerabilities Quickly",
+      "current_names": [
+        "Evaluate Vulnerabilities Quickly"
+      ],
+      "via": "VDR-TFR-EVU"
+    },
+    "FRR-VDR-TF-MO-06": {
+      "current_ids": [
+        "VER-TFR-IRI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Internet-Reachable Incidents",
+      "current_names": [
+        "Internet-Reachable Incidents"
+      ],
+      "via": "VDR-TFR-IRI"
+    },
+    "FRR-VDR-TF-MO-07": {
+      "current_ids": [
+        "VDR-TFR-PVR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Mitigation and Remediation Expectations",
+      "current_names": [
+        "Mitigation and Remediation Expectations"
+      ],
+      "via": "VDR-TFR-PVR"
+    },
+    "FRR-VDR-TF-MO-09": {
+      "current_ids": [
+        "VDR-TFR-RMN"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Remaining Vulnerabilities",
+      "current_names": [
+        "Remaining Vulnerabilities"
+      ],
+      "via": "VDR-TFR-RMN"
+    },
+    "FSI-CSO-ACK": {
+      "current_ids": [
+        "AFC-CSO-ACK"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Acknowledge Receipt",
+      "current_names": [
+        "Acknowledge Receipt"
+      ]
+    },
+    "FSI-CSO-CRA": {
+      "current_ids": [
+        "AFC-CSO-CRA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Complete Required Actions",
+      "current_names": [
+        "Complete Required Actions"
+      ]
+    },
+    "FSI-CSO-EMR": {
+      "current_ids": [
+        "AFC-CSO-EMR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Emergency Message Routing",
+      "current_names": [
+        "Emergency Message Routing"
+      ]
+    },
+    "FSI-CSO-IMA": {
+      "current_ids": [
+        "AFC-CSO-IMA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Important Message Actions",
+      "current_names": [
+        "Important Message Actions"
+      ]
+    },
+    "FSI-CSO-INB": {
+      "current_ids": [
+        "AFC-CSO-INB"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Maintain a FedRAMP Security Inbox",
+      "current_names": [
+        "Maintain a FedRAMP Security Inbox"
+      ]
+    },
+    "FSI-CSO-NOC": {
+      "current_ids": [
+        "AFC-CSO-NOC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Notification of Changes",
+      "current_names": [
+        "Notification of Changes"
+      ]
+    },
+    "FSI-CSO-RCV": {
+      "current_ids": [
+        "AFC-CSO-RCV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Receive Email Without Disruption",
+      "current_names": [
+        "Receive Email Without Disruption"
+      ]
+    },
+    "FSI-CSO-TFG": {
+      "current_ids": [
+        "AFC-CSO-TFG"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Trust @fedramp.gov and @gsa.gov",
+      "current_names": [
+        "Trust @fedramp.gov and @gsa.gov"
+      ]
+    },
+    "FSI-FRP-CDS": {
+      "current_ids": [
+        "AFC-FRP-CDS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Criticality Designators",
+      "current_names": [
+        "Criticality Designators"
+      ]
+    },
+    "FSI-FRP-COR": {
+      "current_ids": [
+        "AFC-FRP-COR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Explain Corrective Actions",
+      "current_names": [
+        "Explain Corrective Actions"
+      ]
+    },
+    "FSI-FRP-ERT": {
+      "current_ids": [
+        "AFC-FRP-ERT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Elevated Reaction Timeframes",
+      "current_names": [
+        "Elevated Reaction Timeframes"
+      ]
+    },
+    "FSI-FRP-PNT": {
+      "current_ids": [
+        "AFC-FRP-PNT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Public Notice of Emergency Tests",
+      "current_names": [
+        "Public Notice of Emergency Tests"
+      ]
+    },
+    "FSI-FRP-RPM": {
+      "current_ids": [
+        "AFC-FRP-RPM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Reaction Metrics",
+      "current_names": [
+        "Reaction Metrics"
+      ]
+    },
+    "FSI-FRP-RQA": {
+      "current_ids": [
+        "AFC-FRP-RQA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Required Actions",
+      "current_names": [
+        "Required Actions"
+      ]
+    },
+    "FSI-FRP-UFS": {
+      "current_ids": [
+        "AFC-FRP-UFS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Use FedRAMP_Security Email in Emergencies",
+      "current_names": [
+        "Use FedRAMP_Security Email in Emergencies"
+      ]
+    },
+    "FSI-FRP-VRE": {
+      "current_ids": [
+        "AFC-FRP-VRE"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Verified Emails",
+      "current_names": [
+        "Verified Emails"
+      ]
+    },
+    "ICP-CSX-AUR": {
+      "current_ids": [
+        "IEC-CSO-AIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Automated Reporting",
+      "current_names": [
+        "Automated Incident Reporting"
+      ]
+    },
+    "ICP-CSX-FIR": {
+      "current_ids": [
+        "IEC-CSO-FIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Final Incident Report",
+      "current_names": [
+        "Final Incident Report"
+      ]
+    },
+    "ICP-CSX-HRM": {
+      "current_ids": [
+        "IEC-CSO-AIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Human and Machine-Readable",
+      "current_names": [
+        "Automated Incident Reporting"
+      ]
+    },
+    "ICP-CSX-ICU": {
+      "current_ids": [
+        "IEC-CSO-OIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Incident Updates",
+      "current_names": [
+        "Ongoing Incident Reports"
+      ]
+    },
+    "ICP-CSX-IRA": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Reporting to Agencies",
+      "current_names": [
+        "Initial Incident Report"
+      ]
+    },
+    "ICP-CSX-IRC": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Reporting to CISA",
+      "current_names": [
+        "Initial Incident Report"
+      ]
+    },
+    "ICP-CSX-IRF": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Reporting to FedRAMP",
+      "current_names": [
+        "Initial Incident Report"
+      ]
+    },
+    "ICP-CSX-RPT": {
+      "current_ids": [
+        "IEC-CSO-FIR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Incident Report Availability",
+      "current_names": [
+        "Final Incident Report"
+      ]
+    },
+    "ICP-CSX-RSD": {
+      "current_ids": [
+        "VER-RPT-NID"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Responsible Disclosure",
+      "current_names": [
+        "Responsible Disclosure"
+      ]
+    },
+    "KSI-AFR-01": {
+      "current_ids": [
+        "MAS-CSO-IIR"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Minimum Assessment Scope",
+      "current_names": [
+        "Identify Information Resources"
+      ],
+      "current_family": "MAS",
+      "via": "KSI-AFR-MAS"
+    },
+    "KSI-AFR-03": {
+      "current_ids": [
+        "CDS-CSO-PUB"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Authorization Data Sharing",
+      "current_names": [
+        "Public Information"
+      ],
+      "current_family": "CDS",
+      "via": "KSI-AFR-ADS"
+    },
+    "KSI-AFR-04": {
+      "current_ids": [
+        "VDR-CSO-DET",
+        "VER-EVA-EFA"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Vulnerability Detection and Response",
+      "current_names": [
+        "Vulnerability Detection",
+        "Evaluation Factors"
+      ],
+      "current_family": "VDR",
+      "via": "KSI-AFR-VDR"
+    },
+    "KSI-AFR-05": {
+      "current_ids": [
+        "SCN-CSO-EVA"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Significant Change Notifications",
+      "current_names": [
+        "Evaluate Changes"
+      ],
+      "current_family": "SCN",
+      "via": "KSI-AFR-SCN"
+    },
+    "KSI-AFR-06": {
+      "current_ids": [
+        "CCM-OCR-AVL"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Collaborative Continuous Monitoring",
+      "current_names": [
+        "Report Availability"
+      ],
+      "current_family": "CCM",
+      "via": "KSI-AFR-CCM"
+    },
+    "KSI-AFR-07": {
+      "current_ids": [
+        "SCG-CSO-RSC"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Secure Configuration Guide",
+      "current_names": [
+        "Recommended Secure Configuration"
+      ],
+      "current_family": "SCG",
+      "via": "KSI-AFR-SCG"
+    },
+    "KSI-AFR-08": {
+      "current_ids": [
+        "AFC-CSO-INB"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "FedRAMP Security Inbox",
+      "current_names": [
+        "Maintain a FedRAMP Security Inbox"
+      ],
+      "current_family": "AFC",
+      "via": "KSI-AFR-FSI"
+    },
+    "KSI-AFR-09": {
+      "current_ids": [
+        "VDR-TFR-MVX",
+        "IVV-CSO-SEE"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Persistent Validation and Assessment",
+      "current_names": [
+        "Persistent Machine Verification and Validation for 20x",
+        "Supply Evidence of Effectiveness"
+      ],
+      "current_family": "IVV",
+      "via": "KSI-AFR-PVA"
+    },
+    "KSI-AFR-10": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Incident Communications Procedures",
+      "current_names": [
+        "Initial Incident Report"
+      ],
+      "current_family": "IEC",
+      "via": "KSI-AFR-ICP"
+    },
+    "KSI-AFR-11": {
+      "current_ids": [
+        "CMU-CSO-UVM"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Using Cryptographic Modules",
+      "current_names": [
+        "Using Validated Cryptographic Modules"
+      ],
+      "current_family": "CMU",
+      "via": "KSI-AFR-UCM"
+    },
+    "KSI-AFR-ADS": {
+      "current_ids": [
+        "CDS-CSO-PUB"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Authorization Data Sharing",
+      "current_names": [
+        "Public Information"
+      ],
+      "current_family": "CDS"
+    },
+    "KSI-AFR-CCM": {
+      "current_ids": [
+        "CCM-OCR-AVL"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Collaborative Continuous Monitoring",
+      "current_names": [
+        "Report Availability"
+      ],
+      "current_family": "CCM"
+    },
+    "KSI-AFR-FSI": {
+      "current_ids": [
+        "AFC-CSO-INB"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "FedRAMP Security Inbox",
+      "current_names": [
+        "Maintain a FedRAMP Security Inbox"
+      ],
+      "current_family": "AFC"
+    },
+    "KSI-AFR-ICP": {
+      "current_ids": [
+        "IEC-CSO-IIR"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Incident Communications Procedures",
+      "current_names": [
+        "Initial Incident Report"
+      ],
+      "current_family": "IEC"
+    },
+    "KSI-AFR-MAS": {
+      "current_ids": [
+        "MAS-CSO-IIR"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Minimum Assessment Scope",
+      "current_names": [
+        "Identify Information Resources"
+      ],
+      "current_family": "MAS"
+    },
+    "KSI-AFR-PVA": {
+      "current_ids": [
+        "VDR-TFR-MVX",
+        "IVV-CSO-SEE"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Persistent Validation and Assessment",
+      "current_names": [
+        "Persistent Machine Verification and Validation for 20x",
+        "Supply Evidence of Effectiveness"
+      ],
+      "current_family": "IVV"
+    },
+    "KSI-AFR-SCG": {
+      "current_ids": [
+        "SCG-CSO-RSC"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Secure Configuration Guide",
+      "current_names": [
+        "Recommended Secure Configuration"
+      ],
+      "current_family": "SCG"
+    },
+    "KSI-AFR-SCN": {
+      "current_ids": [
+        "SCN-CSO-EVA"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Significant Change Notifications",
+      "current_names": [
+        "Evaluate Changes"
+      ],
+      "current_family": "SCN"
+    },
+    "KSI-AFR-UCM": {
+      "current_ids": [
+        "CMU-CSO-UVM"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Using Cryptographic Modules",
+      "current_names": [
+        "Using Validated Cryptographic Modules"
+      ],
+      "current_family": "CMU"
+    },
+    "KSI-AFR-VDR": {
+      "current_ids": [
+        "VDR-CSO-DET",
+        "VER-EVA-EFA"
+      ],
+      "basis": "family-successor",
+      "confidence": "medium",
+      "legacy_name": "Vulnerability Detection and Response",
+      "current_names": [
+        "Vulnerability Detection",
+        "Evaluation Factors"
+      ],
+      "current_family": "VDR"
+    },
+    "KSI-CED-01": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing General Training",
+      "current_names": [
+        "Reviewing All Training"
+      ],
+      "via": "KSI-CED-RGT"
+    },
+    "KSI-CED-02": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing Role-Specific Training",
+      "current_names": [
+        "Reviewing All Training"
+      ],
+      "via": "KSI-CED-RST"
+    },
+    "KSI-CED-03": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing Development and Engineering Training",
+      "current_names": [
+        "Reviewing All Training"
+      ],
+      "via": "KSI-CED-DET"
+    },
+    "KSI-CED-04": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing Response and Recovery Training",
+      "current_names": [
+        "Reviewing All Training"
+      ],
+      "via": "KSI-CED-RRT"
+    },
+    "KSI-CED-DET": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing Development and Engineering Training",
+      "current_names": [
+        "Reviewing All Training"
+      ]
+    },
+    "KSI-CED-RGT": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing General Training",
+      "current_names": [
+        "Reviewing All Training"
+      ]
+    },
+    "KSI-CED-RRT": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing Response and Recovery Training",
+      "current_names": [
+        "Reviewing All Training"
+      ]
+    },
+    "KSI-CED-RST": {
+      "current_ids": [
+        "KSI-CED-RAT"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Reviewing Role-Specific Training",
+      "current_names": [
+        "Reviewing All Training"
+      ]
+    },
+    "KSI-CMT-01": {
+      "current_ids": [
+        "KSI-CMT-LMC"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Logging Changes",
+      "current_names": [
+        "Logging Changes"
+      ],
+      "via": "KSI-CMT-LMC"
+    },
+    "KSI-CMT-02": {
+      "current_ids": [
+        "KSI-CMT-RMV"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Redeploying vs Modifying",
+      "current_names": [
+        "Redeploying vs Modifying"
+      ],
+      "via": "KSI-CMT-RMV"
+    },
+    "KSI-CMT-03": {
+      "current_ids": [
+        "KSI-CMT-VTD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Validating Throughout Deployment",
+      "current_names": [
+        "Validating Throughout Deployment"
+      ],
+      "via": "KSI-CMT-VTD"
+    },
+    "KSI-CMT-04": {
+      "current_ids": [
+        "KSI-CMT-RVP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Change Procedures",
+      "current_names": [
+        "Reviewing Change Procedures"
+      ],
+      "via": "KSI-CMT-RVP"
+    },
+    "KSI-CNA-01": {
+      "current_ids": [
+        "KSI-CNA-RNT"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Restricting Network Traffic",
+      "current_names": [
+        "Restricting Network Traffic"
+      ],
+      "via": "KSI-CNA-RNT"
+    },
+    "KSI-CNA-02": {
+      "current_ids": [
+        "KSI-CNA-MAT"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Minimizing Attack Surface",
+      "current_names": [
+        "Minimizing Attack Surface"
+      ],
+      "via": "KSI-CNA-MAT"
+    },
+    "KSI-CNA-03": {
+      "current_ids": [
+        "KSI-CNA-ULN"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Using Logical Networking",
+      "current_names": [
+        "Using Logical Networking"
+      ],
+      "via": "KSI-CNA-ULN"
+    },
+    "KSI-CNA-04": {
+      "current_ids": [
+        "KSI-CNA-DFP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Defining Functionality and Privileges",
+      "current_names": [
+        "Defining Functionality and Privileges"
+      ],
+      "via": "KSI-CNA-DFP"
+    },
+    "KSI-CNA-05": {
+      "current_ids": [
+        "KSI-CNA-RVP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Protections",
+      "current_names": [
+        "Reviewing Protections"
+      ],
+      "via": "KSI-CNA-RVP"
+    },
+    "KSI-CNA-06": {
+      "current_ids": [
+        "KSI-CNA-OFA"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Optimizing for Availability",
+      "current_names": [
+        "Optimizing for Availability"
+      ],
+      "via": "KSI-CNA-OFA"
+    },
+    "KSI-CNA-07": {
+      "current_ids": [
+        "KSI-CNA-IBP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Implementing Best Practices",
+      "current_names": [
+        "Implementing Best Practices"
+      ],
+      "via": "KSI-CNA-IBP"
+    },
+    "KSI-CNA-08": {
+      "current_ids": [
+        "KSI-CNA-EIS"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Enforcing Intended State",
+      "current_names": [
+        "Enforcing Intended State"
+      ],
+      "via": "KSI-CNA-EIS"
+    },
+    "KSI-CSX-MAS": {
+      "current_ids": [
+        "FRC-CSX-MAS"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Application within MAS",
+      "current_names": [
+        "Application within MAS"
+      ]
+    },
+    "KSI-CSX-ORD": {
+      "current_ids": [
+        "SDR-CSX-KSI"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "AFR Order of Criticality",
+      "current_names": [
+        "Key Security Indicators"
+      ]
+    },
+    "KSI-CSX-SUM": {
+      "current_ids": [
+        "SDR-CSX-KSI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Implementation Summaries",
+      "current_names": [
+        "Key Security Indicators"
+      ]
+    },
+    "KSI-IAM-01": {
+      "current_ids": [
+        "KSI-IAM-APM"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Enforcing Phishing-Resistant MFA",
+      "current_names": [
+        "Adopting Passwordless Methods"
+      ],
+      "via": "KSI-IAM-MFA"
+    },
+    "KSI-IAM-02": {
+      "current_ids": [
+        "KSI-IAM-APM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Adopting Passwordless Methods",
+      "current_names": [
+        "Adopting Passwordless Methods"
+      ],
+      "via": "KSI-IAM-APM"
+    },
+    "KSI-IAM-03": {
+      "current_ids": [
+        "KSI-IAM-SNU"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Securing Non-User Authentication",
+      "current_names": [
+        "Securing Non-User Authentication"
+      ],
+      "via": "KSI-IAM-SNU"
+    },
+    "KSI-IAM-04": {
+      "current_ids": [
+        "KSI-IAM-JIT"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Authorizing Just-in-Time",
+      "current_names": [
+        "Authorizing Just-in-Time"
+      ],
+      "via": "KSI-IAM-JIT"
+    },
+    "KSI-IAM-05": {
+      "current_ids": [
+        "KSI-IAM-ELP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Ensuring Least Privilege",
+      "current_names": [
+        "Ensuring Least Privilege"
+      ],
+      "via": "KSI-IAM-ELP"
+    },
+    "KSI-IAM-06": {
+      "current_ids": [
+        "KSI-IAM-SUS"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Responding to Suspicious Activity",
+      "current_names": [
+        "Responding to Suspicious Activity"
+      ],
+      "via": "KSI-IAM-SUS"
+    },
+    "KSI-IAM-07": {
+      "current_ids": [
+        "KSI-IAM-AAM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Automating Account Management",
+      "current_names": [
+        "Automating Account Management"
+      ],
+      "via": "KSI-IAM-AAM"
+    },
+    "KSI-IAM-MFA": {
+      "current_ids": [
+        "KSI-IAM-APM"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Enforcing Phishing-Resistant MFA",
+      "current_names": [
+        "Adopting Passwordless Methods"
+      ]
+    },
+    "KSI-INR-01": {
+      "current_ids": [
+        "KSI-INR-RIR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Incident Response Procedures",
+      "current_names": [
+        "Reviewing Incident Response Procedures"
+      ],
+      "via": "KSI-INR-RIR"
+    },
+    "KSI-INR-02": {
+      "current_ids": [
+        "KSI-INR-RPI"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Past Incidents",
+      "current_names": [
+        "Reviewing Past Incidents"
+      ],
+      "via": "KSI-INR-RPI"
+    },
+    "KSI-INR-03": {
+      "current_ids": [
+        "KSI-INR-AAR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Generating After Action Reports",
+      "current_names": [
+        "Generating After Action Reports"
+      ],
+      "via": "KSI-INR-AAR"
+    },
+    "KSI-MLA-01": {
+      "current_ids": [
+        "KSI-MLA-OSM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Operating SIEM Capability",
+      "current_names": [
+        "Operating SIEM Capability"
+      ],
+      "via": "KSI-MLA-OSM"
+    },
+    "KSI-MLA-02": {
+      "current_ids": [
+        "KSI-MLA-RVL"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Logs",
+      "current_names": [
+        "Reviewing Logs"
+      ],
+      "via": "KSI-MLA-RVL"
+    },
+    "KSI-MLA-05": {
+      "current_ids": [
+        "KSI-MLA-EVC"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Evaluating Configurations",
+      "current_names": [
+        "Evaluating Configurations"
+      ],
+      "via": "KSI-MLA-EVC"
+    },
+    "KSI-MLA-07": {
+      "current_ids": [
+        "KSI-MLA-LET"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Logging Event Types",
+      "current_names": [
+        "Logging Event Types"
+      ],
+      "via": "KSI-MLA-LET"
+    },
+    "KSI-MLA-08": {
+      "current_ids": [
+        "KSI-MLA-ALA"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Authorizing Log Access",
+      "current_names": [
+        "Authorizing Log Access"
+      ],
+      "via": "KSI-MLA-ALA"
+    },
+    "KSI-PIY-01": {
+      "current_ids": [
+        "KSI-PIY-GIV"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Generating Inventories",
+      "current_names": [
+        "Generating Inventories"
+      ],
+      "via": "KSI-PIY-GIV"
+    },
+    "KSI-PIY-03": {
+      "current_ids": [
+        "KSI-PIY-RVD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Vulnerability Disclosures",
+      "current_names": [
+        "Reviewing Vulnerability Disclosures"
+      ],
+      "via": "KSI-PIY-RVD"
+    },
+    "KSI-PIY-04": {
+      "current_ids": [
+        "KSI-PIY-RSD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Security in the SDLC",
+      "current_names": [
+        "Reviewing Security in the SDLC"
+      ],
+      "via": "KSI-PIY-RSD"
+    },
+    "KSI-PIY-06": {
+      "current_ids": [
+        "KSI-PIY-RIS"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Investments in Security",
+      "current_names": [
+        "Reviewing Investments in Security"
+      ],
+      "via": "KSI-PIY-RIS"
+    },
+    "KSI-PIY-08": {
+      "current_ids": [
+        "KSI-PIY-RES"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Executive Support",
+      "current_names": [
+        "Reviewing Executive Support"
+      ],
+      "via": "KSI-PIY-RES"
+    },
+    "KSI-RPL-01": {
+      "current_ids": [
+        "KSI-RPL-RRO"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Reviewing Recovery Objectives",
+      "current_names": [
+        "Reviewing Recovery Objectives"
+      ],
+      "via": "KSI-RPL-RRO"
+    },
+    "KSI-RPL-02": {
+      "current_ids": [
+        "KSI-RPL-ARP"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Aligning Recovery Plan",
+      "current_names": [
+        "Aligning Recovery Plan"
+      ],
+      "via": "KSI-RPL-ARP"
+    },
+    "KSI-RPL-03": {
+      "current_ids": [
+        "KSI-RPL-ABO"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Aligning Backups with Objectives",
+      "current_names": [
+        "Aligning Backups with Objectives"
+      ],
+      "via": "KSI-RPL-ABO"
+    },
+    "KSI-RPL-04": {
+      "current_ids": [
+        "KSI-RPL-TRC"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Testing Recovery Capabilities",
+      "current_names": [
+        "Testing Recovery Capabilities"
+      ],
+      "via": "KSI-RPL-TRC"
+    },
+    "KSI-SVC-01": {
+      "current_ids": [
+        "KSI-SVC-EIS"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Evaluating and Improving Security",
+      "current_names": [
+        "Evaluating and Improving Security"
+      ],
+      "via": "KSI-SVC-EIS"
+    },
+    "KSI-SVC-02": {
+      "current_ids": [
+        "KSI-SVC-SIN"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Securing Network Traffic",
+      "current_names": [
+        "Securing Information"
+      ],
+      "via": "KSI-SVC-SNT"
+    },
+    "KSI-SVC-04": {
+      "current_ids": [
+        "KSI-SVC-ACM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Automating Configuration Management",
+      "current_names": [
+        "Automating Configuration Management"
+      ],
+      "via": "KSI-SVC-ACM"
+    },
+    "KSI-SVC-05": {
+      "current_ids": [
+        "KSI-SVC-VRI"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Validating Resource Integrity",
+      "current_names": [
+        "Validating Resource Integrity"
+      ],
+      "via": "KSI-SVC-VRI"
+    },
+    "KSI-SVC-06": {
+      "current_ids": [
+        "KSI-SVC-ASM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Automating Secret Management",
+      "current_names": [
+        "Automating Secret Management"
+      ],
+      "via": "KSI-SVC-ASM"
+    },
+    "KSI-SVC-08": {
+      "current_ids": [
+        "KSI-SVC-PRR"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Preventing Residual Risk",
+      "current_names": [
+        "Preventing Residual Risk"
+      ],
+      "via": "KSI-SVC-PRR"
+    },
+    "KSI-SVC-09": {
+      "current_ids": [
+        "KSI-SVC-VCM"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Validating Communications",
+      "current_names": [
+        "Validating Communications"
+      ],
+      "via": "KSI-SVC-VCM"
+    },
+    "KSI-SVC-10": {
+      "current_ids": [
+        "KSI-SVC-RUD"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Removing Unwanted Data",
+      "current_names": [
+        "Removing Unwanted Data"
+      ],
+      "via": "KSI-SVC-RUD"
+    },
+    "KSI-SVC-SNT": {
+      "current_ids": [
+        "KSI-SVC-SIN"
+      ],
+      "basis": "merged",
+      "confidence": "high",
+      "legacy_name": "Securing Network Traffic",
+      "current_names": [
+        "Securing Information"
+      ]
+    },
+    "KSI-TPR-03": {
+      "current_ids": [
+        "KSI-SCR-MIT"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Mitigating Supply Chain Risk",
+      "current_names": [
+        "Mitigating Supply Chain Risk"
+      ],
+      "via": "KSI-SCR-MIT"
+    },
+    "KSI-TPR-04": {
+      "current_ids": [
+        "KSI-SCR-MON"
+      ],
+      "basis": "fka",
+      "confidence": "high",
+      "legacy_name": "Monitoring Supply Chain Risk",
+      "current_names": [
+        "Monitoring Supply Chain Risk"
+      ],
+      "via": "KSI-SCR-MON"
+    },
+    "PVA-CSX-FAV": {
+      "current_ids": [
+        "VDR-CSO-FAV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Issues As Vulnerabilities",
+      "current_names": [
+        "Failures Are Vulnerabilities"
+      ]
+    },
+    "PVA-CSX-IVV": {
+      "current_ids": [
+        "IVV-CSO-FIA"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Independent Verification and Validation",
+      "current_names": [
+        "FedRAMP Independent Assessments"
+      ]
+    },
+    "PVA-CSX-NMV": {
+      "current_ids": [
+        "VDR-TFR-NMV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Non-Machine Validation",
+      "current_names": [
+        "Non-Machine Verification and Validation"
+      ]
+    },
+    "PVA-CSX-PMV": {
+      "current_ids": [
+        "VDR-TFR-MVX"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Persistent Machine Validation",
+      "current_names": [
+        "Persistent Machine Verification and Validation for 20x"
+      ]
+    },
+    "PVA-CSX-PTE": {
+      "current_ids": [
+        "IVV-CSO-STE"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Provide Technical Evidence",
+      "current_names": [
+        "Supply Technical Explanations"
+      ]
+    },
+    "PVA-CSX-RAD": {
+      "current_ids": [
+        "IVV-CSO-RAA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Receiving Advice",
+      "current_names": [
+        "Receiving Assessor Advice"
+      ]
+    },
+    "PVA-CSX-RPV": {
+      "current_ids": [
+        "VER-RPT-PER"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Report Persistent Validation",
+      "current_names": [
+        "Persistent Reporting"
+      ]
+    },
+    "PVA-CSX-VAL": {
+      "current_ids": [
+        "VDR-TFR-MVX"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Persistent Validation",
+      "current_names": [
+        "Persistent Machine Verification and Validation for 20x"
+      ]
+    },
+    "PVA-TPX-MME": {
+      "current_ids": [
+        "IVV-IAS-VEF"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Mixed Methods Evaluation",
+      "current_names": [
+        "Validate Effectiveness"
+      ]
+    },
+    "PVA-TPX-NOR": {
+      "current_ids": [
+        "IVV-IAS-SUM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "No Overall Recommendation",
+      "current_names": [
+        "Assessment Summary"
+      ]
+    },
+    "PVA-TPX-OUC": {
+      "current_ids": [
+        "IVV-IAS-VEF"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Outcome Consistency",
+      "current_names": [
+        "Validate Effectiveness"
+      ]
+    },
+    "PVA-TPX-PAD": {
+      "current_ids": [
+        "IVV-IAS-VIM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Procedure Adherence",
+      "current_names": [
+        "Verify Implementation"
+      ]
+    },
+    "PVA-TPX-PDK": {
+      "current_ids": [
+        "IVV-IAS-VIM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Processes Derived from Key Security Indicators",
+      "current_names": [
+        "Verify Implementation"
+      ]
+    },
+    "PVA-TPX-PEX": {
+      "current_ids": [
+        "IVV-IAS-EPX"
+      ],
+      "basis": "renamed-by-text",
+      "confidence": "medium",
+      "legacy_name": "Provider Experts",
+      "current_names": [
+        "Engage Provider Experts"
+      ]
+    },
+    "PVA-TPX-SHA": {
+      "current_ids": [
+        "IVV-IAS-SHA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Sharing Advice",
+      "current_names": [
+        "Sharing Advice"
+      ]
+    },
+    "PVA-TPX-STE": {
+      "current_ids": [
+        "IVV-CSO-SEI"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Static Evidence",
+      "current_names": [
+        "Supply Evidence of Implementation"
+      ]
+    },
+    "PVA-TPX-SUM": {
+      "current_ids": [
+        "IVV-IAS-SUM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Assessment Summary",
+      "current_names": [
+        "Assessment Summary"
+      ]
+    },
+    "PVA-TPX-UNP": {
+      "current_ids": [
+        "IVV-IAS-VIM"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Underlying Processes",
+      "current_names": [
+        "Verify Implementation"
+      ]
+    },
+    "UCM-CSX-CAT": {
+      "current_ids": [
+        "CMU-CSO-CAT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Configuration of Agency Tenants",
+      "current_names": [
+        "Configuration of Agency Tenants"
+      ]
+    },
+    "UCM-CSX-CMD": {
+      "current_ids": [
+        "CMU-CSO-CMD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Cryptographic Module Documentation",
+      "current_names": [
+        "Cryptographic Module Documentation"
+      ]
+    },
+    "UCM-CSX-UVM": {
+      "current_ids": [
+        "CMU-CSO-UVM"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Using Validated Cryptographic Modules",
+      "current_names": [
+        "Using Validated Cryptographic Modules"
+      ]
+    },
+    "VDR-AGM-DRE": {
+      "current_ids": [
+        "AGU-AGC-NAR"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Do Not Request Extra Info",
+      "current_names": [
+        "No Additional Security Requirements"
+      ]
+    },
+    "VDR-AGM-MAP": {
+      "current_ids": [
+        "VER-AGM-MAP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Maintain Agency POA&M",
+      "current_names": [
+        "Maintain Agency Plans of Action and Milestones"
+      ]
+    },
+    "VDR-AGM-NFR": {
+      "current_ids": [
+        "AGU-AGC-NAI"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Notify FedRAMP",
+      "current_names": [
+        "Notify Additional Information Requests"
+      ]
+    },
+    "VDR-AGM-RVR": {
+      "current_ids": [
+        "VER-AGM-RVR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Review Vulnerability Reports",
+      "current_names": [
+        "Review Vulnerability Reports"
+      ]
+    },
+    "VDR-BST-ADT": {
+      "current_ids": [
+        "VDR-CSO-ADT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Automate Detection",
+      "current_names": [
+        "Automate Detection"
+      ]
+    },
+    "VDR-BST-AKE": {
+      "current_ids": [
+        "VDR-CSO-AKE"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Avoid KEVs",
+      "current_names": [
+        "Avoid KEVs"
+      ]
+    },
+    "VDR-BST-DAC": {
+      "current_ids": [
+        "VDR-CSO-DAC"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Detect After Changes",
+      "current_names": [
+        "Detect After Changes"
+      ]
+    },
+    "VDR-BST-DFR": {
+      "current_ids": [
+        "VDR-CSO-DFR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Design For Resilience",
+      "current_names": [
+        "Design For Resilience"
+      ]
+    },
+    "VDR-BST-MSP": {
+      "current_ids": [
+        "VDR-CSO-MSP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Maintain Security",
+      "current_names": [
+        "Maintain Security"
+      ]
+    },
+    "VDR-BST-SIR": {
+      "current_ids": [
+        "VDR-CSO-SIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Sampling",
+      "current_names": [
+        "Sampling"
+      ]
+    },
+    "VDR-CSO-DOC": {
+      "current_ids": [
+        "VER-RPT-HLO"
+      ],
+      "basis": "related",
+      "confidence": "low",
+      "legacy_name": "Documentation for Recommendations",
+      "current_names": [
+        "High-Level Overviews"
+      ]
+    },
+    "VDR-EVA-EFA": {
+      "current_ids": [
+        "VER-EVA-EFA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluation Factors",
+      "current_names": [
+        "Evaluation Factors"
+      ]
+    },
+    "VDR-EVA-EFP": {
+      "current_ids": [
+        "VER-EVA-EFP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate False Positives",
+      "current_names": [
+        "Evaluate False Positives"
+      ]
+    },
+    "VDR-EVA-EIR": {
+      "current_ids": [
+        "VER-EVA-EIR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Internet-Reachability",
+      "current_names": [
+        "Evaluate Internet-Reachability"
+      ]
+    },
+    "VDR-EVA-ELX": {
+      "current_ids": [
+        "VER-EVA-ELX"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Exploitability",
+      "current_names": [
+        "Evaluate Exploitability"
+      ]
+    },
+    "VDR-EVA-EPA": {
+      "current_ids": [
+        "VER-EVA-EPA"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Estimate Potential Adverse Impact",
+      "current_names": [
+        "Estimate Potential Agency Impact"
+      ]
+    },
+    "VDR-EVA-GRV": {
+      "current_ids": [
+        "VER-EVA-GRV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Group Vulnerabilities",
+      "current_names": [
+        "Group Vulnerabilities"
+      ]
+    },
+    "VDR-FRP-ADV": {
+      "current_ids": [
+        "VER-FRP-ADV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Sensitive Details",
+      "current_names": [
+        "Sensitive Details"
+      ]
+    },
+    "VDR-FRP-ARP": {
+      "current_ids": [
+        "VER-FRP-ARP"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Additional Requirements",
+      "current_names": [
+        "Additional Requirements"
+      ]
+    },
+    "VDR-RPT-AVI": {
+      "current_ids": [
+        "VER-RPT-AVI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Accepted Vulnerability Info",
+      "current_names": [
+        "Accepted Vulnerability Info"
+      ]
+    },
+    "VDR-RPT-HLO": {
+      "current_ids": [
+        "VER-RPT-HLO"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "High-Level Overviews",
+      "current_names": [
+        "High-Level Overviews"
+      ]
+    },
+    "VDR-RPT-NID": {
+      "current_ids": [
+        "VER-RPT-NID"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Disclosure",
+      "current_names": [
+        "Responsible Disclosure"
+      ]
+    },
+    "VDR-RPT-PER": {
+      "current_ids": [
+        "VER-RPT-PER"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Persistent Reporting",
+      "current_names": [
+        "Persistent Reporting"
+      ]
+    },
+    "VDR-RPT-RPD": {
+      "current_ids": [
+        "VER-RPT-RPD"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Responsible Public Disclosure",
+      "current_names": [
+        "Responsible Public Disclosure"
+      ]
+    },
+    "VDR-RPT-VDT": {
+      "current_ids": [
+        "VER-RPT-VDT"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Vulnerability Details",
+      "current_names": [
+        "Vulnerability Details"
+      ]
+    },
+    "VDR-TFR-EVU": {
+      "current_ids": [
+        "VER-TFR-EVU"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Evaluate Vulnerabilities Quickly",
+      "current_names": [
+        "Evaluate Vulnerabilities Quickly"
+      ]
+    },
+    "VDR-TFR-IRI": {
+      "current_ids": [
+        "VER-TFR-IRI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Internet-Reachable Incidents",
+      "current_names": [
+        "Internet-Reachable Incidents"
+      ]
+    },
+    "VDR-TFR-MAV": {
+      "current_ids": [
+        "VER-TFR-MAV"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Mark Accepted Vulnerabilities",
+      "current_names": [
+        "Mark Accepted Vulnerabilities"
+      ]
+    },
+    "VDR-TFR-MHR": {
+      "current_ids": [
+        "VER-TFR-MHR"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Monthly Activity Report",
+      "current_names": [
+        "Monthly Activity Report"
+      ]
+    },
+    "VDR-TFR-MRH": {
+      "current_ids": [
+        "VER-TFR-MRH"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Historical Activity",
+      "current_names": [
+        "Historical Activity"
+      ]
+    },
+    "VDR-TFR-NRI": {
+      "current_ids": [
+        "VER-TFR-NRI"
+      ],
+      "basis": "renamed",
+      "confidence": "high",
+      "legacy_name": "Non-Internet-Reachable Incidents",
+      "current_names": [
+        "Non-Internet-Reachable Incidents"
+      ]
+    }
+  }
+}

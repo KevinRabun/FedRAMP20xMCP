@@ -1,12 +1,12 @@
 pattern_id: afr.crypto.weak_algorithms
 name: Weak or Deprecated Cryptographic Algorithms
 description: Detects use of weak cryptographic algorithms (MD5, SHA1, DES, RC4, TLS
-  1.0/1.1) that do not meet FedRAMP requirements. KSI-AFR-11 mandates FIPS 140-2/3
+  1.0/1.1) that do not meet FedRAMP requirements. CMU-CSO-UVM mandates FIPS 140-2/3
   approved algorithms only.
 severity: CRITICAL
-family: AFR
+family: CMU
 pattern_type: function_call
-ksi_id: KSI-AFR-11
+ksi_id: CMU-CSO-UVM
 nist_controls: &id001
 - sc-13
 - sc-17
@@ -77,30 +77,30 @@ remediation: "Replace weak cryptographic algorithms with FIPS 140-2/3 approved a
   }\n```\n\n**References:**\n- NIST FIPS 140-3: https://csrc.nist.gov/publications/detail/fips/140/3/final\n\
   - NIST SP 800-52 Rev 2 (TLS): https://csrc.nist.gov/publications/detail/sp/800-52/rev-2/final\n\
   - NIST SP 800-57 Part 1 (Key Management): https://csrc.nist.gov/publications/detail/sp/800-57-part-1/rev-5/final\n\
-  - FedRAMP UCM Guidance: https://www.fedramp.gov/using-cryptographic-modules/\n"
+  - FedRAMP CMU Guidance: https://www.fedramp.gov/using-cryptographic-modules/\n"
 finding:
   title: Weak cryptographic algorithm detected
   description: Code uses weak cryptographic algorithms that do not meet FIPS 140-2/3
     requirements
   recommendation: Replace with FIPS-approved algorithms (SHA-256+, AES-256, TLS 1.2+)
   references:
-  - KSI-AFR-11
+  - CMU-CSO-UVM
   - NIST FIPS 140-3
 evidence_artifacts:
 - artifact_type: logs
-  name: AFR operational logs
+  name: CMU operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: AFR configuration export
+  name: CMU configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: AFR compliance validation report
+  name: CMU compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -111,51 +111,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "afr"
+      | where Message contains "cmu"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track AFR related operations over last 30 days
+    description: Track CMU related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'afr' | take 100"
-    description: Query recent AFR events
+      "AppTraces | where Message contains 'cmu' | take 100"
+    description: Query recent CMU events
     output_format: json
   powershell:
-  - script: '# Query AFR configuration
+  - script: '# Query CMU configuration
 
       Get-AzAFRResource | Select-Object Name, Location, Properties'
-    description: Get AFR resource configuration
+    description: Get CMU resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for AFR compliance enforcement
-    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CMU compliance enforcement
+    implementation: "# Azure Policy definition for CMU\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'afr.crypto.weak_algorithms-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance Policy'\n    description:\
-      \ 'Enforces AFR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMU Compliance Policy'\n    description:\
+      \ 'Enforces CMU compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for AFR violations
+    description: Azure Monitor alerts for CMU violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'afr.crypto.weak_algorithms-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on AFR compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CMU compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for AFR
-    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CMU
+    implementation: "# GitHub Actions\n- name: Validate CMU Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMU Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
     azure_services:
     - Azure Pipelines
@@ -164,23 +164,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - AFR requirements documented and approved
+  - CMU requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review AFR FedRAMP requirements
+    action: Review CMU FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design AFR implementation architecture
+    action: Design CMU implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement AFR controls in code/IaC
+    action: Implement CMU controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for AFR
+    action: Configure Azure services for CMU
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/afr/main.bicep
@@ -197,22 +197,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMU')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: AFR - AFR
+  control_family: CMU - CMU
   control_numbers: *id001
   ssp_sections:
   - section: 'sc-13: Implementation'
-    description_template: The system implements AFR controls in accordance with FedRAMP
-      20x requirements. AFR Requirements is addressed through a combination of Azure
+    description_template: The system implements CMU controls in accordance with FedRAMP
+      20x requirements. CMU Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce AFR compliance
+    implementation_details: Azure services are configured to enforce CMU compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      AFR requirements.
+      CMU requirements.
     evidence_references:
-    - AFR configuration exports from Azure Portal
+    - CMU configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -220,21 +220,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for AFR compliance
+    purpose: Primary service for CMU compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: AFR implementation
+    design_area: CMU implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement AFR controls as part of secure baseline
+    guidance: Implement CMU controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-AFR-11
+    requirement_id: CMU-CSO-UVM
     requirement_name: Using Cryptographic Modules
     impact_levels:
     - Low
@@ -261,17 +261,17 @@ tags:
   - fips
   - security
 related_ksis:
-  - KSI-AFR-11
+  - CMU-CSO-UVM
 ---
 pattern_id: afr.config.debug_mode
 name: Debug Mode Enabled in Production
-description: Detects debug mode enabled in production environments. KSI-AFR-07 requires
+description: Detects debug mode enabled in production environments. KSI-CNA-MAT requires
   secure default configurations - debug mode exposes sensitive information and stack
   traces.
 severity: HIGH
-family: AFR
+family: CNA
 pattern_type: configuration
-ksi_id: KSI-AFR-07
+ksi_id: KSI-CNA-MAT
 nist_controls: &id001
 - cm-6
 - si-11
@@ -319,23 +319,24 @@ finding:
   description: Application has debug mode enabled which may expose sensitive information
   recommendation: Disable debug mode in production environments
   references:
-  - KSI-AFR-07
-  - FRR-RSC-01
+  - KSI-CNA-MAT
+related_ksis:
+- KSI-CNA-MAT
 evidence_artifacts:
 - artifact_type: logs
-  name: AFR operational logs
+  name: CNA operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: AFR configuration export
+  name: CNA configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: AFR compliance validation report
+  name: CNA compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -346,51 +347,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "afr"
+      | where Message contains "cna"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track AFR related operations over last 30 days
+    description: Track CNA related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'afr' | take 100"
-    description: Query recent AFR events
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
     output_format: json
   powershell:
-  - script: '# Query AFR configuration
+  - script: '# Query CNA configuration
 
       Get-AzAFRResource | Select-Object Name, Location, Properties'
-    description: Get AFR resource configuration
+    description: Get CNA resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for AFR compliance enforcement
-    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'afr.config.debug_mode-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance Policy'\n    description:\
-      \ 'Enforces AFR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for AFR violations
+    description: Azure Monitor alerts for CNA violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'afr.config.debug_mode-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on AFR compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CNA compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for AFR
-    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
     azure_services:
     - Azure Pipelines
@@ -399,23 +400,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - AFR requirements documented and approved
+  - CNA requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review AFR FedRAMP requirements
+    action: Review CNA FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design AFR implementation architecture
+    action: Design CNA implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement AFR controls in code/IaC
+    action: Implement CNA controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for AFR
+    action: Configure Azure services for CNA
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/afr/main.bicep
@@ -432,22 +433,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: AFR - AFR
+  control_family: CNA - CNA
   control_numbers: *id001
   ssp_sections:
   - section: 'cm-6: Implementation'
-    description_template: The system implements AFR controls in accordance with FedRAMP
-      20x requirements. AFR Requirements is addressed through a combination of Azure
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce AFR compliance
+    implementation_details: Azure services are configured to enforce CNA compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      AFR requirements.
+      CNA requirements.
     evidence_references:
-    - AFR configuration exports from Azure Portal
+    - CNA configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -455,22 +456,22 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for AFR compliance
+    purpose: Primary service for CNA compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: AFR implementation
+    design_area: CNA implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement AFR controls as part of secure baseline
+    guidance: Implement CNA controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-AFR-07
-    requirement_name: Recommended Secure Configuration
+    requirement_id: KSI-CNA-MAT
+    requirement_name: Minimizing Attack Surface
     impact_levels:
     - Low
     - Moderate
@@ -495,12 +496,12 @@ testing:
 pattern_id: afr.scanning.missing_vulnerability_scan
 name: Missing Vulnerability Scanning Configuration
 description: Detects missing vulnerability scanning (SAST, dependency scanning, container
-  scanning) in CI/CD pipelines. KSI-AFR-04 requires comprehensive vulnerability detection
+  scanning) in CI/CD pipelines. VDR-CSO-DET requires comprehensive vulnerability detection
   per FedRAMP VDR process.
 severity: HIGH
-family: AFR
+family: VDR
 pattern_type: pipeline
-ksi_id: KSI-AFR-04
+ksi_id: VDR-CSO-DET
 nist_controls: &id001
 - ra-5
 - sa-11
@@ -568,23 +569,24 @@ finding:
   description: No vulnerability scanning detected in CI/CD pipeline or IaC
   recommendation: Implement SAST, dependency scanning, and container scanning
   references:
-  - KSI-AFR-04
-  - FRR-VDR-01
+  - VDR-CSO-DET
+related_frrs:
+- VDR-CSO-DET
 evidence_artifacts:
 - artifact_type: logs
-  name: AFR operational logs
+  name: VDR operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: AFR configuration export
+  name: VDR configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: AFR compliance validation report
+  name: VDR compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -595,51 +597,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "afr"
+      | where Message contains "vdr"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track AFR related operations over last 30 days
+    description: Track VDR related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'afr' | take 100"
-    description: Query recent AFR events
+      "AppTraces | where Message contains 'vdr' | take 100"
+    description: Query recent VDR events
     output_format: json
   powershell:
-  - script: '# Query AFR configuration
+  - script: '# Query VDR configuration
 
       Get-AzAFRResource | Select-Object Name, Location, Properties'
-    description: Get AFR resource configuration
+    description: Get VDR resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for AFR compliance enforcement
-    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for VDR compliance enforcement
+    implementation: "# Azure Policy definition for VDR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'afr.scanning.missing_vulnerability_scan-policy'\n  properties:\
-      \ {\n    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance\
-      \ Policy'\n    description: 'Enforces AFR compliance requirements'\n    policyRule:\
+      \ {\n    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'VDR Compliance\
+      \ Policy'\n    description: 'Enforces VDR compliance requirements'\n    policyRule:\
       \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
       \        effect: 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for AFR violations
+    description: Azure Monitor alerts for VDR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'afr.scanning.missing_vulnerability_scan-alert'\n  location: 'global'\n\
-      \  properties: {\n    description: 'Alert on AFR compliance violations'\n  \
+      \  properties: {\n    description: 'Alert on VDR compliance violations'\n  \
       \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
       \ 'PT15M'\n  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for AFR
-    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for VDR
+    implementation: "# GitHub Actions\n- name: Validate VDR Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'VDR Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
     azure_services:
     - Azure Pipelines
@@ -648,23 +650,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - AFR requirements documented and approved
+  - VDR requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review AFR FedRAMP requirements
+    action: Review VDR FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design AFR implementation architecture
+    action: Design VDR implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement AFR controls in code/IaC
+    action: Implement VDR controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for AFR
+    action: Configure Azure services for VDR
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/afr/main.bicep
@@ -681,22 +683,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'VDR')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: AFR - AFR
+  control_family: VDR - VDR
   control_numbers: *id001
   ssp_sections:
   - section: 'ra-5: Implementation'
-    description_template: The system implements AFR controls in accordance with FedRAMP
-      20x requirements. AFR Requirements is addressed through a combination of Azure
+    description_template: The system implements VDR controls in accordance with FedRAMP
+      20x requirements. VDR Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce AFR compliance
+    implementation_details: Azure services are configured to enforce VDR compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      AFR requirements.
+      VDR requirements.
     evidence_references:
-    - AFR configuration exports from Azure Portal
+    - VDR configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -704,21 +706,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for AFR compliance
+    purpose: Primary service for VDR compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: AFR implementation
+    design_area: VDR implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement AFR controls as part of secure baseline
+    guidance: Implement VDR controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-AFR-04
+    requirement_id: VDR-CSO-DET
     requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
@@ -744,12 +746,12 @@ testing:
 pattern_id: afr.config.insecure_defaults
 name: Insecure Default Configurations Detected
 description: Detects insecure default configurations such as public network access
-  enabled, HTTPS not required, or missing encryption. KSI-AFR-07 requires secure-by-default
+  enabled, HTTPS not required, or missing encryption. KSI-CNA-IBP requires secure-by-default
   configurations.
 severity: HIGH
-family: AFR
+family: CNA
 pattern_type: resource
-ksi_id: KSI-AFR-07
+ksi_id: KSI-CNA-IBP
 nist_controls: &id001
 - cm-6
 - sc-8
@@ -829,23 +831,24 @@ finding:
     etc.)
   recommendation: Enable secure defaults per Azure Security Baseline
   references:
-  - KSI-AFR-07
-  - FRR-RSC-01
+  - KSI-CNA-IBP
+related_ksis:
+- KSI-CNA-IBP
 evidence_artifacts:
 - artifact_type: logs
-  name: AFR operational logs
+  name: CNA operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: AFR configuration export
+  name: CNA configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: AFR compliance validation report
+  name: CNA compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -856,51 +859,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "afr"
+      | where Message contains "cna"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track AFR related operations over last 30 days
+    description: Track CNA related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'afr' | take 100"
-    description: Query recent AFR events
+      "AppTraces | where Message contains 'cna' | take 100"
+    description: Query recent CNA events
     output_format: json
   powershell:
-  - script: '# Query AFR configuration
+  - script: '# Query CNA configuration
 
       Get-AzAFRResource | Select-Object Name, Location, Properties'
-    description: Get AFR resource configuration
+    description: Get CNA resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for AFR compliance enforcement
-    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for CNA compliance enforcement
+    implementation: "# Azure Policy definition for CNA\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'afr.config.insecure_defaults-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance Policy'\n    description:\
-      \ 'Enforces AFR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CNA Compliance Policy'\n    description:\
+      \ 'Enforces CNA compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for AFR violations
+    description: Azure Monitor alerts for CNA violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'afr.config.insecure_defaults-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on AFR compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on CNA compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for AFR
-    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for CNA
+    implementation: "# GitHub Actions\n- name: Validate CNA Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CNA Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
     azure_services:
     - Azure Pipelines
@@ -909,23 +912,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - AFR requirements documented and approved
+  - CNA requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review AFR FedRAMP requirements
+    action: Review CNA FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design AFR implementation architecture
+    action: Design CNA implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement AFR controls in code/IaC
+    action: Implement CNA controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for AFR
+    action: Configure Azure services for CNA
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/afr/main.bicep
@@ -942,22 +945,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'CNA')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: AFR - AFR
+  control_family: CNA - CNA
   control_numbers: *id001
   ssp_sections:
   - section: 'cm-6: Implementation'
-    description_template: The system implements AFR controls in accordance with FedRAMP
-      20x requirements. AFR Requirements is addressed through a combination of Azure
+    description_template: The system implements CNA controls in accordance with FedRAMP
+      20x requirements. CNA Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce AFR compliance
+    implementation_details: Azure services are configured to enforce CNA compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      AFR requirements.
+      CNA requirements.
     evidence_references:
-    - AFR configuration exports from Azure Portal
+    - CNA configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -965,22 +968,22 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for AFR compliance
+    purpose: Primary service for CNA compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: AFR implementation
+    design_area: CNA implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement AFR controls as part of secure baseline
+    guidance: Implement CNA controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-AFR-07
-    requirement_name: Recommended Secure Configuration
+    requirement_id: KSI-CNA-IBP
+    requirement_name: Implementing Best Practices
     impact_levels:
     - Low
     - Moderate
@@ -1004,8 +1007,8 @@ testing:
 ---
 pattern_id: afr.compliance.ksi_afr_01
 name: Minimum Assessment Scope Detection
-description: Detects compliance indicators for KSI-AFR-01 - Minimum Assessment Scope
-family: AFR
+description: Detects compliance indicators for MAS-CSO-IIR - Minimum Assessment Scope
+family: MAS
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1015,8 +1018,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Minimum Assessment Scope compliance check
-  description_template: Configuration may not fully implement KSI-AFR-01 - Minimum Assessment Scope
-  remediation_template: Review and implement KSI-AFR-01 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement MAS-CSO-IIR - Minimum Assessment Scope
+  remediation_template: Review and implement MAS-CSO-IIR requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1025,33 +1028,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- mas
 - compliance
 - ksi-afr-01
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-01
+- MAS-CSO-IIR
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-01 compliance configuration
+  name: MAS-CSO-IIR compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-01 compliance report
+  name: MAS-CSO-IIR compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-01 compliance enforcement
+    description: Azure Policy for MAS-CSO-IIR compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-01 compliance
+      # Azure Policy for MAS-CSO-IIR compliance
       # GitHub Actions
-      - name: KSI-AFR-01 Compliance Check
+      - name: MAS-CSO-IIR Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_01 \
@@ -1059,23 +1062,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-01 Validation'
+        displayName: 'MAS-CSO-IIR Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-01 compliance
+            # Validate MAS-CSO-IIR compliance
             python validate.py --pattern afr.compliance.ksi_afr_01
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-01
+    description: Continuous monitoring for MAS-CSO-IIR
     implementation: |
-      # Azure Monitor for KSI-AFR-01 continuous monitoring
+      # Azure Monitor for MAS-CSO-IIR continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-01"
+      | where OperationNameValue contains "MAS-CSO-IIR"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1084,8 +1087,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_02
 name: Key Security Indicators Detection
-description: Detects compliance indicators for KSI-AFR-02 - Key Security Indicators
-family: AFR
+description: Detects compliance indicators for FRC-CSX-VVK - Key Security Indicators
+family: FRC
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1095,8 +1098,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Key Security Indicators compliance check
-  description_template: Configuration may not fully implement KSI-AFR-02 - Key Security Indicators
-  remediation_template: Review and implement KSI-AFR-02 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement FRC-CSX-VVK - Key Security Indicators
+  remediation_template: Review and implement FRC-CSX-VVK requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1105,33 +1108,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- frc
 - compliance
 - ksi-afr-02
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-02
+- FRC-CSX-VVK
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-02 compliance configuration
+  name: FRC-CSX-VVK compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-02 compliance report
+  name: FRC-CSX-VVK compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-02 compliance enforcement
+    description: Azure Policy for FRC-CSX-VVK compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-02 compliance
+      # Azure Policy for FRC-CSX-VVK compliance
       # GitHub Actions
-      - name: KSI-AFR-02 Compliance Check
+      - name: FRC-CSX-VVK Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_02 \
@@ -1139,23 +1142,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-02 Validation'
+        displayName: 'FRC-CSX-VVK Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-02 compliance
+            # Validate FRC-CSX-VVK compliance
             python validate.py --pattern afr.compliance.ksi_afr_02
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-02
+    description: Continuous monitoring for FRC-CSX-VVK
     implementation: |
-      # Azure Monitor for KSI-AFR-02 continuous monitoring
+      # Azure Monitor for FRC-CSX-VVK continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-02"
+      | where OperationNameValue contains "FRC-CSX-VVK"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1164,8 +1167,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_03
 name: Authorization Data Sharing Detection
-description: Detects compliance indicators for KSI-AFR-03 - Authorization Data Sharing
-family: AFR
+description: Detects compliance indicators for CDS-CSO-PUB - Authorization Data Sharing
+family: CDS
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1175,8 +1178,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Authorization Data Sharing compliance check
-  description_template: Configuration may not fully implement KSI-AFR-03 - Authorization Data Sharing
-  remediation_template: Review and implement KSI-AFR-03 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement CDS-CSO-PUB - Authorization Data Sharing
+  remediation_template: Review and implement CDS-CSO-PUB requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1185,33 +1188,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- cds
 - compliance
 - ksi-afr-03
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-03
+- CDS-CSO-PUB
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-03 compliance configuration
+  name: CDS-CSO-PUB compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-03 compliance report
+  name: CDS-CSO-PUB compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-03 compliance enforcement
+    description: Azure Policy for CDS-CSO-PUB compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-03 compliance
+      # Azure Policy for CDS-CSO-PUB compliance
       # GitHub Actions
-      - name: KSI-AFR-03 Compliance Check
+      - name: CDS-CSO-PUB Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_03 \
@@ -1219,23 +1222,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-03 Validation'
+        displayName: 'CDS-CSO-PUB Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-03 compliance
+            # Validate CDS-CSO-PUB compliance
             python validate.py --pattern afr.compliance.ksi_afr_03
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-03
+    description: Continuous monitoring for CDS-CSO-PUB
     implementation: |
-      # Azure Monitor for KSI-AFR-03 continuous monitoring
+      # Azure Monitor for CDS-CSO-PUB continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-03"
+      | where OperationNameValue contains "CDS-CSO-PUB"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1244,8 +1247,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_04
 name: Vulnerability Detection and Response Detection
-description: Detects compliance indicators for KSI-AFR-04 - Vulnerability Detection and Response
-family: AFR
+description: Detects compliance indicators for VDR-CSO-DET - Vulnerability Detection and Response
+family: VDR
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1255,8 +1258,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Vulnerability Detection and Response compliance check
-  description_template: Configuration may not fully implement KSI-AFR-04 - Vulnerability Detection and Response
-  remediation_template: Review and implement KSI-AFR-04 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement VDR-CSO-DET - Vulnerability Detection and Response
+  remediation_template: Review and implement VDR-CSO-DET requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1265,33 +1268,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- vdr
 - compliance
 - ksi-afr-04
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-04
+- VDR-CSO-DET
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-04 compliance configuration
+  name: VDR-CSO-DET compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-04 compliance report
+  name: VDR-CSO-DET compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-04 compliance enforcement
+    description: Azure Policy for VDR-CSO-DET compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-04 compliance
+      # Azure Policy for VDR-CSO-DET compliance
       # GitHub Actions
-      - name: KSI-AFR-04 Compliance Check
+      - name: VDR-CSO-DET Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_04 \
@@ -1299,23 +1302,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-04 Validation'
+        displayName: 'VDR-CSO-DET Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-04 compliance
+            # Validate VDR-CSO-DET compliance
             python validate.py --pattern afr.compliance.ksi_afr_04
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-04
+    description: Continuous monitoring for VDR-CSO-DET
     implementation: |
-      # Azure Monitor for KSI-AFR-04 continuous monitoring
+      # Azure Monitor for VDR-CSO-DET continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-04"
+      | where OperationNameValue contains "VDR-CSO-DET"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1324,8 +1327,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_05
 name: Significant Change Notifications Detection
-description: Detects compliance indicators for KSI-AFR-05 - Significant Change Notifications
-family: AFR
+description: Detects compliance indicators for SCN-CSO-EVA - Significant Change Notifications
+family: SCN
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1335,8 +1338,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Significant Change Notifications compliance check
-  description_template: Configuration may not fully implement KSI-AFR-05 - Significant Change Notifications
-  remediation_template: Review and implement KSI-AFR-05 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement SCN-CSO-EVA - Significant Change Notifications
+  remediation_template: Review and implement SCN-CSO-EVA requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1345,33 +1348,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- scn
 - compliance
 - ksi-afr-05
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-05
+- SCN-CSO-EVA
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-05 compliance configuration
+  name: SCN-CSO-EVA compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-05 compliance report
+  name: SCN-CSO-EVA compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-05 compliance enforcement
+    description: Azure Policy for SCN-CSO-EVA compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-05 compliance
+      # Azure Policy for SCN-CSO-EVA compliance
       # GitHub Actions
-      - name: KSI-AFR-05 Compliance Check
+      - name: SCN-CSO-EVA Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_05 \
@@ -1379,23 +1382,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-05 Validation'
+        displayName: 'SCN-CSO-EVA Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-05 compliance
+            # Validate SCN-CSO-EVA compliance
             python validate.py --pattern afr.compliance.ksi_afr_05
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-05
+    description: Continuous monitoring for SCN-CSO-EVA
     implementation: |
-      # Azure Monitor for KSI-AFR-05 continuous monitoring
+      # Azure Monitor for SCN-CSO-EVA continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-05"
+      | where OperationNameValue contains "SCN-CSO-EVA"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1404,8 +1407,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_06
 name: Collaborative Continuous Monitoring Detection
-description: Detects compliance indicators for KSI-AFR-06 - Collaborative Continuous Monitoring
-family: AFR
+description: Detects compliance indicators for CCM-OCR-AVL - Collaborative Continuous Monitoring
+family: CCM
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1415,8 +1418,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Collaborative Continuous Monitoring compliance check
-  description_template: Configuration may not fully implement KSI-AFR-06 - Collaborative Continuous Monitoring
-  remediation_template: Review and implement KSI-AFR-06 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement CCM-OCR-AVL - Collaborative Continuous Monitoring
+  remediation_template: Review and implement CCM-OCR-AVL requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1425,33 +1428,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- ccm
 - compliance
 - ksi-afr-06
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-06
+- CCM-OCR-AVL
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-06 compliance configuration
+  name: CCM-OCR-AVL compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-06 compliance report
+  name: CCM-OCR-AVL compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-06 compliance enforcement
+    description: Azure Policy for CCM-OCR-AVL compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-06 compliance
+      # Azure Policy for CCM-OCR-AVL compliance
       # GitHub Actions
-      - name: KSI-AFR-06 Compliance Check
+      - name: CCM-OCR-AVL Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_06 \
@@ -1459,23 +1462,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-06 Validation'
+        displayName: 'CCM-OCR-AVL Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-06 compliance
+            # Validate CCM-OCR-AVL compliance
             python validate.py --pattern afr.compliance.ksi_afr_06
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-06
+    description: Continuous monitoring for CCM-OCR-AVL
     implementation: |
-      # Azure Monitor for KSI-AFR-06 continuous monitoring
+      # Azure Monitor for CCM-OCR-AVL continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-06"
+      | where OperationNameValue contains "CCM-OCR-AVL"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1484,8 +1487,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_07
 name: Recommended Secure Configuration Detection
-description: Detects compliance indicators for KSI-AFR-07 - Recommended Secure Configuration
-family: AFR
+description: Detects compliance indicators for SCG-CSO-RSC - Recommended Secure Configuration
+family: SCG
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1495,8 +1498,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Recommended Secure Configuration compliance check
-  description_template: Configuration may not fully implement KSI-AFR-07 - Recommended Secure Configuration
-  remediation_template: Review and implement KSI-AFR-07 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement SCG-CSO-RSC - Recommended Secure Configuration
+  remediation_template: Review and implement SCG-CSO-RSC requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1505,33 +1508,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- scg
 - compliance
 - ksi-afr-07
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-07
+- SCG-CSO-RSC
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-07 compliance configuration
+  name: SCG-CSO-RSC compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-07 compliance report
+  name: SCG-CSO-RSC compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-07 compliance enforcement
+    description: Azure Policy for SCG-CSO-RSC compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-07 compliance
+      # Azure Policy for SCG-CSO-RSC compliance
       # GitHub Actions
-      - name: KSI-AFR-07 Compliance Check
+      - name: SCG-CSO-RSC Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_07 \
@@ -1539,23 +1542,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-07 Validation'
+        displayName: 'SCG-CSO-RSC Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-07 compliance
+            # Validate SCG-CSO-RSC compliance
             python validate.py --pattern afr.compliance.ksi_afr_07
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-07
+    description: Continuous monitoring for SCG-CSO-RSC
     implementation: |
-      # Azure Monitor for KSI-AFR-07 continuous monitoring
+      # Azure Monitor for SCG-CSO-RSC continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-07"
+      | where OperationNameValue contains "SCG-CSO-RSC"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1564,8 +1567,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_08
 name: FedRAMP Security Inbox Detection
-description: Detects compliance indicators for KSI-AFR-08 - FedRAMP Security Inbox
-family: AFR
+description: Detects compliance indicators for AFC-CSO-INB - FedRAMP Security Inbox
+family: AFC
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1575,8 +1578,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: FedRAMP Security Inbox compliance check
-  description_template: Configuration may not fully implement KSI-AFR-08 - FedRAMP Security Inbox
-  remediation_template: Review and implement KSI-AFR-08 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement AFC-CSO-INB - FedRAMP Security Inbox
+  remediation_template: Review and implement AFC-CSO-INB requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1585,33 +1588,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- afc
 - compliance
 - ksi-afr-08
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-08
+- AFC-CSO-INB
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-08 compliance configuration
+  name: AFC-CSO-INB compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-08 compliance report
+  name: AFC-CSO-INB compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-08 compliance enforcement
+    description: Azure Policy for AFC-CSO-INB compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-08 compliance
+      # Azure Policy for AFC-CSO-INB compliance
       # GitHub Actions
-      - name: KSI-AFR-08 Compliance Check
+      - name: AFC-CSO-INB Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_08 \
@@ -1619,23 +1622,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-08 Validation'
+        displayName: 'AFC-CSO-INB Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-08 compliance
+            # Validate AFC-CSO-INB compliance
             python validate.py --pattern afr.compliance.ksi_afr_08
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-08
+    description: Continuous monitoring for AFC-CSO-INB
     implementation: |
-      # Azure Monitor for KSI-AFR-08 continuous monitoring
+      # Azure Monitor for AFC-CSO-INB continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-08"
+      | where OperationNameValue contains "AFC-CSO-INB"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1644,8 +1647,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_09
 name: Persistent Validation and Assessment Detection
-description: Detects compliance indicators for KSI-AFR-09 - Persistent Validation and Assessment
-family: AFR
+description: Detects compliance indicators for VDR-TFR-MVX - Persistent Validation and Assessment
+family: VDR
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1655,8 +1658,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Persistent Validation and Assessment compliance check
-  description_template: Configuration may not fully implement KSI-AFR-09 - Persistent Validation and Assessment
-  remediation_template: Review and implement KSI-AFR-09 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement VDR-TFR-MVX - Persistent Validation and Assessment
+  remediation_template: Review and implement VDR-TFR-MVX requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1665,33 +1668,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- vdr
 - compliance
 - ksi-afr-09
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-09
+- VDR-TFR-MVX
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-09 compliance configuration
+  name: VDR-TFR-MVX compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-09 compliance report
+  name: VDR-TFR-MVX compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-09 compliance enforcement
+    description: Azure Policy for VDR-TFR-MVX compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-09 compliance
+      # Azure Policy for VDR-TFR-MVX compliance
       # GitHub Actions
-      - name: KSI-AFR-09 Compliance Check
+      - name: VDR-TFR-MVX Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_09 \
@@ -1699,23 +1702,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-09 Validation'
+        displayName: 'VDR-TFR-MVX Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-09 compliance
+            # Validate VDR-TFR-MVX compliance
             python validate.py --pattern afr.compliance.ksi_afr_09
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-09
+    description: Continuous monitoring for VDR-TFR-MVX
     implementation: |
-      # Azure Monitor for KSI-AFR-09 continuous monitoring
+      # Azure Monitor for VDR-TFR-MVX continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-09"
+      | where OperationNameValue contains "VDR-TFR-MVX"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1724,8 +1727,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_10
 name: Incident Communications Procedures Detection
-description: Detects compliance indicators for KSI-AFR-10 - Incident Communications Procedures
-family: AFR
+description: Detects compliance indicators for IEC-CSO-IIR - Incident Communications Procedures
+family: IEC
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1735,8 +1738,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Incident Communications Procedures compliance check
-  description_template: Configuration may not fully implement KSI-AFR-10 - Incident Communications Procedures
-  remediation_template: Review and implement KSI-AFR-10 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement IEC-CSO-IIR - Incident Communications Procedures
+  remediation_template: Review and implement IEC-CSO-IIR requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1745,33 +1748,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- iec
 - compliance
 - ksi-afr-10
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-10
+- IEC-CSO-IIR
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-10 compliance configuration
+  name: IEC-CSO-IIR compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-10 compliance report
+  name: IEC-CSO-IIR compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-10 compliance enforcement
+    description: Azure Policy for IEC-CSO-IIR compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-10 compliance
+      # Azure Policy for IEC-CSO-IIR compliance
       # GitHub Actions
-      - name: KSI-AFR-10 Compliance Check
+      - name: IEC-CSO-IIR Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_10 \
@@ -1779,23 +1782,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-10 Validation'
+        displayName: 'IEC-CSO-IIR Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-10 compliance
+            # Validate IEC-CSO-IIR compliance
             python validate.py --pattern afr.compliance.ksi_afr_10
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-10
+    description: Continuous monitoring for IEC-CSO-IIR
     implementation: |
-      # Azure Monitor for KSI-AFR-10 continuous monitoring
+      # Azure Monitor for IEC-CSO-IIR continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-10"
+      | where OperationNameValue contains "IEC-CSO-IIR"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1804,8 +1807,8 @@ impact_levels: ['Low', 'Moderate']
 ---
 pattern_id: afr.compliance.ksi_afr_11
 name: Using Cryptographic Modules Detection
-description: Detects compliance indicators for KSI-AFR-11 - Using Cryptographic Modules
-family: AFR
+description: Detects compliance indicators for CMU-CSO-UVM - Using Cryptographic Modules
+family: CMU
 severity: MEDIUM
 pattern_type: configuration
 languages:
@@ -1815,8 +1818,8 @@ languages:
     regex_fallback: ".*"
 finding:
   title_template: Using Cryptographic Modules compliance check
-  description_template: Configuration may not fully implement KSI-AFR-11 - Using Cryptographic Modules
-  remediation_template: Review and implement KSI-AFR-11 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement CMU-CSO-UVM - Using Cryptographic Modules
+  remediation_template: Review and implement CMU-CSO-UVM requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -1825,33 +1828,33 @@ finding:
   - Azure Policy
   - Microsoft Defender for Cloud
 tags:
-- afr
+- cmu
 - compliance
 - ksi-afr-11
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-AFR-11
+- CMU-CSO-UVM
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-AFR-11 compliance configuration
+  name: CMU-CSO-UVM compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-AFR-11 compliance report
+  name: CMU-CSO-UVM compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-AFR-11 compliance enforcement
+    description: Azure Policy for CMU-CSO-UVM compliance enforcement
     implementation: |
-      # Azure Policy for KSI-AFR-11 compliance
+      # Azure Policy for CMU-CSO-UVM compliance
       # GitHub Actions
-      - name: KSI-AFR-11 Compliance Check
+      - name: CMU-CSO-UVM Compliance Check
         run: |
           python -m fedramp_20x_mcp.analyzers.generic_analyzer \
             --pattern afr.compliance.ksi_afr_11 \
@@ -1859,23 +1862,23 @@ automation:
       
       # Azure Pipelines
       - task: PowerShell@2
-        displayName: 'KSI-AFR-11 Validation'
+        displayName: 'CMU-CSO-UVM Validation'
         inputs:
           script: |
-            # Validate KSI-AFR-11 compliance
+            # Validate CMU-CSO-UVM compliance
             python validate.py --pattern afr.compliance.ksi_afr_11
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-AFR-11
+    description: Continuous monitoring for CMU-CSO-UVM
     implementation: |
-      # Azure Monitor for KSI-AFR-11 continuous monitoring
+      # Azure Monitor for CMU-CSO-UVM continuous monitoring
       # Log Analytics Query
       AzureActivity
       | where CategoryValue == "Policy"
-      | where OperationNameValue contains "KSI-AFR-11"
+      | where OperationNameValue contains "CMU-CSO-UVM"
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
     azure_services:
     - Azure Monitor
@@ -1885,7 +1888,7 @@ impact_levels: ['Low', 'Moderate']
 pattern_id: afr.security_goals.no_validation
 name: No Automated Security Goals Validation
 description: Detects lack of automated monitoring/validation of security goals (AFR-02 violation)
-family: AFR
+family: FRC
 severity: HIGH
 pattern_type: code_smell
 languages:
@@ -1901,20 +1904,19 @@ languages:
     regex_fallback: "(?i)(no.*automat.*monitor|manual.*track.*only|no.*alert|no.*dashboard)"
 finding:
   title: Missing Automated Security Goals Validation
-  description: Code lacks automated monitoring and validation mechanisms for security goals. FedRAMP requires automated tracking and alerting.
+  description: Code lacks automated monitoring and validation mechanisms for security goals. FRC-CSX-VVK expects automated verification and validation of Key Security Indicators.
   recommendation: Implement automated monitoring dashboards and alerting for security goal progress validation.
 tags:
   - authorization
   - monitoring
   - automation
 related_ksis:
-  - KSI-AFR-02
-
+  - FRC-CSX-VVK
 ---
 pattern_id: afr.data_sharing.no_process
 name: No Authorization Data Sharing Process
 description: Detects lack of authorization data sharing infrastructure/process (AFR-03 violation)
-family: AFR
+family: CDS
 severity: HIGH
 pattern_type: code_smell
 languages:
@@ -1930,20 +1932,19 @@ languages:
     regex_fallback: "(?i)(no.*data.*shar|no.*trust.*center|no.*process)"
 finding:
   title: Missing Authorization Data Sharing Process
-  description: Code lacks documented authorization data sharing mechanism. FedRAMP requires versioned, controlled data sharing process.
+  description: Code lacks documented authorization data sharing mechanism. CDS-CSO-PUB requires up-to-date certification data in human-readable and JSON formats.
   recommendation: Implement Azure Storage with versioning and access controls for FedRAMP authorization data sharing.
 tags:
   - authorization
   - data-sharing
   - documentation
 related_ksis:
-  - KSI-AFR-03
-
+  - CDS-CSO-PUB
 ---
 pattern_id: afr.vulnerability.no_scanning
 name: No Vulnerability Detection
 description: Detects lack of vulnerability scanning and response process (AFR-04 violation)
-family: AFR
+family: VDR
 severity: CRITICAL
 pattern_type: code_smell
 languages:
@@ -1959,20 +1960,19 @@ languages:
     regex_fallback: "(?i)(no.*scan|no.*vulnerab.*detect|no.*alert)"
 finding:
   title: Missing Vulnerability Detection and Response
-  description: Code lacks vulnerability scanning infrastructure and automated response. FedRAMP requires continuous vulnerability detection.
+  description: Code lacks vulnerability scanning infrastructure and automated response. VDR-CSO-DET requires systematic, persistent and prompt vulnerability detection.
   recommendation: Implement Azure Security Center vulnerability scanning with automated alerting and response workflows.
 tags:
   - vulnerability
   - scanning
   - security
 related_ksis:
-  - KSI-AFR-04
-
+  - VDR-CSO-DET
 ---
 pattern_id: afr.change_tracking.no_notification
 name: No Change Tracking and Notification
 description: Detects lack of significant change tracking and FedRAMP notification (AFR-05 violation)
-family: AFR
+family: SCN
 severity: HIGH
 pattern_type: code_smell
 languages:
@@ -1995,13 +1995,12 @@ tags:
   - notification
   - compliance
 related_ksis:
-  - KSI-AFR-05
-
+  - SCN-CSO-EVA
 ---
 pattern_id: afr.ongoing_auth.no_reporting
 name: No Ongoing Authorization Reporting
 description: Detects lack of quarterly FedRAMP ongoing authorization reports (AFR-06 violation)
-family: AFR
+family: CCM
 severity: HIGH
 pattern_type: code_smell
 languages:
@@ -2017,20 +2016,19 @@ languages:
     regex_fallback: "(?i)(no.*quarterly|no.*report|no.*automat.*report)"
 finding:
   title: Missing Ongoing Authorization Reporting
-  description: Code lacks automated quarterly reporting infrastructure. FedRAMP requires ongoing authorization reports via CCM process.
+  description: Code lacks automated quarterly reporting infrastructure. CCM-OCR-AVL requires an Ongoing Certification Report every 3 months.
   recommendation: Implement Azure Automation schedules for quarterly report generation and submission to FedRAMP.
 tags:
   - authorization
   - reporting
   - compliance
 related_ksis:
-  - KSI-AFR-06
-
+  - CCM-OCR-AVL
 ---
 pattern_id: afr.secure_inbox.missing
 name: No Secure Inbox for FedRAMP Communications
 description: Detects lack of secure inbox for critical FedRAMP communications (AFR-08 violation)
-family: AFR
+family: AFC
 severity: HIGH
 pattern_type: code_smell
 languages:
@@ -2053,13 +2051,12 @@ tags:
   - encryption
   - security
 related_ksis:
-  - KSI-AFR-08
-
+  - AFC-CSO-INB
 ---
 pattern_id: afr.continuous_validation.missing
 name: No Persistent Validation and Assessment
 description: Detects lack of continuous validation and assessment automation (AFR-09 violation)
-family: AFR
+family: VDR
 severity: HIGH
 pattern_type: code_smell
 languages:
@@ -2075,20 +2072,19 @@ languages:
     regex_fallback: "(?i)(no.*continuous|no.*persist.*valid|manual.*only)"
 finding:
   title: Missing Persistent Validation and Assessment
-  description: Code lacks continuous validation infrastructure. FedRAMP requires persistent automated assessment of security controls.
+  description: Code lacks continuous validation infrastructure. VDR-TFR-MVX expects persistent machine verification and validation.
   recommendation: Implement Azure Policy assignments with continuous compliance assessment and automated reporting.
 tags:
   - validation
   - assessment
   - automation
 related_ksis:
-  - KSI-AFR-09
-
+  - VDR-TFR-MVX
 ---
 pattern_id: afr.incident_comms.no_integration
 name: No FedRAMP Incident Communications Integration
-description: Detects lack of FedRAMP ICP integration for incident communications (AFR-10 violation)
-family: AFR
+description: Detects lack of FedRAMP IEC integration for incident communications (AFR-10 violation)
+family: IEC
 severity: HIGH
 pattern_type: code_smell
 languages:
@@ -2101,7 +2097,7 @@ languages:
   typescript:
     regex_fallback: "(?i)(no.*fedramp.*icp.*integrat|internal.*incident.*only|no.*fedramp.*notif|no.*document.*integrat)"
   yaml:
-    regex_fallback: "(?i)(no.*fedramp.*icp|internal.*only|no.*integrat)"
+    regex_fallback: "(?i)(no.*fedramp.*iec|internal.*only|no.*integrat)"
 finding:
   title: Missing FedRAMP Incident Communications Integration
   description: Code lacks integration with FedRAMP Incident Communications Procedures. Internal-only incident response is non-compliant.
@@ -2111,4 +2107,176 @@ tags:
   - communication
   - integration
 related_ksis:
-  - KSI-AFR-10
+  - IEC-CSO-IIR
+---
+pattern_id: ksi.frr.frr_ksi_01
+name: Application of Key Security Indicators Compliance
+description: Validates compliance with FRC-CSX-MAS - Application of Key Security Indicators
+family: FRC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRC-CSX-MAS - Application of Key Security Indicators compliance check
+  description_template: Configuration requires validation for FRC-CSX-MAS compliance
+  remediation_template: Implement FRC-CSX-MAS requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ksi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRC-CSX-MAS
+evidence_artifacts:
+- artifact_type: policy
+  name: FRC-CSX-MAS policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRC-CSX-MAS configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRC-CSX-MAS compliance validation
+    implementation: |
+      # FRC-CSX-MAS compliance automation
+      # GitHub Actions
+      - name: FRC-CSX-MAS Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ksi.frr.frr_ksi_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRC-CSX-MAS Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRC-CSX-MAS compliance
+            az policy state list --filter "policyDefinitionName eq 'FRC-CSX-MAS'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRC-CSX-MAS
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRC-CSX-MAS"
+        RequirementName = "Application of Key Security Indicators"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRC-CSX-MAS.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: ksi.frr.frr_ksi_02
+name: Implementation Summaries Compliance
+description: Validates compliance with SDR-CSX-KSI - Implementation Summaries
+family: SDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SDR-CSX-KSI - Implementation Summaries compliance check
+  description_template: Configuration requires validation for SDR-CSX-KSI compliance
+  remediation_template: Implement SDR-CSX-KSI requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ksi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SDR-CSX-KSI
+evidence_artifacts:
+- artifact_type: policy
+  name: SDR-CSX-KSI policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SDR-CSX-KSI configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SDR-CSX-KSI compliance validation
+    implementation: |
+      # SDR-CSX-KSI compliance automation
+      # GitHub Actions
+      - name: SDR-CSX-KSI Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ksi.frr.frr_ksi_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SDR-CSX-KSI Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SDR-CSX-KSI compliance
+            az policy state list --filter "policyDefinitionName eq 'SDR-CSX-KSI'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SDR-CSX-KSI
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SDR-CSX-KSI"
+        RequirementName = "Implementation Summaries"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SDR-CSX-KSI.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate']

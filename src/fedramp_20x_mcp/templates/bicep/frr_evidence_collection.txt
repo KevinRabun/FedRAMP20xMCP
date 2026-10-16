@@ -1,102 +1,168 @@
 ## Bicep Template for FRR Evidence Collection
 
 ```bicep
-// frr_evidence_collection.bicep - FRR-Specific Evidence Collection Infrastructure
-// Comprehensive infrastructure for FedRAMP 20x FRR evidence automation
+// frr_evidence_collection.bicep - FRR evidence storage
+// Hardened evidence account with one immutable container per FRR family plus the build-artifact streams, and alerting on the supplied workspace.
 //
-// FRR Families Covered:
-// - VDR: Vulnerability Detection and Response
-// - RSC: Recommended Secure Configuration  
-// - ADS: Audit and Data Security
-// - SCN: Secure Configuration
-// - CCM: Configuration Change Management
-// - MAS: Malware and Antivirus
-// - UCM: Update and Configuration Management
-// - ICP: Incident Communication and Planning
-// - FSI: Federal Security Incidents
-// - PVA: Privacy and Vulnerability Assessment
-// - KSI: Key Security Indicators
+// CR26 (FedRAMP Consolidated Rules for 2026) references for evidence storage:
+//   KSI-MLA-RVL / KSI-MLA-OSM / KSI-MLA-ALA  log review, SIEM/log aggregation, log access
+//   KSI-SVC-SIN  information secured       KSI-SVC-RUD  removing unwanted data
+//   KSI-CMT-LMC  logging changes           VER-TFR-MRH  historical activity
+//   IVV-CSO-SEI / IVV-CSO-SEE  supply evidence of implementation / effectiveness
+//   FRC-CSX-VVK / FRC-CSX-VVR  automated verification and validation (KSIs / rules)
+//   SDR-CSX-KMT  KSI metrics
+// CR26 sets no numeric log or evidence retention period. The 1095 day (3 year) default is an
+// organizational choice; keep it configurable.
 //
-// Evidence Collection Methods:
-// 1. Azure Monitor Log Analytics with KQL queries
-// 2. Azure Resource Graph for configuration auditing
-// 3. Microsoft Defender for Cloud integration
-// 4. Azure Policy compliance state export
-// 5. Automated evidence export to blob storage
+// Blob layout convention (one container per evidence stream):
+//   <container>/<report-or-app>/<yyyy-MM-dd or version>/<runId or buildId>/<files>
+//   Each run folder also carries:
+//     run.json             provenance: pipeline, buildId, commit, rulesVersion, collectedAt
+//     sha256-manifest.txt  SHA-256 of every evidence file in the folder
+//   Upload with Entra auth and WITHOUT --overwrite (versioning is off on purpose; with
+//   container-level WORM an overwrite of an existing blob name fails instead of silently
+//   creating a version):
+//     az storage blob upload-batch --auth-mode login --account-name <account> \
+//       --destination <container> --destination-path <report-or-app>/<date>/<runId> --source ./out
+//
+// Locking is a deliberate, one-way, out-of-band step. Once a time-based retention policy is
+// locked it can only be extended (never shortened or removed) and the storage account cannot
+// be deleted while retained blobs exist. Review the unlocked policy first, then lock it with
+// `az storage container immutability-policy lock` (or the portal).
+// Locking is intentionally not a deployment parameter (the Bicep resource cannot lock it).
+//
+// Lifecycle: tier to cool after 30 days since creation. There is deliberately NO delete
+// rule. Expiry of retained evidence is a records-management decision, not a lifecycle default.
+//
+// Baseline: StorageV2 Standard RA-GRS (parameterized), Hot tier, shared key and SAS disabled,
+// public network access disabled, private endpoint (blob) with private DNS zone group,
+// optional customer-managed key (user-assigned identity + versionless Key Vault key),
+// infrastructure encryption, no SFTP/NFSv3, versioning OFF, change feed ON, no blob soft
+// delete or point-in-time restore (incompatible with immutability), container soft delete 90d.
+// Writers: one user-assigned managed identity per stream with Storage Blob Data Contributor
+// scoped to its own container. Readers: an Entra group with Storage Blob Data Reader on the
+// account. No access keys, SAS tokens or connection strings with AccountKey anywhere.
 
-@description('Primary deployment location')
+targetScope = 'resourceGroup'
+
+@description('Deployment location')
 param location string = resourceGroup().location
 
 @description('Unique suffix for resource naming')
 param nameSuffix string = uniqueString(resourceGroup().id)
 
-@description('Log Analytics retention in days (730 = 2 years for FedRAMP)')
-param logRetentionDays int = 730
+@description('Storage replication. RA-GRS by default (organizational baseline).')
+@allowed([
+  'Standard_RAGRS'
+  'Standard_RAGZRS'
+  'Standard_GRS'
+  'Standard_GZRS'
+  'Standard_ZRS'
+  'Standard_LRS'
+])
+param storageReplication string = 'Standard_RAGRS'
 
-@description('Evidence storage retention in days (2555 = 7 years)')
-param evidenceRetentionDays int = 2555
+@description('Container immutability (WORM) period in days since creation. 1095 (3 years) is an organizational choice, not a FedRAMP requirement.')
+@minValue(1)
+param immutabilityPeriodDays int = 1095
 
-@description('Enable Defender for Cloud integration')
-param enableDefender bool = true
+@description('Use a customer-managed key when the key inputs below are provided.')
+param enableCmk bool = true
+
+@description('Key Vault URI holding the CMK, e.g. https://kv-name.vault.azure.net/ (empty = Microsoft-managed key)')
+param cmkKeyVaultUri string = ''
+
+@description('Key name in the Key Vault. The key version is omitted so rotation is automatic.')
+param cmkKeyName string = ''
+
+@description('Resource ID of the user-assigned identity with Key Vault Crypto Service Encryption User on the key (empty = Microsoft-managed key)')
+param cmkIdentityId string = ''
+
+@description('Subnet resource ID for the blob private endpoint')
+param privateEndpointSubnetId string
+
+@description('Resource ID of the privatelink.blob.core.windows.net private DNS zone')
+param blobPrivateDnsZoneId string
+
+@description('Log Analytics workspace resource ID for StorageRead/StorageWrite/StorageDelete diagnostics')
+param logAnalyticsWorkspaceId string
+
+@description('Object ID of the Entra group granted Storage Blob Data Reader on the account (use a group, not individuals)')
+param readerGroupObjectId string
 
 @description('Alert email address')
 param alertEmail string
 
-// FedRAMP 20x Compliance Tags
-var frComplianceTags = {
-  Compliance: 'FedRAMP 20x'
-  Requirements: 'FRR-VDR-01, FRR-RSC-01, FRR-ADS-01, FRR-SCN-01, FRR-CCM-01'
-  Purpose: 'Evidence Collection'
-  RetentionDays: string(evidenceRetentionDays)
+@description('Age in days after which an open high-severity recommendation raises an alert (organizational threshold, not a FedRAMP number)')
+param vulnAgeThresholdDays int = 15
+
+var cmkEnabled = enableCmk && !empty(cmkKeyVaultUri) && !empty(cmkKeyName) && !empty(cmkIdentityId)
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+var storageBlobDataReaderRoleId = '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
+var streams = [
+  'frr-vdr'
+  'frr-scg'
+  'frr-cds'
+  'frr-scn'
+  'frr-ccm'
+  'frr-mas'
+  'frr-cmu'
+  'frr-iec'
+  'frr-ivv'
+  'frr-afc'
+  'vdr-reports'
+  'sbom'
+  'grype-reports'
+  'scap-reports'
+]
+// FRR families covered (CR26): VDR, SCG, CDS, SCN, CCM, MAS, CMU, IEC, IVV, AFC.
+// Retired names: ADS->CDS, RSC->SCG, UCM->CMU, ICP->IEC, PVA->IVV, FSI->AFC.
+
+var tags = {
+  Compliance: 'FedRAMP 20x CR26'
+  Purpose: 'Evidence Storage'
+  ImmutabilityDays: string(immutabilityPeriodDays)
 }
 
 // ============================================================================
-// Log Analytics Workspace - Central Evidence Repository
-// Addresses: FRR-ADS-01 (Audit Logging), FRR-MLA-01 (Monitoring)
+// Evidence Storage Account
+// Supports: KSI-SVC-SIN (information secured), KSI-SVC-RUD (removing unwanted data)
 // ============================================================================
 
-resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: 'law-frr-evidence-${nameSuffix}'
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: 'stevidfrr${take(nameSuffix, 12)}'
   location: location
-  tags: frComplianceTags
-  properties: {
-    sku: {
-      name: 'PerGB2018'
-    }
-    retentionInDays: logRetentionDays
-    features: {
-      enableLogAccessUsingOnlyResourcePermissions: true
-      immediatePurgeDataOn30Days: false
-    }
-    workspaceCapping: {
-      dailyQuotaGb: -1 // No cap for FedRAMP compliance
-    }
-  }
-}
-
-// ============================================================================
-// Evidence Storage Account - Immutable Evidence Archive
-// Addresses: FRR-ADS-02 (Data Protection), FRR-RSC-01 (Secure Config)
-// ============================================================================
-
-resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: 'stfrrevidence${nameSuffix}'
-  location: location
-  tags: frComplianceTags
+  tags: tags
   sku: {
-    name: 'Standard_GRS' // Geo-redundant for compliance
+    name: storageReplication
   }
   kind: 'StorageV2'
+  identity: cmkEnabled ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${cmkIdentityId}': {}
+    }
+  } : null
   properties: {
     accessTier: 'Hot'
+    allowSharedKeyAccess: false // Entra only: no account keys, no key-signed SAS
+    defaultToOAuthAuthentication: true
     allowBlobPublicAccess: false
+    publicNetworkAccess: 'Disabled'
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
+    isLocalUserEnabled: false
+    isSftpEnabled: false // SFTP and NFSv3 are incompatible with immutability
+    isNfsV3Enabled: false
+    allowCrossTenantReplication: false
+    allowedCopyScope: 'AAD'
     networkAcls: {
       defaultAction: 'Deny'
       bypass: 'AzureServices'
     }
     encryption: {
+      keySource: cmkEnabled ? 'Microsoft.Keyvault' : 'Microsoft.Storage'
+      requireInfrastructureEncryption: true
       services: {
         blob: {
           enabled: true
@@ -107,195 +173,213 @@ resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
           keyType: 'Account'
         }
       }
-      keySource: 'Microsoft.Storage'
+      identity: cmkEnabled ? {
+        userAssignedIdentity: cmkIdentityId
+      } : null
+      keyvaultproperties: cmkEnabled ? {
+        keyname: cmkKeyName
+        keyvaulturi: cmkKeyVaultUri // keyversion omitted: versionless key, rotation is automatic
+      } : null
     }
   }
 }
 
-resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
-  parent: evidenceStorage
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
+  parent: storageAccount
   name: 'default'
   properties: {
+    // Versioning is OFF on purpose: with container-level WORM and no versioning, an
+    // overwrite of an existing blob name fails outright instead of silently creating a version.
+    isVersioningEnabled: false
+    changeFeed: {
+      enabled: true // audit trail of blob changes
+    }
     containerDeleteRetentionPolicy: {
       enabled: true
-      days: 30
+      days: 90
     }
+    // No blob soft delete and no point-in-time restore: incompatible with immutability.
     deleteRetentionPolicy: {
-      enabled: true
-      days: 365
+      enabled: false
     }
-    changeFeed: {
-      enabled: true
-      retentionInDays: 365
-    }
-    isVersioningEnabled: true
-  }
-}
-
-// Evidence containers by FRR family
-resource vdrContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'frr-vdr'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      family: 'VDR'
-      description: 'Vulnerability Detection and Response Evidence'
-    }
-  }
-}
-
-resource rscContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'frr-rsc'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      family: 'RSC'
-      description: 'Recommended Secure Configuration Evidence'
-    }
-  }
-}
-
-resource adsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'frr-ads'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      family: 'ADS'
-      description: 'Audit and Data Security Evidence'
-    }
-  }
-}
-
-resource scnContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'frr-scn'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      family: 'SCN'
-      description: 'Secure Configuration Evidence'
-    }
-  }
-}
-
-resource ccmContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'frr-ccm'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      family: 'CCM'
-      description: 'Configuration Change Management Evidence'
-    }
-  }
-}
-
-resource masContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'frr-mas'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      family: 'MAS'
-      description: 'Malware and Antivirus Evidence'
+    restorePolicy: {
+      enabled: false
     }
   }
 }
 
 // ============================================================================
-// Key Vault - Secrets Management
-// Addresses: FRR-SVC-01 (Secure Services), FRR-RSC-01 (Secure Config)
+// Containers (one per evidence stream), each private and WORM
 // ============================================================================
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: 'kv-frr-${nameSuffix}'
+resource evidenceContainers 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = [for stream in streams: {
+  parent: blobService
+  name: stream
+  properties: {
+    publicAccess: 'None'
+  }
+}]
+
+// Time-based retention. Created UNLOCKED. See the locking note at the top of this file.
+resource immutabilityPolicies 'Microsoft.Storage/storageAccounts/blobServices/containers/immutabilityPolicies@2023-05-01' = [for (stream, i) in streams: {
+  parent: evidenceContainers[i]
+  name: 'default'
+  properties: {
+    immutabilityPeriodSinceCreationInDays: immutabilityPeriodDays
+    allowProtectedAppendWrites: false
+  }
+}]
+
+// ============================================================================
+// Lifecycle management (tier only, never delete)
+// ============================================================================
+
+resource lifecyclePolicy 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05-01' = {
+  parent: storageAccount
+  name: 'default'
+  properties: {
+    policy: {
+      rules: [
+        {
+          name: 'tier-evidence-to-cool-30d'
+          enabled: true
+          type: 'Lifecycle'
+          definition: {
+            filters: {
+              blobTypes: [
+                'blockBlob'
+              ]
+            }
+            actions: {
+              baseBlob: {
+                tierToCool: {
+                  daysAfterCreationGreaterThan: 30
+                }
+                // No delete action: retention expiry is a records decision.
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+// ============================================================================
+// Private endpoint (blob) with private DNS zone group
+// ============================================================================
+
+resource blobPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-09-01' = {
+  name: 'pe-${storageAccount.name}-blob'
   location: location
-  tags: frComplianceTags
+  tags: tags
   properties: {
-    sku: {
-      family: 'A'
-      name: 'premium' // HSM-backed keys for FedRAMP
+    subnet: {
+      id: privateEndpointSubnetId
     }
-    tenantId: subscription().tenantId
-    enablePurgeProtection: true
-    enableSoftDelete: true
-    softDeleteRetentionInDays: 90
-    enableRbacAuthorization: true
-    networkAcls: {
-      defaultAction: 'Deny'
-      bypass: 'AzureServices'
-    }
+    privateLinkServiceConnections: [
+      {
+        name: 'blob'
+        properties: {
+          privateLinkServiceId: storageAccount.id
+          groupIds: [
+            'blob'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource blobPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-09-01' = {
+  parent: blobPrivateEndpoint
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink-blob-core-windows-net'
+        properties: {
+          privateDnsZoneId: blobPrivateDnsZoneId
+        }
+      }
+    ]
   }
 }
 
 // ============================================================================
-// Automation Account - Scheduled Evidence Collection
-// Addresses: FRR-CCM-01 (Change Management), FRR-ADS-01 (Audit)
+// RBAC: per-container writers, group readers. No keys, no SAS.
+// Any function, app or collector writes using one of these managed identities (Entra only).
 // ============================================================================
 
-resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
-  name: 'aa-frr-evidence-${nameSuffix}'
+resource writerIdentities 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = [for stream in streams: {
+  name: 'id-evidence-writer-${stream}-${nameSuffix}'
   location: location
-  tags: frComplianceTags
-  identity: {
-    type: 'SystemAssigned'
-  }
+  tags: tags
+}]
+
+resource writerRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (stream, i) in streams: {
+  scope: evidenceContainers[i] // container scope, not account: a writer cannot touch another stream
+  name: guid(evidenceContainers[i].id, writerIdentities[i].id, storageBlobDataContributorRoleId)
   properties: {
-    sku: {
-      name: 'Basic'
-    }
-    encryption: {
-      keySource: 'Microsoft.Automation'
-    }
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
+    principalId: writerIdentities[i].properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}]
+
+resource readerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: storageAccount
+  name: guid(storageAccount.id, readerGroupObjectId, storageBlobDataReaderRoleId)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataReaderRoleId)
+    principalId: readerGroupObjectId
+    principalType: 'Group'
   }
 }
 
 // ============================================================================
-// Microsoft Defender for Cloud - Vulnerability Scanning
-// Addresses: FRR-VDR-01 (Vulnerability Detection), FRR-MAS-01 (Antimalware)
+// Diagnostics: StorageRead / StorageWrite / StorageDelete to Log Analytics
+// Supports: KSI-MLA-OSM, KSI-MLA-ALA, KSI-CMT-LMC
 // ============================================================================
 
-resource defenderPricing 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
-  name: 'VirtualMachines'
+resource blobDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'evidence-blob-to-law'
+  scope: blobService
   properties: {
-    pricingTier: 'Standard'
-    subPlan: 'P2'
-  }
-}
-
-resource defenderStorage 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
-  name: 'StorageAccounts'
-  properties: {
-    pricingTier: 'Standard'
-  }
-}
-
-resource defenderSql 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
-  name: 'SqlServers'
-  properties: {
-    pricingTier: 'Standard'
-  }
-}
-
-resource defenderKeyVault 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
-  name: 'KeyVaults'
-  properties: {
-    pricingTier: 'Standard'
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        category: 'StorageRead'
+        enabled: true
+      }
+      {
+        category: 'StorageWrite'
+        enabled: true
+      }
+      {
+        category: 'StorageDelete'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'Transaction'
+        enabled: true
+      }
+    ]
   }
 }
 
 // ============================================================================
-// Action Group - Compliance Alerts
-// Addresses: FRR-ICP-01 (Incident Communication)
+// Action group and alerts (queries run against the Log Analytics workspace input)
+// Supports: VDR-CSO-DET (vulnerability detection), CCM-OCR-AVL (change visibility),
+//           IEC-CSO-IIR (incident reporting)
 // ============================================================================
 
 resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   name: 'ag-frr-alerts-${nameSuffix}'
   location: 'global'
-  tags: frComplianceTags
+  tags: tags
   properties: {
     groupShortName: 'FRRAlerts'
     enabled: true
@@ -309,39 +393,26 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   }
 }
 
-// ============================================================================
-// Scheduled Query Rules - Evidence Collection Alerts
-// ============================================================================
-
-resource criticalVulnAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
-  name: 'alert-frr-vdr-01-critical-vulns'
+resource staleVulnAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+  name: 'alert-frr-vdr-stale-high-severity'
   location: location
-  tags: union(frComplianceTags, {
-    FRR: 'FRR-VDR-01'
-    Purpose: 'Critical Vulnerability SLA Monitoring'
+  tags: union(tags, {
+    FRR: 'VDR-CSO-DET'
   })
   properties: {
-    displayName: 'FRR-VDR-01: Critical Vulnerabilities Exceeding SLA'
-    description: 'Alerts when critical vulnerabilities exceed 15-day remediation SLA'
-    severity: 0
+    displayName: 'VDR-CSO-DET: High-severity recommendations open beyond threshold'
+    description: 'Alerts when high-severity recommendations stay open longer than vulnAgeThresholdDays'
+    severity: 1
     enabled: true
     evaluationFrequency: 'PT1H'
     windowSize: 'PT1H'
     scopes: [
-      logAnalytics.id
+      logAnalyticsWorkspaceId
     ]
     criteria: {
       allOf: [
         {
-          query: '''
-SecurityRecommendation
-| where RecommendationSeverity == "High"
-| where RecommendationState == "Active"
-| extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
-| where DaysOpen > 15
-| summarize Count = count() by ResourceId
-| where Count > 0
-          '''
+          query: 'SecurityRecommendation | where RecommendationSeverity == "High" | where RecommendationState == "Active" | extend DaysOpen = datetime_diff("day", now(), FirstEvaluationDate) | where DaysOpen > ${vulnAgeThresholdDays} | summarize Count = count() by ResourceId | where Count > 0'
           timeAggregation: 'Count'
           operator: 'GreaterThan'
           threshold: 0
@@ -360,36 +431,26 @@ SecurityRecommendation
   }
 }
 
-resource configDriftAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
-  name: 'alert-frr-ccm-01-config-drift'
+resource configChangeAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+  name: 'alert-frr-ccm-config-change'
   location: location
-  tags: union(frComplianceTags, {
-    FRR: 'FRR-CCM-01'
-    Purpose: 'Configuration Drift Detection'
+  tags: union(tags, {
+    FRR: 'CCM-OCR-AVL'
   })
   properties: {
-    displayName: 'FRR-CCM-01: Unauthorized Configuration Change Detected'
-    description: 'Alerts on configuration changes outside change management process'
-    severity: 1
+    displayName: 'CCM-OCR-AVL: Successful configuration change on critical providers'
+    description: 'Surfaces write/delete operations for review against change records (add caller exclusions for approved automation)'
+    severity: 2
     enabled: true
     evaluationFrequency: 'PT15M'
     windowSize: 'PT15M'
     scopes: [
-      logAnalytics.id
+      logAnalyticsWorkspaceId
     ]
     criteria: {
       allOf: [
         {
-          query: '''
-AzureActivity
-| where OperationNameValue has_any ("write", "delete")
-| where ActivityStatusValue == "Success"
-| where Caller !in ("allowed-service-principal@domain.com")
-| where ResourceProviderValue in (
-    "Microsoft.Network", "Microsoft.Compute", "Microsoft.KeyVault"
-)
-| project TimeGenerated, Caller, OperationNameValue, ResourceId
-          '''
+          query: 'AzureActivity | where OperationNameValue has_any ("write", "delete") | where ActivityStatusValue == "Success" | where ResourceProviderValue in ("Microsoft.Network", "Microsoft.Compute", "Microsoft.KeyVault", "Microsoft.Storage") | project TimeGenerated, Caller, OperationNameValue, ResourceId'
           timeAggregation: 'Count'
           operator: 'GreaterThan'
           threshold: 0
@@ -405,64 +466,6 @@ AzureActivity
         actionGroup.id
       ]
     }
-  }
-}
-
-// ============================================================================
-// Diagnostic Settings - Enable All Logging
-// ============================================================================
-
-resource kvDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'ds-kv-frr'
-  scope: keyVault
-  properties: {
-    workspaceId: logAnalytics.id
-    logs: [
-      {
-        category: 'AuditEvent'
-        enabled: true
-        retentionPolicy: {
-          enabled: true
-          days: logRetentionDays
-        }
-      }
-      {
-        category: 'AzurePolicyEvaluationDetails'
-        enabled: true
-        retentionPolicy: {
-          enabled: true
-          days: logRetentionDays
-        }
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-        retentionPolicy: {
-          enabled: true
-          days: logRetentionDays
-        }
-      }
-    ]
-  }
-}
-
-resource storageDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'ds-storage-frr'
-  scope: evidenceStorage
-  properties: {
-    workspaceId: logAnalytics.id
-    metrics: [
-      {
-        category: 'Transaction'
-        enabled: true
-        retentionPolicy: {
-          enabled: true
-          days: logRetentionDays
-        }
-      }
-    ]
   }
 }
 
@@ -470,57 +473,40 @@ resource storageDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
 // Outputs
 // ============================================================================
 
-output logAnalyticsWorkspaceId string = logAnalytics.id
-output logAnalyticsWorkspaceName string = logAnalytics.name
-output evidenceStorageAccountName string = evidenceStorage.name
-output keyVaultName string = keyVault.name
-output automationAccountName string = automationAccount.name
+output storageAccountName string = storageAccount.name
+output storageAccountId string = storageAccount.id
+output containerNames array = streams
+output writerIdentities array = [for (stream, i) in streams: {
+  container: stream
+  clientId: writerIdentities[i].properties.clientId
+  principalId: writerIdentities[i].properties.principalId
+}]
+output blobLayout string = '<container>/<report-or-app>/<yyyy-MM-dd or version>/<runId or buildId>/<files> + run.json + sha256-manifest.txt'
 output actionGroupId string = actionGroup.id
-
-output deploymentSummary object = {
-  logRetentionDays: logRetentionDays
-  evidenceRetentionDays: evidenceRetentionDays
-  frrsAddressed: [
-    'FRR-VDR-01: Vulnerability scanning via Defender for Cloud'
-    'FRR-RSC-01: Secure configuration via Key Vault and Storage encryption'
-    'FRR-ADS-01: Audit logging via Log Analytics'
-    'FRR-SCN-01: Network security via storage network ACLs'
-    'FRR-CCM-01: Change management via Activity Log monitoring'
-    'FRR-MAS-01: Antimalware via Defender for Cloud'
-    'FRR-ICP-01: Incident communication via Action Groups'
-  ]
-}
 ```
 
 ## Deployment Instructions
 
-### Prerequisites
-- Azure CLI installed and authenticated
-- Contributor role on target subscription
-- Email address for compliance alerts
-
-### Deploy with Azure CLI
 ```bash
-# Create resource group
-az group create --name rg-frr-evidence --location eastus
+az group create --name rg-evidence --location eastus
 
-# Deploy template
 az deployment group create \
-    --resource-group rg-frr-evidence \
-    --template-file frr_evidence_collection.bicep \
-    --parameters alertEmail=compliance@yourorg.com
-
-# Verify deployment
-az deployment group show \
-    --resource-group rg-frr-evidence \
-    --name frr_evidence_collection
+  --resource-group rg-evidence \
+  --template-file evidence.bicep \
+  --parameters alertEmail=<email> \
+               privateEndpointSubnetId=<subnet-id> \
+               blobPrivateDnsZoneId=<privatelink.blob.core.windows.net zone id> \
+               logAnalyticsWorkspaceId=<workspace-id> \
+               readerGroupObjectId=<entra-group-object-id> \
+               cmkKeyVaultUri=<https://kv.vault.azure.net/> cmkKeyName=<key> cmkIdentityId=<uami-id>
 ```
 
-### Post-Deployment Configuration
-1. Configure Defender for Cloud workload protections
-2. Assign Azure Policy FedRAMP initiative
-3. Set up scheduled evidence export runbooks
-4. Configure GRC tool webhook integration
-5. Test alert notifications
+## Usage Notes
 
-*Generated by FedRAMP 20x MCP Server - FRR Evidence Infrastructure*
+- Public network access is disabled: upload from a runner or agent with private connectivity to the endpoint.
+- Writers authenticate with their managed identity or federated workload identity (Entra). Shared key access is disabled, so connection strings with AccountKey and SAS tokens do not work.
+- The immutability policies are created unlocked. Lock them out of band when ready (see the locking note in the template).
+- Retention (1095 days) is an organizational choice, not a FedRAMP number. CR26 does not set one.
+- Grant the CMK identity Key Vault Crypto Service Encryption User on the key before deploying with CMK. Omit the cmk parameters to use a Microsoft-managed key.
+
+*Generated by FedRAMP 20x MCP Server - Evidence Infrastructure*

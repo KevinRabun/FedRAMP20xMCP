@@ -40,21 +40,25 @@ class TestPatternLoading:
             "iam_patterns.yaml",
             "vdr_patterns.yaml",
             "scn_patterns.yaml",
-            "rsc_patterns.yaml",
-            "ads_patterns.yaml",
+            "scg_patterns.yaml",
+            "cds_patterns.yaml",
             "ccm_patterns.yaml",
             "cna_patterns.yaml",
-            "afr_patterns.yaml",
+            "cross_family_patterns.yaml",
             "mla_patterns.yaml",
             "piy_patterns.yaml",
             "svc_patterns.yaml",
-            "tpr_patterns.yaml",
-            "ucm_patterns.yaml",
+            "scr_patterns.yaml",
+            "cmu_patterns.yaml",
             "cmt_patterns.yaml",
             "inr_patterns.yaml",
             "rpl_patterns.yaml",
             "ced_patterns.yaml",
-            "common_patterns.yaml"
+            "common_patterns.yaml",
+            "afc_patterns.yaml",
+            "ivv_patterns.yaml",
+            "iec_patterns.yaml",
+            "mas_patterns.yaml",
         ]
         
         for file in expected_files:
@@ -135,7 +139,7 @@ class TestPatternLoading:
             families.add(pattern.family)
         
         # Should have multiple families
-        expected_families = ["IAM", "VDR", "SCN", "RSC", "ADS", "CNA"]
+        expected_families = ["IAM", "VDR", "SCN", "SCG", "CDS", "CNA"]
         for family in expected_families:
             assert family in families, f"Missing family: {family}"
     

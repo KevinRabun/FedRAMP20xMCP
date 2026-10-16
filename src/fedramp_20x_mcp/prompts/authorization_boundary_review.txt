@@ -1,6 +1,6 @@
-I'll help you review your FedRAMP authorization boundary for completeness.
+I'll help you review your FedRAMP Minimum Assessment Scope (the cloud service offering boundary) for completeness.
 
-**Minimum Assessment Scope (MAS) Boundary Review**:
+**Minimum Assessment Scope (MAS) Boundary Review** (MAS-CSO-IIR: all information resources likely to handle federal customer data or likely to impact its confidentiality, integrity, or availability):
 
 **1. Information Resources Inventory**
 
@@ -48,7 +48,7 @@ Trace data flow through your system:
 
 **4. Boundary Exclusions**
 
-FedRAMP explicitly excludes certain categories (per OMB direction):
+Certain product categories are outside FedRAMP scope by direction of the OMB Director (see MAS-CSO-IIR notes):
 - Identify any excluded services
 - Document why they're out of scope
 - Verify exclusions are valid
@@ -69,8 +69,8 @@ For each component, verify:
 ❌ Backup systems not included
 ❌ Non-machine resources (policies, procedures, people) omitted
 
-**Next Steps**:
+**Next Steps** (rules: MAS-CSO-IIR, MAS-CSO-FLO, MAS-CSO-TPR, MAS-CSO-MDI):
 1. Use search_requirements with "minimum assessment scope" or "information resource"
-2. Use list_family_controls with "MAS" for detailed requirements
+2. Use list_frrs_by_family with "MAS" for detailed requirements
 3. Review get_definition for "Information Resource" and "Cloud Service Offering"
 4. Document any boundary additions or clarifications needed

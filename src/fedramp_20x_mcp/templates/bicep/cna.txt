@@ -3,6 +3,8 @@
 ```bicep
 // main.bicep - Cloud Native Architecture Evidence
 param location string = resourceGroup().location
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period.')
+param logRetentionDays int
 
 // AKS cluster with monitoring
 resource aks 'Microsoft.ContainerService/managedClusters@2023-10-01' = {
@@ -16,7 +18,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2023-10-01' = {
     enableRBAC: true
     networkProfile: {
       networkPlugin: 'azure'
-      networkPolicy: 'calico'  // For KSI-CNA-01
+      networkPolicy: 'calico'  // For KSI-CNA-RNT
       serviceCidr: '10.0.0.0/16'
       dnsServiceIP: '10.0.0.10'
     }
@@ -28,7 +30,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2023-10-01' = {
         }
       }
       azurePolicy: {
-        enabled: true  // For KSI-CNA-08
+        enabled: true  // For KSI-CNA-EIS
       }
     }
   }
@@ -39,7 +41,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   location: location
   properties: {
     sku: { name: 'PerGB2018' }
-    retentionInDays: 730
+    retentionInDays: logRetentionDays  // organization-defined
   }
 }
 

@@ -1,0 +1,859 @@
+pattern_id: rsc.frr.frr_rsc_01
+name: Top-Level Administrative Accounts Guidance Compliance
+description: Validates compliance with SCG-CSO-RSC - Top-Level Administrative Accounts Guidance
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-CSO-RSC - Top-Level Administrative Accounts Guidance compliance check
+  description_template: Configuration requires validation for SCG-CSO-RSC compliance
+  remediation_template: Implement SCG-CSO-RSC requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-CSO-RSC
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-CSO-RSC policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-CSO-RSC configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-CSO-RSC compliance validation
+    implementation: |
+      # SCG-CSO-RSC compliance automation
+      # GitHub Actions
+      - name: SCG-CSO-RSC Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-CSO-RSC Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-CSO-RSC compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-CSO-RSC'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-CSO-RSC
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-CSO-RSC"
+        RequirementName = "Top-Level Administrative Accounts Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-CSO-RSC.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_02
+name: Top-Level Administrative Accounts Security Settings Guidance Compliance
+description: Validates compliance with SCG-CSO-RSC - Top-Level Administrative Accounts Security Settings Guidance
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-CSO-RSC - Top-Level Administrative Accounts Security Settings Guidance compliance check
+  description_template: Configuration requires validation for SCG-CSO-RSC compliance
+  remediation_template: Implement SCG-CSO-RSC requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-CSO-RSC
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-CSO-RSC policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-CSO-RSC configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-CSO-RSC compliance validation
+    implementation: |
+      # SCG-CSO-RSC compliance automation
+      # GitHub Actions
+      - name: SCG-CSO-RSC Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-CSO-RSC Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-CSO-RSC compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-CSO-RSC'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-CSO-RSC
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-CSO-RSC"
+        RequirementName = "Top-Level Administrative Accounts Security Settings Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-CSO-RSC.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_03
+name: Privileged Accounts Security Settings Guidance Compliance
+description: Validates compliance with SCG-CSO-RSC - Privileged Accounts Security Settings Guidance
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-CSO-RSC - Privileged Accounts Security Settings Guidance compliance check
+  description_template: Configuration requires validation for SCG-CSO-RSC compliance
+  remediation_template: Implement SCG-CSO-RSC requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-CSO-RSC
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-CSO-RSC policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-CSO-RSC configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-CSO-RSC compliance validation
+    implementation: |
+      # SCG-CSO-RSC compliance automation
+      # GitHub Actions
+      - name: SCG-CSO-RSC Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-CSO-RSC Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-CSO-RSC compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-CSO-RSC'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-CSO-RSC
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-CSO-RSC"
+        RequirementName = "Privileged Accounts Security Settings Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-CSO-RSC.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_04
+name: Secure Defaults on Provisioning Compliance
+description: Validates compliance with SCG-CSO-SDF - Secure Defaults on Provisioning
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-CSO-SDF - Secure Defaults on Provisioning compliance check
+  description_template: Configuration requires validation for SCG-CSO-SDF compliance
+  remediation_template: Implement SCG-CSO-SDF requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-CSO-SDF
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-CSO-SDF policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-CSO-SDF configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-CSO-SDF compliance validation
+    implementation: |
+      # SCG-CSO-SDF compliance automation
+      # GitHub Actions
+      - name: SCG-CSO-SDF Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-CSO-SDF Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-CSO-SDF compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-CSO-SDF'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-CSO-SDF
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-CSO-SDF"
+        RequirementName = "Secure Defaults on Provisioning"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-CSO-SDF.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_05
+name: Comparison Capability Compliance
+description: Validates compliance with SCG-ENH-CMP - Comparison Capability
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-ENH-CMP - Comparison Capability compliance check
+  description_template: Configuration requires validation for SCG-ENH-CMP compliance
+  remediation_template: Implement SCG-ENH-CMP requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-ENH-CMP
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-ENH-CMP policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-ENH-CMP configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-ENH-CMP compliance validation
+    implementation: |
+      # SCG-ENH-CMP compliance automation
+      # GitHub Actions
+      - name: SCG-ENH-CMP Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-ENH-CMP Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-ENH-CMP compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-ENH-CMP'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-ENH-CMP
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-ENH-CMP"
+        RequirementName = "Comparison Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-ENH-CMP.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_06
+name: Export Capability Compliance
+description: Validates compliance with SCG-ENH-EXP - Export Capability
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-ENH-EXP - Export Capability compliance check
+  description_template: Configuration requires validation for SCG-ENH-EXP compliance
+  remediation_template: Implement SCG-ENH-EXP requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-ENH-EXP
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-ENH-EXP policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-ENH-EXP configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-ENH-EXP compliance validation
+    implementation: |
+      # SCG-ENH-EXP compliance automation
+      # GitHub Actions
+      - name: SCG-ENH-EXP Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-ENH-EXP Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-ENH-EXP compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-ENH-EXP'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-ENH-EXP
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-ENH-EXP"
+        RequirementName = "Export Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-ENH-EXP.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_07
+name: API Capability Compliance
+description: Validates compliance with SCG-ENH-API - API Capability
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-ENH-API - API Capability compliance check
+  description_template: Configuration requires validation for SCG-ENH-API compliance
+  remediation_template: Implement SCG-ENH-API requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-ENH-API
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-ENH-API policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-ENH-API configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-ENH-API compliance validation
+    implementation: |
+      # SCG-ENH-API compliance automation
+      # GitHub Actions
+      - name: SCG-ENH-API Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-ENH-API Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-ENH-API compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-ENH-API'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-ENH-API
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-ENH-API"
+        RequirementName = "API Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-ENH-API.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_08
+name: Machine-Readable Guidance Compliance
+description: Validates compliance with SCG-ENH-MRG - Machine-Readable Guidance
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-ENH-MRG - Machine-Readable Guidance compliance check
+  description_template: Configuration requires validation for SCG-ENH-MRG compliance
+  remediation_template: Implement SCG-ENH-MRG requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-ENH-MRG
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-ENH-MRG policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-ENH-MRG configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-ENH-MRG compliance validation
+    implementation: |
+      # SCG-ENH-MRG compliance automation
+      # GitHub Actions
+      - name: SCG-ENH-MRG Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-ENH-MRG Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-ENH-MRG compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-ENH-MRG'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-ENH-MRG
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-ENH-MRG"
+        RequirementName = "Machine-Readable Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-ENH-MRG.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_09
+name: Publish Guidance Compliance
+description: Validates compliance with SCG-CSO-PUB - Publish Guidance
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-CSO-PUB - Publish Guidance compliance check
+  description_template: Configuration requires validation for SCG-CSO-PUB compliance
+  remediation_template: Implement SCG-CSO-PUB requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-CSO-PUB
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-CSO-PUB policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-CSO-PUB configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-CSO-PUB compliance validation
+    implementation: |
+      # SCG-CSO-PUB compliance automation
+      # GitHub Actions
+      - name: SCG-CSO-PUB Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-CSO-PUB Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-CSO-PUB compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-CSO-PUB'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-CSO-PUB
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-CSO-PUB"
+        RequirementName = "Publish Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-CSO-PUB.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_10
+name: Versioning and Release History Compliance
+description: Validates compliance with SCG-ENH-VRH - Versioning and Release History
+family: SCG
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: SCG-ENH-VRH - Versioning and Release History compliance check
+  description_template: Configuration requires validation for SCG-ENH-VRH compliance
+  remediation_template: Implement SCG-ENH-VRH requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scg
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- SCG-ENH-VRH
+evidence_artifacts:
+- artifact_type: policy
+  name: SCG-ENH-VRH policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: SCG-ENH-VRH configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated SCG-ENH-VRH compliance validation
+    implementation: |
+      # SCG-ENH-VRH compliance automation
+      # GitHub Actions
+      - name: SCG-ENH-VRH Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'SCG-ENH-VRH Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate SCG-ENH-VRH compliance
+            az policy state list --filter "policyDefinitionName eq 'SCG-ENH-VRH'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for SCG-ENH-VRH
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "SCG-ENH-VRH"
+        RequirementName = "Versioning and Release History"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_SCG-ENH-VRH.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

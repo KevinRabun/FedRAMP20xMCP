@@ -1,10 +1,27 @@
 """
 FedRAMP Data Loader
 
-This module handles fetching and caching FedRAMP 20x requirements data
-from the official GitHub repository.
+Loads the FedRAMP Consolidated Rules for 2026 (CR26) and the FedRAMP
+documentation that explains them.
+
+Rules source of truth: the single machine-readable file published in the
+FedRAMP/rules repository (fedramp-consolidated-rules.json). The legacy
+FedRAMP/docs repository (now FedRAMP/docs-legacy) no longer carries it.
+
+Resolution order for rules data:
+  1. In-memory cache (CACHE_DURATION)
+  2. On-disk cache, if it was written by this loader format (CACHE_FORMAT)
+  3. Remote fetch of FEDRAMP_RULES_URL, or the local FEDRAMP_RULES_FILE
+  4. Stale on-disk cache
+  5. The pinned snapshot bundled in rules_data/ (always available offline)
+
+Set FEDRAMP_RULES_OFFLINE=1 to skip the network and use the bundled snapshot
+(or FEDRAMP_RULES_FILE). Every load records the rules version and sha256 in
+metadata so a finding can be traced to the exact rules release it used.
 """
 
+import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -16,21 +33,47 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# GitHub API configuration
+# GitHub configuration
 GITHUB_API_BASE = "https://api.github.com"
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com"
-FEDRAMP_REPO = "FedRAMP/docs"
+
+# Rules: FedRAMP/rules publishes one consolidated JSON at the repo root.
+FEDRAMP_REPO = "FedRAMP/rules"
 FEDRAMP_BRANCH = "main"
-DATA_PATH = ""  # Files are now in root directory
-DOCS_PATH = "docs"
+DATA_PATH = ""  # Consolidated rules file lives in the repo root
+RULES_FILENAME = "fedramp-consolidated-rules.json"
+DEFAULT_RULES_URL = f"{GITHUB_RAW_BASE}/{FEDRAMP_REPO}/{FEDRAMP_BRANCH}/{RULES_FILENAME}"
+
+# Documentation: the CR26 site content lives in FedRAMP/2026 under content/.
+DOCS_REPO = "FedRAMP/2026"
+DOCS_BRANCH = "main"
+DOCS_PATH = "content"
+
+# Bundled, pinned data shipped inside the package.
+RULES_DATA_DIR = Path(__file__).parent / "rules_data"
+BUNDLED_RULES_FILE = RULES_DATA_DIR / RULES_FILENAME
+CROSSWALK_FILE = RULES_DATA_DIR / "legacy-crosswalk.json"
 
 # Cache configuration
 CACHE_DIR = Path(__file__).parent / "__fedramp_cache__"
 CACHE_DURATION = timedelta(hours=1)
+# Bump when the cached structure changes so older caches are ignored.
+CACHE_FORMAT = 2
+HTTP_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
+
+
+def _github_headers() -> Dict[str, str]:
+    """Use GITHUB_TOKEN when present to avoid API rate limits."""
+    token = os.environ.get("GITHUB_TOKEN")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
+def _truthy(value: Optional[str]) -> bool:
+    return (value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 class FedRAMPDataLoader:
-    """Loads and caches FedRAMP 20x requirements data."""
+    """Loads and caches FedRAMP Consolidated Rules data."""
 
     def __init__(self):
         """Initialize the data loader."""
@@ -40,12 +83,23 @@ class FedRAMPDataLoader:
         self._cache_timestamp: Optional[datetime] = None
         self._docs_cache: Optional[Dict[str, str]] = None
         self._docs_cache_timestamp: Optional[datetime] = None
-        self._fka_map: Dict[str, str] = {}  # Maps old IDs (fka) to new IDs
+        self._fka_map: Dict[str, str] = {}  # Maps legacy IDs to current IDs
+        self._crosswalk: Dict[str, Dict[str, Any]] = self._load_crosswalk()
+
+    @staticmethod
+    def _load_crosswalk() -> Dict[str, Dict[str, Any]]:
+        """Load the bundled legacy-ID crosswalk (legacy ID -> CR26 IDs)."""
+        try:
+            with open(CROSSWALK_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("crosswalk", {})
+        except Exception as e:
+            logger.warning(f"Legacy crosswalk unavailable: {e}")
+            return {}
 
     def _get_cache_file(self) -> Path:
         """Get the cache file path."""
         return self.cache_dir / "fedramp_controls.json"
-    
+
     def _get_docs_cache_file(self) -> Path:
         """Get the documentation cache file path."""
         return self.cache_dir / "fedramp_docs.json"
@@ -57,9 +111,9 @@ class FedRAMPDataLoader:
         return datetime.now() - self._cache_timestamp < CACHE_DURATION
 
     def _load_from_cache(self) -> Optional[Dict[str, Any]]:
-        """Load data from local cache if available and valid."""
+        """Load data from local cache if it exists and matches CACHE_FORMAT."""
         cache_file = self._get_cache_file()
-        
+
         if not cache_file.exists():
             logger.info("No cache file found")
             return None
@@ -67,8 +121,11 @@ class FedRAMPDataLoader:
         try:
             with open(cache_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                logger.info("Loaded data from cache")
-                return data
+            if data.get("metadata", {}).get("cache_format") != CACHE_FORMAT:
+                logger.info("Ignoring cache written by an older loader format")
+                return None
+            logger.info("Loaded data from cache")
+            return data
         except Exception as e:
             logger.error(f"Failed to load cache: {e}")
             return None
@@ -76,11 +133,11 @@ class FedRAMPDataLoader:
     def _save_to_cache(self, data: Dict[str, Any]) -> None:
         """
         Save data to local cache with restricted permissions.
-        
+
         Security: Creates file with owner-only permissions (0600) using thread-safe approach.
         """
         cache_file = self._get_cache_file()
-        
+
         try:
             # Create or truncate cache file with explicit owner-only permissions (0600)
             # This is thread-safe unlike os.umask()
@@ -100,51 +157,81 @@ class FedRAMPDataLoader:
             # Broad exception catch is intentional - cache failures should never crash the app
             logger.error(f"Failed to save cache: {e}")
 
-    async def _fetch_file_list(self) -> List[Dict[str, Any]]:
-        """Fetch the list of JSON files from the GitHub repository."""
-        # Construct URL with proper path handling (empty path = root)
-        url = f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents/{DATA_PATH}" if DATA_PATH else f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents"
-        
-        # Use GITHUB_TOKEN if available to avoid rate limits
-        headers = {}
-        github_token = os.environ.get("GITHUB_TOKEN")
-        if github_token:
-            headers["Authorization"] = f"Bearer {github_token}"
-        
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.get(url, headers=headers)
-                response.raise_for_status()
-                files = response.json()
-                
-                # Filter for JSON files
-                json_files = [
-                    f for f in files 
-                    if isinstance(f, dict) and f.get("name", "").endswith(".json")
-                ]
-                
-                logger.info(f"Found {len(json_files)} JSON files in repository")
-                return json_files
-            except Exception as e:
-                logger.error(f"Failed to fetch file list: {e}")
-                return []
+    async def _fetch_rules_bytes(self) -> Optional[tuple]:
+        """
+        Fetch the consolidated rules file.
 
-    async def _fetch_json_file(self, filename: str) -> Optional[Dict[str, Any]]:
-        """Fetch a single JSON file from the repository."""
-        # Construct URL with proper path handling
-        path = f"{DATA_PATH}/{filename}" if DATA_PATH else filename
-        url = f"{GITHUB_RAW_BASE}/{FEDRAMP_REPO}/{FEDRAMP_BRANCH}/{path}"
-        
-        async with httpx.AsyncClient() as client:
+        Returns (raw_bytes, source_description) or None. Honors
+        FEDRAMP_RULES_FILE (local path) and FEDRAMP_RULES_URL (override URL).
+        """
+        local = os.environ.get("FEDRAMP_RULES_FILE")
+        if local:
             try:
-                response = await client.get(url)
-                response.raise_for_status()
-                data = response.json()
-                logger.info(f"Fetched {filename}")
-                return data
+                return Path(local).read_bytes(), f"file:{local}"
             except Exception as e:
-                logger.error(f"Failed to fetch {filename}: {e}")
+                logger.error(f"Failed to read FEDRAMP_RULES_FILE {local}: {e}")
                 return None
+
+        if _truthy(os.environ.get("FEDRAMP_RULES_OFFLINE")):
+            return None
+
+        url = os.environ.get("FEDRAMP_RULES_URL", DEFAULT_RULES_URL)
+        async with httpx.AsyncClient(follow_redirects=True, timeout=HTTP_TIMEOUT) as client:
+            try:
+                response = await client.get(url, headers=_github_headers())
+                response.raise_for_status()
+                logger.info(f"Fetched rules from {url}")
+                return response.content, url
+            except Exception as e:
+                logger.error(f"Failed to fetch rules from {url}: {e}")
+                return None
+
+    def _load_bundled(self) -> Optional[tuple]:
+        """Read the pinned rules snapshot shipped with the package."""
+        try:
+            return BUNDLED_RULES_FILE.read_bytes(), f"bundled:{BUNDLED_RULES_FILE.name}"
+        except Exception as e:
+            logger.error(f"Bundled rules snapshot unreadable: {e}")
+            return None
+
+    def _build_dataset(self, raw: bytes, source: str) -> Dict[str, Any]:
+        """Parse a rules file into the loader's indexed structure."""
+        data = json.loads(raw.decode("utf-8"))
+        info = data.get("info", {})
+
+        all_data: Dict[str, Any] = {
+            "requirements": {},  # All requirements by ID
+            "documents": {},     # Documents by short_name
+            "families": {},      # Requirements grouped by family
+            "definitions": {},   # FedRAMP definitions (FRD)
+            "ksi": {},           # Key Security Indicators (KSI)
+            "control_parameters": {},  # FedRAMP NIST control parameters/guidance (CTL)
+            "metadata": {
+                "cache_format": CACHE_FORMAT,
+                "loaded_at": datetime.now().isoformat(),
+                "source": source,
+                "title": info.get("title", ""),
+                "version": info.get("version", ""),
+                "last_updated": info.get("last_updated", ""),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "default_artifacts": info.get("default_artifacts", {}),
+            },
+        }
+
+        short_name = info.get("short_name", "FRMR")
+        all_data["documents"][short_name] = {
+            "name": info.get("title", info.get("name", "")),
+            "short_name": short_name,
+            "version": info.get("version", ""),
+            "last_updated": info.get("last_updated", ""),
+            "filename": RULES_FILENAME,
+        }
+
+        if "FRD" in data and "FRR" in data and "KSI" in data:
+            self._process_consolidated_format(data, all_data)
+        else:
+            self._process_legacy_format(data, info, short_name, all_data)
+        return all_data
 
     async def load_data(self, force_refresh: bool = False) -> Dict[str, Any]:
         """
@@ -154,7 +241,7 @@ class FedRAMPDataLoader:
             force_refresh: Force refresh from remote source
 
         Returns:
-            Dictionary containing all FedRAMP 20x requirement data
+            Dictionary containing all FedRAMP requirement data
         """
         # Check memory cache first
         if not force_refresh and self._data_cache and self._is_cache_valid():
@@ -165,76 +252,50 @@ class FedRAMPDataLoader:
         if not force_refresh:
             cached_data = self._load_from_cache()
             if cached_data:
-                self._data_cache = cached_data
-                self._cache_timestamp = datetime.now()
-                self._build_fka_map()  # Build fka map for backward compatibility
+                self._set_data(cached_data)
                 return cached_data
 
-        # Fetch from remote
-        logger.info("Fetching data from GitHub repository")
-        
-        files = await self._fetch_file_list()
-        if not files:
-            # If fetch fails and we have cache, use it even if old
-            cached_data = self._load_from_cache()
-            if cached_data:
-                logger.warning("Using stale cache due to fetch failure")
-                return cached_data
-            raise Exception("Failed to fetch data and no cache available")
+        logger.info("Fetching FedRAMP Consolidated Rules")
+        fetched = await self._fetch_rules_bytes()
+        all_data: Optional[Dict[str, Any]] = None
+        if fetched:
+            try:
+                all_data = self._build_dataset(*fetched)
+            except Exception as e:
+                logger.error(f"Fetched rules could not be parsed: {e}")
 
-        # Fetch all JSON files
-        all_data: Dict[str, Any] = {
-            "requirements": {},  # All requirements by ID
-            "documents": {},     # Documents by short_name
-            "families": {},      # Requirements grouped by family
-            "definitions": {},   # FedRAMP definitions (FRD)
-            "ksi": {},          # Key Security Indicators (KSI)
-            "metadata": {
-                "last_updated": datetime.now().isoformat(),
-                "source": f"{FEDRAMP_REPO}/{DATA_PATH}",
-            }
-        }
+        if all_data is None:
+            stale = self._load_from_cache()
+            if stale:
+                logger.warning("Using stale cache because the rules fetch failed")
+                self._set_data(stale)
+                return stale
+            bundled = self._load_bundled()
+            if not bundled:
+                raise Exception("Failed to fetch rules and no cache or bundled snapshot available")
+            logger.warning("Using bundled rules snapshot")
+            all_data = self._build_dataset(*bundled)
+        else:
+            self._save_to_cache(all_data)
 
-        for file_info in files:
-            filename = file_info.get("name", "")
-            data = await self._fetch_json_file(filename)
-            
-            if not data:
-                continue
-                
-            # Extract document info - handle consolidated format
-            info = data.get("info", {})
-            short_name = info.get("short_name", filename.replace(".json", ""))
-            
-            # Store the document
-            all_data["documents"][short_name] = {
-                "name": info.get("title", info.get("name", "")),
-                "short_name": short_name,
-                "version": info.get("version", ""),
-                "last_updated": info.get("last_updated", ""),
-                "filename": filename,
-            }
-            
-            # Handle consolidated FRMR.documentation.json format
-            if "FRD" in data and "FRR" in data and "KSI" in data:
-                self._process_consolidated_format(data, all_data)
-            else:
-                # Legacy format handling (individual files)
-                self._process_legacy_format(data, info, short_name, all_data)
+        self._set_data(all_data)
+        meta = all_data["metadata"]
+        logger.info(
+            f"Loaded {len(all_data['requirements'])} requirements, {len(all_data['ksi'])} KSIs "
+            f"from {meta['source']} (version {meta['version']})"
+        )
+        return all_data
 
-        # Save to cache
-        self._save_to_cache(all_data)
-        self._data_cache = all_data
+    def _set_data(self, data: Dict[str, Any]) -> None:
+        self._data_cache = data
         self._cache_timestamp = datetime.now()
-        
-        # Build fka (formerly known as) reverse lookup for backward compatibility
         self._build_fka_map()
 
-        # Count actual JSON files vs logical sections
-        json_file_count = len(files)
-        section_count = len(all_data['documents'])
-        logger.info(f"Loaded {len(all_data['requirements'])} requirements from {json_file_count} file(s) ({section_count} sections)")
-        return all_data
+    def get_rules_metadata(self) -> Dict[str, Any]:
+        """Return source, version and checksum of the loaded rules."""
+        if not self._data_cache:
+            return {}
+        return dict(self._data_cache.get("metadata", {}))
 
     def _process_consolidated_format(self, data: Dict[str, Any], all_data: Dict[str, Any]) -> None:
         """
@@ -361,15 +422,29 @@ class FedRAMPDataLoader:
                 indicator["category"] = category_name
                 indicator["category_id"] = category_key
                 indicator["theme"] = category_theme
-                
+                indicator.setdefault("status", category_data.get("status", ""))
+
                 # Store in both ksi and requirements
                 all_data["ksi"][ksi_id] = indicator
                 all_data["requirements"][ksi_id] = indicator
-                
+
                 # Track in families
                 if "KSI" not in all_data["families"]:
                     all_data["families"]["KSI"] = []
                 all_data["families"]["KSI"].append(ksi_id)
+
+        # Process CTL (FedRAMP-specific NIST SP 800-53 parameter values and
+        # guidance for Rev5 controls), keyed like "AC-06-01".
+        for control_family, controls in data.get("CTL", {}).items():
+            if not isinstance(controls, dict):
+                continue
+            for control_id, control in controls.items():
+                if isinstance(control, dict):
+                    all_data["control_parameters"][control_id.upper()] = {
+                        "id": control_id.upper(),
+                        "family": control_family,
+                        **control,
+                    }
 
     def _process_legacy_format(self, data: Dict[str, Any], info: Dict[str, Any], 
                                short_name: str, all_data: Dict[str, Any]) -> None:
@@ -423,17 +498,25 @@ class FedRAMPDataLoader:
 
     def _build_fka_map(self) -> None:
         """
-        Build a reverse lookup map from old IDs (fka - formerly known as) to new IDs.
-        
-        This provides backward compatibility so code using old FedRAMP IDs like
-        'FRR-VDR-01' or 'KSI-IAM-01' can still find the requirements that are now
-        stored under new IDs like 'VDR-EVA-EFA' or 'KSI-IAM-MFA'.
+        Build a reverse lookup map from legacy IDs to current IDs.
+
+        CR26 carries no fka (formerly known as) fields, so the map is seeded
+        from the bundled crosswalk (rules_data/legacy-crosswalk.json): legacy
+        IDs like 'VDR-CSO-DET' or 'KSI-IAM-APM' resolve to their CR26 successor
+        ('VDR-CSO-DET', 'KSI-IAM-APM'). Any fka fields present in the loaded
+        data (older rule files) still take precedence.
         """
         self._fka_map.clear()
-        
+
         if not self._data_cache:
             return
-        
+
+        requirements = self._data_cache.get("requirements", {})
+        for legacy_id, entry in self._crosswalk.items():
+            targets = [t for t in entry.get("current_ids", []) if t in requirements]
+            if targets:
+                self._fka_map[legacy_id.upper()] = targets[0]
+
         # Scan all requirements and KSIs for fka fields
         for req_id, req in self._data_cache.get("requirements", {}).items():
             if isinstance(req, dict) and "fka" in req:
@@ -450,12 +533,41 @@ class FedRAMPDataLoader:
         
         logger.debug(f"Built fka map with {len(self._fka_map)} entries")
 
+    def resolve_legacy_id(self, legacy_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Explain how a legacy rule/KSI ID maps to CR26.
+
+        Returns the crosswalk entry (current_ids, basis, confidence, names) or
+        None when the ID is current or unknown. basis "related" means CR26 has
+        no single successor; treat the target as the nearest rule, not a rename.
+        """
+        entry = self._crosswalk.get(legacy_id.upper())
+        if entry is None:
+            return None
+        return {"legacy_id": legacy_id.upper(), **entry}
+
+    def get_control_parameters(self, control_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get FedRAMP parameter values/guidance for a NIST control (CTL section).
+
+        Accepts "AC-6(1)", "ac-6.1" or "AC-06-01".
+        """
+        if not self._data_cache:
+            return None
+        import re
+        m = re.match(r"^\s*([A-Za-z]{2})-?0*(\d+)(?:[.(\-]0*(\d+)\)?)?\s*$", control_id)
+        if not m:
+            return None
+        fam, base, enh = m.group(1).upper(), int(m.group(2)), m.group(3)
+        key = f"{fam}-{base:02d}" + (f"-{int(enh):02d}" if enh else "")
+        return self._data_cache.get("control_parameters", {}).get(key)
+
     def get_control(self, control_id: str) -> Optional[Dict[str, Any]]:
         """
         Get a specific requirement by ID.
         
-        Supports both new IDs (e.g., 'VDR-EVA-EFA', 'KSI-IAM-MFA') and legacy IDs
-        (e.g., 'FRR-VDR-01', 'KSI-IAM-01') via the fka (formerly known as) mapping.
+        Supports both CR26 IDs (e.g., 'VER-EVA-EFA', 'KSI-IAM-APM') and legacy IDs
+        (e.g., 'VDR-CSO-DET', 'KSI-IAM-APM') via the legacy crosswalk.
 
         Args:
             control_id: The requirement identifier (new or legacy format)
@@ -565,8 +677,8 @@ class FedRAMPDataLoader:
         """
         Get a Key Security Indicator by ID.
         
-        Supports both new IDs (e.g., 'KSI-IAM-MFA') and legacy IDs
-        (e.g., 'KSI-IAM-01') via the fka (formerly known as) mapping.
+        Supports both CR26 IDs (e.g., 'KSI-IAM-APM') and legacy IDs
+        (e.g., 'KSI-IAM-APM') via the legacy crosswalk.
 
         Args:
             ksi_id: The KSI identifier (new or legacy format)
@@ -627,47 +739,67 @@ class FedRAMPDataLoader:
 
 
     async def _fetch_docs_file_list(self) -> List[Dict[str, Any]]:
-        """Fetch the list of markdown files from the docs directory."""
-        url = f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents/{DOCS_PATH}"
-        
-        # Use GITHUB_TOKEN if available to avoid rate limits
-        headers = {}
-        github_token = os.environ.get("GITHUB_TOKEN")
-        if github_token:
-            headers["Authorization"] = f"Bearer {github_token}"
-        
-        async with httpx.AsyncClient() as client:
+        """
+        List markdown files under DOCS_PATH in DOCS_REPO (recursive).
+
+        Uses one git trees call instead of walking directories. Each entry has
+        "name" (path relative to DOCS_PATH, e.g. "providers/20x/index.md") and
+        "path" (repo path).
+        """
+        url = f"{GITHUB_API_BASE}/repos/{DOCS_REPO}/git/trees/{DOCS_BRANCH}?recursive=1"
+        prefix = f"{DOCS_PATH}/"
+
+        async with httpx.AsyncClient(follow_redirects=True, timeout=HTTP_TIMEOUT) as client:
             try:
-                response = await client.get(url, headers=headers)
+                response = await client.get(url, headers=_github_headers())
                 response.raise_for_status()
-                files = response.json()
-                
-                # Filter for markdown files only
+                tree = response.json().get("tree", [])
                 markdown_files = [
-                    f for f in files 
-                    if isinstance(f, dict) and f.get("name", "").endswith(".md") and f.get("type") == "file"
+                    {"name": item["path"][len(prefix):], "path": item["path"]}
+                    for item in tree
+                    if item.get("type") == "blob"
+                    and item.get("path", "").startswith(prefix)
+                    and item["path"].endswith(".md")
                 ]
-                
-                logger.info(f"Found {len(markdown_files)} markdown files in docs directory")
+                logger.info(f"Found {len(markdown_files)} markdown files in {DOCS_REPO}/{DOCS_PATH}")
                 return markdown_files
             except Exception as e:
                 logger.error(f"Failed to fetch docs file list: {e}")
                 return []
 
-    async def _fetch_markdown_file(self, filename: str) -> Optional[str]:
-        """Fetch a single markdown file from the docs directory."""
-        url = f"{GITHUB_RAW_BASE}/{FEDRAMP_REPO}/{FEDRAMP_BRANCH}/{DOCS_PATH}/{filename}"
-        
-        async with httpx.AsyncClient() as client:
+    async def _fetch_markdown_file(self, filename: str, client: Optional[httpx.AsyncClient] = None) -> Optional[str]:
+        """Fetch one markdown file; filename is relative to DOCS_PATH."""
+        url = f"{GITHUB_RAW_BASE}/{DOCS_REPO}/{DOCS_BRANCH}/{DOCS_PATH}/{filename}"
+
+        async def _get(c: httpx.AsyncClient) -> Optional[str]:
             try:
-                response = await client.get(url)
+                response = await c.get(url)
                 response.raise_for_status()
-                content = response.text
-                logger.info(f"Fetched {filename}")
-                return content
+                return response.text
             except Exception as e:
                 logger.error(f"Failed to fetch {filename}: {e}")
                 return None
+
+        if client is not None:
+            return await _get(client)
+        async with httpx.AsyncClient(follow_redirects=True, timeout=HTTP_TIMEOUT) as c:
+            return await _get(c)
+
+    def _read_docs_cache(self) -> Optional[Dict[str, str]]:
+        cache_file = self._get_docs_cache_file()
+        if not cache_file.exists():
+            return None
+        try:
+            with open(cache_file, "r", encoding="utf-8") as f:
+                cached = json.load(f)
+            meta = cached.get("__meta__", {}) if isinstance(cached, dict) else {}
+            if meta.get("repo") != DOCS_REPO or meta.get("cache_format") != CACHE_FORMAT:
+                logger.info("Ignoring documentation cache from an older source")
+                return None
+            return {k: v for k, v in cached.items() if k != "__meta__"}
+        except Exception as e:
+            logger.error(f"Failed to load docs cache: {e}")
+            return None
 
     async def load_documentation(self, force_refresh: bool = False) -> Dict[str, str]:
         """
@@ -677,7 +809,7 @@ class FedRAMPDataLoader:
             force_refresh: Force refresh from remote source
 
         Returns:
-            Dictionary mapping filenames to their markdown content
+            Dictionary mapping file paths (relative to the docs root) to markdown
         """
         # Check memory cache first
         if not force_refresh and self._docs_cache and self._docs_cache_timestamp:
@@ -687,51 +819,43 @@ class FedRAMPDataLoader:
 
         # Try to load from disk cache
         if not force_refresh:
-            cache_file = self._get_docs_cache_file()
-            if cache_file.exists():
-                try:
-                    with open(cache_file, "r", encoding="utf-8") as f:
-                        cached_data = json.load(f)
-                        logger.info("Loaded documentation from cache")
-                        self._docs_cache = cached_data
-                        self._docs_cache_timestamp = datetime.now()
-                        return cached_data
-                except Exception as e:
-                    logger.error(f"Failed to load docs cache: {e}")
+            cached_data = self._read_docs_cache()
+            if cached_data:
+                logger.info("Loaded documentation from cache")
+                self._docs_cache = cached_data
+                self._docs_cache_timestamp = datetime.now()
+                return cached_data
 
-        # Fetch from remote
-        logger.info("Fetching documentation from GitHub repository")
-        
-        # Get list of markdown files
-        files = await self._fetch_docs_file_list()
+        logger.info(f"Fetching documentation from {DOCS_REPO}")
+        files = [] if _truthy(os.environ.get("FEDRAMP_RULES_OFFLINE")) else await self._fetch_docs_file_list()
         if not files:
-            # If fetch fails and we have cache, use it even if old
-            cache_file = self._get_docs_cache_file()
-            if cache_file.exists():
-                try:
-                    with open(cache_file, "r", encoding="utf-8") as f:
-                        cached_data = json.load(f)
-                        logger.warning("Using stale docs cache due to fetch failure")
-                        return cached_data
-                except Exception as e:
-                    logger.error(f"Failed to load stale cache: {e}")
+            stale = self._read_docs_cache()
+            if stale:
+                logger.warning("Using stale docs cache due to fetch failure")
+                self._docs_cache = stale
+                self._docs_cache_timestamp = datetime.now()
+                return stale
             raise Exception("Failed to fetch documentation and no cache available")
 
-        # Fetch all markdown files
         docs_data: Dict[str, str] = {}
-        
-        for file_info in files:
-            filename = file_info.get("name", "")
-            content = await self._fetch_markdown_file(filename)
-            
-            if content:
-                docs_data[filename] = content
+        async with httpx.AsyncClient(follow_redirects=True, timeout=HTTP_TIMEOUT) as client:
+            semaphore = asyncio.Semaphore(8)
 
-        # Save to cache
+            async def fetch(name: str) -> None:
+                async with semaphore:
+                    content = await self._fetch_markdown_file(name, client)
+                if content:
+                    docs_data[name] = content
+
+            await asyncio.gather(*(fetch(f["name"]) for f in files))
+        docs_data = dict(sorted(docs_data.items()))
+
         cache_file = self._get_docs_cache_file()
         try:
+            payload = {"__meta__": {"repo": DOCS_REPO, "cache_format": CACHE_FORMAT,
+                                    "fetched_at": datetime.now().isoformat()}, **docs_data}
             with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump(docs_data, f, indent=2)
+                json.dump(payload, f, indent=2)
                 logger.info("Saved documentation to cache")
         except Exception as e:
             logger.error(f"Failed to save docs cache: {e}")
@@ -786,15 +910,22 @@ class FedRAMPDataLoader:
         Get the full content of a specific documentation file.
 
         Args:
-            filename: The markdown filename (e.g., "overview.md")
+            filename: Path relative to the docs root (e.g., "providers/20x/index.md").
+                A bare name or a path suffix also works when it matches one file.
 
         Returns:
             Full markdown content or None if not found
         """
         if not self._docs_cache:
             return None
-        
-        return self._docs_cache.get(filename)
+
+        key = filename.strip().lstrip("/")
+        if key.startswith(f"{DOCS_PATH}/"):
+            key = key[len(DOCS_PATH) + 1:]
+        if key in self._docs_cache:
+            return self._docs_cache[key]
+        matches = [k for k in self._docs_cache if k == key or k.endswith(f"/{key}")]
+        return self._docs_cache[matches[0]] if len(matches) == 1 else None
 
     def list_documentation_files(self) -> List[str]:
         """

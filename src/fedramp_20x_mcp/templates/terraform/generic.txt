@@ -2,6 +2,11 @@
 
 ```hcl
 # main.tf - Generic KSI Evidence Collection Infrastructure
+variable "log_retention_days" {
+  description = "Log retention in days. Organization-defined: CR26 sets no numeric log retention period."
+  type        = number
+}
+
 variable "ksi_id" {
   description = "KSI identifier"
   type        = string
@@ -15,7 +20,7 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
-# Key Vault for customer-managed keys (FedRAMP 20x SC-12 requirement)
+# Key Vault for customer-managed keys (supports KSI-SVC-ASM; NIST SC-12 key management)
 resource "azurerm_key_vault" "cmk" {
   name                       = "kv-${random_string.suffix.result}"
   location                   = var.location
@@ -43,7 +48,7 @@ resource "azurerm_log_analytics_workspace" "generic" {
   location            = var.location
   resource_group_name = azurerm_resource_group.evidence.name
   sku                 = "PerGB2018"
-  retention_in_days   = 730
+  retention_in_days   = var.log_retention_days  # organization-defined
 }
 
 # Evidence storage account with customer-managed key encryption

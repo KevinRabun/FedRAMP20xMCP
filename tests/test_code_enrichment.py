@@ -138,9 +138,9 @@ def test_requirement_header(data_loader):
     print("TEST: Requirement Header Generation")
     print("=" * 80)
     
-    # Use new descriptive IDs (Feb 2026 format)
+    # CR26 IDs
     header = get_requirement_header(
-        ksi_ids=["KSI-IAM-MFA"],
+        ksi_ids=["KSI-IAM-APM"],
         frr_ids=["VDR-EVA-EFA"],  # New format: family-group-id
         data_loader=data_loader,
         language="bicep"
@@ -150,9 +150,9 @@ def test_requirement_header(data_loader):
     print("-" * 80)
     print(header)
     
-    assert "KSI-IAM-MFA" in header, "KSI ID not in header"
+    assert "KSI-IAM-APM" in header, "KSI ID not in header"
     assert "VDR-EVA-EFA" in header, "FRR ID not in header"
-    assert "Phishing-Resistant MFA" in header, "KSI name not in header"
+    assert "Adopting Passwordless Methods" in header, "KSI name not in header"
     print("\n[PASS] Header generation test passed!")
 
 

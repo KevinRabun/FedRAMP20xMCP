@@ -59,7 +59,7 @@ languages:
     - ResourceGraphClient
 finding:
   title_template: Automated resource inventory detected
-  description_template: Code implements automated resource inventory using Azure Resource Graph or similar authoritative sources, compliant with KSI-PIY-01.
+  description_template: Code implements automated resource inventory using Azure Resource Graph or similar authoritative sources, compliant with KSI-PIY-GIV.
   remediation_template: N/A - Positive finding
 tags:
 - inventory
@@ -68,10 +68,10 @@ tags:
 nist_controls:
 - cm-8
 related_ksis:
-- KSI-PIY-01
+- KSI-PIY-GIV
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-01
+    requirement_id: KSI-PIY-GIV
     requirement_name: Automated Inventory
     impact_levels:
     - Low
@@ -138,7 +138,7 @@ languages:
     - inventoryList
 finding:
   title_template: Manual inventory tracking detected
-  description_template: Code uses manual inventory tracking. KSI-PIY-01 requires automated inventory from authoritative sources like Azure Resource Graph.
+  description_template: Code uses manual inventory tracking. KSI-PIY-GIV requires automated inventory from authoritative sources like Azure Resource Graph.
   remediation_template: 'Implement automated inventory using Azure Resource Graph:
 
     Python:
@@ -174,7 +174,7 @@ tags:
 nist_controls:
 - cm-8
 related_ksis:
-- KSI-PIY-01
+- KSI-PIY-GIV
 ---
 pattern_id: piy.pii.logging_detection
 name: PII in Logging Statements
@@ -267,6 +267,8 @@ nist_controls:
 - pt-3
 - si-12
 # Note: No direct KSI mapping for PII logging - covered by NIST controls above
+related_ksis:
+- KSI-SVC-SIN
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -417,8 +419,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-01
-    requirement_name: Automated Inventory
+    requirement_id: KSI-SVC-SIN
+    requirement_name: Securing Information
     impact_levels:
     - Low
     - Moderate
@@ -549,7 +551,7 @@ nist_controls:
 - au-11
 - mp-6
 related_ksis:
-- KSI-PIY-02
+- KSI-SVC-RUD
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -695,8 +697,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-02
-    requirement_name: Security Objectives and Requirements
+    requirement_id: KSI-SVC-RUD
+    requirement_name: Removing Unwanted Data
     impact_levels:
     - Low
     - Moderate
@@ -718,10 +720,10 @@ testing:
 ---
 pattern_id: piy.vdp.missing_program
 name: Missing Vulnerability Disclosure Program
-description: Detects absence of vulnerability disclosure mechanisms (KSI-PIY-03)
+description: Detects absence of vulnerability disclosure mechanisms (KSI-PIY-RVD)
 family: PIY
 severity: HIGH
-ksi_id: KSI-PIY-03
+ksi_id: KSI-PIY-RVD
 nist_controls:
 - si-2
 - pm-15
@@ -754,7 +756,7 @@ languages:
 finding:
   title_template: Missing Vulnerability Disclosure Program
   description_template: Repository or application lacks vulnerability disclosure program.
-    KSI-PIY-03 requires published VDP with contact information and disclosure timeline.
+    KSI-PIY-RVD requires published VDP with contact information and disclosure timeline.
   remediation_template: "Create Vulnerability Disclosure Program (VDP):\n\n**SECURITY.md\
     \ (GitHub/Root Directory):**\n```markdown\n# Security Policy\n\n## Supported Versions\n\
     \n| Version | Supported          |\n| ------- | ------------------ |\n| 1.0.x\
@@ -825,7 +827,7 @@ tags:
 - security-program
 - critical-gap
 related_ksis:
-- KSI-PIY-03
+- KSI-PIY-RVD
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -972,7 +974,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-03
+    requirement_id: KSI-PIY-RVD
     requirement_name: Vulnerability Disclosure Program
     impact_levels:
     - Low
@@ -1022,10 +1024,10 @@ testing:
 ---
 pattern_id: piy.secure_by_design.missing_practices
 name: Missing CISA Secure By Design Practices
-description: Detects absence of CISA Secure By Design principles (KSI-PIY-04)
+description: Detects absence of CISA Secure By Design principles (KSI-PIY-RSD)
 family: PIY
 severity: HIGH
-ksi_id: KSI-PIY-04
+ksi_id: KSI-PIY-RSD
 nist_controls:
 - sa-8
 - sa-11
@@ -1100,7 +1102,7 @@ languages:
     - secretReference
 finding:
   title_template: CISA Secure By Design principle violation
-  description_template: Code violates CISA Secure By Design principles. KSI-PIY-04
+  description_template: Code violates CISA Secure By Design principles. KSI-PIY-RSD
     requires security built-in from design phase.
   remediation_template: "Implement CISA Secure By Design Principles:\n\n**1. Default\
     \ Security (Secure Out-of-the-Box):**\n\nPython - Environment Variables for Secrets:\n\
@@ -1128,7 +1130,7 @@ finding:
     \        return user\n    except AuthenticationError as e:\n        log.warning(\"\
     authentication_failure\",\n                   username=username,\n           \
     \        ip=request.remote_addr,\n                   reason=str(e))\n        raise\n\
-    ```\n\n**3. Vulnerability Disclosure (Proactive):**\nSee KSI-PIY-03 remediation\
+    ```\n\n**3. Vulnerability Disclosure (Proactive):**\nSee KSI-PIY-RVD remediation\
     \ for VDP implementation.\n\n**4. Automated Secure Development:**\n\nGitHub Actions\
     \ - Security Automation:\n```yaml\nname: Security Checks\n\non: [push, pull_request]\n\
     \njobs:\n  security-scan:\n    runs-on: ubuntu-latest\n    steps:\n      - uses:\
@@ -1163,7 +1165,7 @@ finding:
     \   - High vulnerabilities within 30 days\n   - Automated update mechanism\n\n\
     5. **CVE Assignment:**\n   - Obtain CVEs for all security issues\n   - Public\
     \ vulnerability disclosure\n\n6. **Vulnerability Disclosure Policy:**\n   - Published\
-    \ VDP (see KSI-PIY-03)\n   - Clear reporting process\n   - Legal safe harbor\n\
+    \ VDP (see KSI-PIY-RVD)\n   - Clear reporting process\n   - Legal safe harbor\n\
     \n7. **Artifact Signing:**\n   - Code signing for all releases\n   - SBOM generation\n\
     \   - Supply chain security (Sigstore, SLSA)\n"
   evidence_collection:
@@ -1183,8 +1185,8 @@ tags:
 - secure-development
 - security-gap
 related_ksis:
-- KSI-PIY-04
-- KSI-PIY-03
+- KSI-PIY-RSD
+- KSI-PIY-RVD
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -1334,7 +1336,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-04
+    requirement_id: KSI-PIY-RSD
     requirement_name: CISA Secure By Design
     impact_levels:
     - Low
@@ -1358,10 +1360,10 @@ testing:
 ---
 pattern_id: piy.evaluation.missing_validation
 name: Missing Implementation Validation
-description: Detects absence of security control validation (KSI-PIY-05)
+description: Detects absence of security control validation (KSI-CMT-VTD)
 family: PIY
 severity: MEDIUM
-ksi_id: KSI-PIY-05
+ksi_id: KSI-CMT-VTD
 nist_controls:
 - ca-2
 - ca-7
@@ -1387,7 +1389,7 @@ languages:
     - burp
 finding:
   title_template: Missing security control validation testing
-  description_template: CI/CD pipeline lacks security control validation tests. KSI-PIY-05
+  description_template: CI/CD pipeline lacks security control validation tests. KSI-CMT-VTD
     requires automated testing of security implementations.
   remediation_template: "Implement Security Control Validation Testing:\n\n**1. Unit\
     \ Tests for Security Controls:**\n\nPython - pytest Security Tests:\n```python\n\
@@ -1511,7 +1513,7 @@ tags:
 - penetration-testing
 - security-gap
 related_ksis:
-- KSI-PIY-05
+- KSI-CMT-VTD
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -1660,7 +1662,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-05
+    requirement_id: KSI-CMT-VTD
     requirement_name: Evaluate Implementations
     impact_levels:
     - Low
@@ -1714,10 +1716,10 @@ testing:
 ---
 pattern_id: piy.investment.missing_metrics
 name: Missing Security Investment Metrics
-description: Detects absence of security effectiveness measurement (KSI-PIY-06)
+description: Detects absence of security effectiveness measurement (KSI-PIY-RIS)
 family: PIY
 severity: MEDIUM
-ksi_id: KSI-PIY-06
+ksi_id: KSI-PIY-RIS
 nist_controls:
 - pm-9
 - pm-14
@@ -1741,7 +1743,7 @@ languages:
 finding:
   title_template: Missing security investment effectiveness metrics
   description_template: Organization lacks documented security investment effectiveness
-    metrics. KSI-PIY-06 requires measurement of security program ROI.
+    metrics. KSI-PIY-RIS requires measurement of security program ROI.
   remediation_template: "Implement Security Investment Effectiveness Metrics:\n\n\
     **1. Key Performance Indicators (KPIs):**\n\n```yaml\nsecurity_kpis:\n  detection_response:\n\
     \    mttr:  # Mean Time To Respond\n      target: 4h\n      current: 6h\n    \
@@ -1873,7 +1875,7 @@ tags:
 - effectiveness
 - security-gap
 related_ksis:
-- KSI-PIY-06
+- KSI-PIY-RIS
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -2021,7 +2023,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-06
+    requirement_id: KSI-PIY-RIS
     requirement_name: Security Investment Effectiveness
     impact_levels:
     - Low
@@ -2078,10 +2080,10 @@ testing:
 ---
 pattern_id: piy.supply_chain.unvetted_dependencies
 name: Unvetted Supply Chain Dependencies
-description: Detects dependencies without supply chain security validation (KSI-PIY-07)
+description: Detects dependencies without supply chain security validation (KSI-SCR-MIT)
 family: PIY
 severity: HIGH
-ksi_id: KSI-PIY-07
+ksi_id: KSI-SCR-MIT
 nist_controls:
 - sa-9
 - sa-12
@@ -2138,7 +2140,7 @@ languages:
     - verified
 finding:
   title_template: Unvetted supply chain dependencies detected
-  description_template: Dependencies lack supply chain security vetting. KSI-PIY-07
+  description_template: Dependencies lack supply chain security vetting. KSI-SCR-MIT
     requires vendor/dependency risk assessment.
   remediation_template: "Implement Supply Chain Security for Dependencies:\n\n**1.\
     \ Dependency Vetting Process:**\n\nDependency Approval Checklist:\n```yaml\ndependency_approval_criteria:\n\
@@ -2244,9 +2246,9 @@ tags:
 - sbom
 - security-gap
 related_ksis:
-- KSI-PIY-07
-- KSI-TPR-03
-- KSI-TPR-04
+- KSI-SCR-MIT
+- KSI-SCR-MIT
+- KSI-SCR-MON
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -2397,7 +2399,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-07
+    requirement_id: KSI-SCR-MIT
     requirement_name: Supply Chain Risk Management
     impact_levels:
     - Low
@@ -2421,10 +2423,10 @@ testing:
 ---
 pattern_id: piy.executive.missing_governance
 name: Missing Executive Security Governance
-description: Detects absence of executive security oversight (KSI-PIY-08)
+description: Detects absence of executive security oversight (KSI-PIY-RES)
 family: PIY
 severity: MEDIUM
-ksi_id: KSI-PIY-08
+ksi_id: KSI-PIY-RES
 nist_controls:
 - pm-1
 - pm-2
@@ -2447,7 +2449,7 @@ languages:
 finding:
   title_template: Missing executive security governance documentation
   description_template: Organization lacks documented executive security oversight.
-    KSI-PIY-08 requires executive-level security governance.
+    KSI-PIY-RES requires executive-level security governance.
   remediation_template: "Implement Executive Security Governance:\n\n**1. Security\
     \ Governance Structure:**\n\n```yaml\nsecurity_governance:\n  ciso:\n    title:\
     \ \"Chief Information Security Officer\"\n    reports_to: \"CEO\"  # Or CTO/CIO\n\
@@ -2547,7 +2549,7 @@ tags:
 - oversight
 - security-gap
 related_ksis:
-- KSI-PIY-08
+- KSI-PIY-RES
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -2695,7 +2697,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-PIY-08
+    requirement_id: KSI-PIY-RES
     requirement_name: Executive Support
     impact_levels:
     - Low
@@ -2783,7 +2785,7 @@ languages:
     - "No vulnerability disclosure"
 finding:
   title_template: Missing vulnerability disclosure policy
-  description_template: No vulnerability disclosure mechanism detected. KSI-PIY-03 requires public vulnerability disclosure program.
+  description_template: No vulnerability disclosure mechanism detected. KSI-PIY-RVD requires public vulnerability disclosure program.
   remediation_template: Create SECURITY.md with vulnerability reporting process and coordinated disclosure timeline.
 tags:
 - disclosure
@@ -2791,7 +2793,7 @@ tags:
 nist_controls:
 - ir-9
 related_ksis:
-- KSI-PIY-03
+- KSI-PIY-RVD
 ---
 pattern_id: piy.sdlc.security_integration
 name: Security in SDLC
@@ -2813,7 +2815,7 @@ languages:
     - Dependency
 finding:
   title_template: Security integrated in SDLC
-  description_template: Development workflow includes security checks, compliant with KSI-PIY-04.
+  description_template: Development workflow includes security checks, compliant with KSI-PIY-RSD.
   remediation_template: N/A - Positive finding
 tags:
 - sdlc
@@ -2823,7 +2825,7 @@ nist_controls:
 - sa-8
 - sa-11
 related_ksis:
-- KSI-PIY-04
+- KSI-PIY-RSD
 ---
 pattern_id: piy.evaluation.methodology
 name: Evaluation Methodology Documentation
@@ -2839,7 +2841,7 @@ languages:
     - methodology
 finding:
   title_template: Evaluation methodology documented
-  description_template: Evaluation methods are documented, compliant with KSI-PIY-05.
+  description_template: Evaluation methods are documented, compliant with KSI-SVC-EIS.
   remediation_template: N/A - Positive finding
 tags:
 - evaluation
@@ -2847,7 +2849,7 @@ tags:
 nist_controls:
 - ca-2
 related_ksis:
-- KSI-PIY-05
+- KSI-SVC-EIS
 ---
 pattern_id: piy.investment.security_metrics
 name: Security Investment Monitoring
@@ -2870,7 +2872,7 @@ languages:
     - security-investment-metrics
 finding:
   title_template: Security investment monitoring detected
-  description_template: Security investment effectiveness is monitored, compliant with KSI-PIY-06.
+  description_template: Security investment effectiveness is monitored, compliant with KSI-PIY-RIS.
   remediation_template: N/A - Positive finding
 tags:
 - investment
@@ -2879,7 +2881,7 @@ tags:
 nist_controls:
 - pm-14
 related_ksis:
-- KSI-PIY-06
+- KSI-PIY-RIS
 ---
 pattern_id: piy.supply_chain.documentation
 name: Supply Chain Risk Documentation
@@ -2896,7 +2898,7 @@ languages:
     - provenance
 finding:
   title_template: Supply chain security documented
-  description_template: Supply chain risk decisions are documented, compliant with KSI-PIY-07.
+  description_template: Supply chain risk decisions are documented, compliant with KSI-SCR-MIT.
   remediation_template: N/A - Positive finding
 tags:
 - supply-chain
@@ -2905,7 +2907,7 @@ nist_controls:
 - sr-3
 - sr-6
 related_ksis:
-- KSI-PIY-07
+- KSI-SCR-MIT
 ---
 pattern_id: piy.executive.support_metrics
 name: Executive Security Support Measurement
@@ -2921,7 +2923,7 @@ languages:
     - ExecutiveSupport
 finding:
   title_template: Executive security support measured
-  description_template: Executive support for security is measured, compliant with KSI-PIY-08.
+  description_template: Executive support for security is measured, compliant with KSI-PIY-RES.
   remediation_template: N/A - Positive finding
 tags:
 - executive
@@ -2931,7 +2933,7 @@ nist_controls:
 - pm-1
 - pm-2
 related_ksis:
-- KSI-PIY-08
+- KSI-PIY-RES
 ---
 pattern_id: piy.sdlc.no_security
 name: No Security in SDLC
@@ -2959,7 +2961,7 @@ languages:
     - "No security"
 finding:
   title_template: Security not integrated in SDLC
-  description_template: Development workflow lacks security integration. KSI-PIY-04 requires security in SDLC.
+  description_template: Development workflow lacks security integration. KSI-PIY-RSD requires security in SDLC.
   remediation_template: Integrate SAST, dependency scanning, and threat modeling into CI/CD pipeline.
 tags:
 - sdlc
@@ -2967,7 +2969,7 @@ tags:
 nist_controls:
 - sa-3
 related_ksis:
-- KSI-PIY-04
+- KSI-PIY-RSD
 ---
 pattern_id: piy.evaluation.no_methodology
 name: No Evaluation Methodology
@@ -2995,7 +2997,7 @@ languages:
     - "No evaluation"
 finding:
   title_template: No evaluation methodology
-  description_template: No documented evaluation methodology. KSI-PIY-05 requires documented evaluation methods.
+  description_template: No documented evaluation methodology. KSI-SVC-EIS requires documented evaluation methods.
   remediation_template: Document evaluation methodology including scanning tools, testing frequency, and compliance validation.
 tags:
 - evaluation
@@ -3003,7 +3005,7 @@ tags:
 nist_controls:
 - ca-2
 related_ksis:
-- KSI-PIY-05
+- KSI-SVC-EIS
 ---
 pattern_id: piy.supply_chain.no_documentation
 name: No Supply Chain Documentation
@@ -3035,7 +3037,7 @@ languages:
     - "No provenance"
 finding:
   title_template: Supply chain risks undocumented
-  description_template: Supply chain security decisions not documented. KSI-PIY-07 requires documented supply chain risk management.
+  description_template: Supply chain security decisions not documented. KSI-SCR-MIT requires documented supply chain risk management.
   remediation_template: Document approved dependency sources, SBOM generation, provenance requirements, and risk decisions.
 tags:
 - supply-chain
@@ -3043,7 +3045,7 @@ tags:
 nist_controls:
 - sr-3
 related_ksis:
-- KSI-PIY-07
+- KSI-SCR-MIT
 ---
 pattern_id: piy.executive.no_measurement
 name: No Executive Support Measurement
@@ -3071,7 +3073,7 @@ languages:
     - "No executive"
 finding:
   title_template: Executive support not measured
-  description_template: Executive security support not measured. KSI-PIY-08 requires measurement of executive engagement.
+  description_template: Executive security support not measured. KSI-PIY-RES requires measurement of executive engagement.
   remediation_template: Implement executive security metrics including budget allocation, training hours, and policy approvals.
 tags:
 - executive
@@ -3079,7 +3081,7 @@ tags:
 nist_controls:
 - pm-1
 related_ksis:
-- KSI-PIY-08
+- KSI-PIY-RES
 ---
 pattern_id: piy.investment.no_monitoring
 name: No Security Investment Monitoring
@@ -3107,7 +3109,7 @@ languages:
     - "No metrics"
 finding:
   title_template: Security investment not monitored
-  description_template: Security investment effectiveness not measured. KSI-PIY-06 requires monitoring security investment ROI.
+  description_template: Security investment effectiveness not measured. KSI-PIY-RIS requires monitoring security investment ROI.
   remediation_template: Implement security metrics dashboards tracking vulnerability reduction, incident response times, and compliance rates.
 tags:
 - investment
@@ -3115,4 +3117,4 @@ tags:
 nist_controls:
 - pm-14
 related_ksis:
-- KSI-PIY-06
+- KSI-PIY-RIS

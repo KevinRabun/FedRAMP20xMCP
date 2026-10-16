@@ -2,6 +2,11 @@
 
 ```hcl
 # main.tf - Service Management Evidence Collection
+variable "log_retention_days" {
+  description = "Log retention in days. Organization-defined: CR26 sets no numeric log retention period."
+  type        = number
+}
+
 data "azurerm_client_config" "current" {}
 
 resource "random_string" "suffix" {
@@ -15,10 +20,10 @@ resource "azurerm_log_analytics_workspace" "keyvault" {
   location            = var.location
   resource_group_name = azurerm_resource_group.evidence.name
   sku                 = "PerGB2018"
-  retention_in_days   = 730
+  retention_in_days   = var.log_retention_days  # organization-defined
 }
 
-# Key Vault for secret management (KSI-SVC-06) and CMK encryption (SC-12)
+# Key Vault for secret management (KSI-SVC-ASM) and CMK encryption (SC-12)
 resource "azurerm_key_vault" "secrets" {
   name                       = "kv-fedramp-secrets"
   location                   = var.location
@@ -89,7 +94,7 @@ resource "azurerm_monitor_diagnostic_setting" "keyvault" {
     
     retention_policy {
       enabled = true
-      days    = 730
+      days    = var.log_retention_days  # organization-defined
     }
   }
 }

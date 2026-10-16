@@ -1,11 +1,11 @@
 pattern_id: tpr.dependencies.unverified
 name: Unverified Third-Party Dependencies
 description: Detects usage of third-party dependencies without verification, integrity
-  checks, or security scanning. KSI-TPR-03 requires supply chain risk management for
+  checks, or security scanning. KSI-SCR-MIT requires supply chain risk management for
   all external components.
 severity: HIGH
-family: TPR
-ksi_id: KSI-TPR-03
+family: SCR
+ksi_id: KSI-SCR-MIT
 nist_controls: &id001
 - sa-12
 - sr-3
@@ -15,7 +15,7 @@ pattern_type: configuration
 finding:
   title_template: 'Unverified dependency installation detected: {file_path}'
   description_template: Third-party dependencies are being installed without cryptographic
-    integrity verification. KSI-TPR-03 requires verified supply chain components.
+    integrity verification. KSI-SCR-MIT requires verified supply chain components.
   remediation_template: Use package lock files with hash verification (requirements.txt
     with hashes, package-lock.json, Pipfile.lock) and verify signatures before installation.
 languages:
@@ -135,21 +135,23 @@ remediation: "Implement secure dependency management with verification:\n\n**Pyt
   \ (SA-12)\n- Maintain SBOM for all components (SR-4.2)\n- Scan for vulnerabilities\
   \ weekly (RA-5)\n- Track dependency licenses (SA-12)\n- Monitor supply chain alerts\
   \ (SR-11)\n"
+related_ksis:
+- KSI-SCR-MIT
 evidence_artifacts:
 - artifact_type: logs
-  name: TPR operational logs
+  name: SCR operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: TPR configuration export
+  name: SCR configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: TPR compliance validation report
+  name: SCR compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -160,51 +162,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "tpr"
+      | where Message contains "scr"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track TPR related operations over last 30 days
+    description: Track SCR related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'tpr' | take 100"
-    description: Query recent TPR events
+      "AppTraces | where Message contains 'scr' | take 100"
+    description: Query recent SCR events
     output_format: json
   powershell:
-  - script: '# Query TPR configuration
+  - script: '# Query SCR configuration
 
       Get-AzTPRResource | Select-Object Name, Location, Properties'
-    description: Get TPR resource configuration
+    description: Get SCR resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for TPR compliance enforcement
-    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for SCR compliance enforcement
+    implementation: "# Azure Policy definition for SCR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'tpr.dependencies.unverified-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'TPR Compliance Policy'\n    description:\
-      \ 'Enforces TPR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCR Compliance Policy'\n    description:\
+      \ 'Enforces SCR compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for TPR violations
+    description: Azure Monitor alerts for SCR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'tpr.dependencies.unverified-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on TPR compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on SCR compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for TPR
-    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for SCR
+    implementation: "# GitHub Actions\n- name: Validate SCR Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCR Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
     azure_services:
     - Azure Pipelines
@@ -213,23 +215,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - TPR requirements documented and approved
+  - SCR requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review TPR FedRAMP requirements
+    action: Review SCR FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design TPR implementation architecture
+    action: Design SCR implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement TPR controls in code/IaC
+    action: Implement SCR controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for TPR
+    action: Configure Azure services for SCR
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/tpr/main.bicep
@@ -246,22 +248,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCR')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: TPR - TPR
+  control_family: SCR - SCR
   control_numbers: *id001
   ssp_sections:
   - section: 'sa-12: Implementation'
-    description_template: The system implements TPR controls in accordance with FedRAMP
-      20x requirements. TPR Requirements is addressed through a combination of Azure
+    description_template: The system implements SCR controls in accordance with FedRAMP
+      20x requirements. SCR Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce TPR compliance
+    implementation_details: Azure services are configured to enforce SCR compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      TPR requirements.
+      SCR requirements.
     evidence_references:
-    - TPR configuration exports from Azure Portal
+    - SCR configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -269,21 +271,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for TPR compliance
+    purpose: Primary service for SCR compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: TPR implementation
+    design_area: SCR implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement TPR controls as part of secure baseline
+    guidance: Implement SCR controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-TPR-03
+    requirement_id: KSI-SCR-MIT
     requirement_name: Supply Chain Risk Management
     impact_levels:
     - Low
@@ -309,10 +311,10 @@ testing:
 pattern_id: tpr.monitoring.supply_chain_missing
 name: Missing Supply Chain Security Monitoring
 description: Detects absence of supply chain monitoring, vulnerability alerts, or
-  dependency update tracking. KSI-TPR-04 requires continuous supply chain risk monitoring.
+  dependency update tracking. KSI-SCR-MON requires continuous supply chain risk monitoring.
 severity: HIGH
-family: TPR
-ksi_id: KSI-TPR-04
+family: SCR
+ksi_id: KSI-SCR-MON
 nist_controls: &id001
 - sr-11
 - ra-5
@@ -321,7 +323,7 @@ pattern_type: configuration
 finding:
   title_template: 'Missing supply chain security monitoring: {file_path}'
   description_template: No supply chain security monitoring tools (Dependabot, Renovate,
-    Snyk, etc.) detected in CI/CD configuration. KSI-TPR-04 requires continuous monitoring
+    Snyk, etc.) detected in CI/CD configuration. KSI-SCR-MON requires continuous monitoring
     for dependency vulnerabilities and updates.
   remediation_template: Implement automated supply chain monitoring using Dependabot,
     Renovate, or similar tools to track vulnerabilities and dependency updates continuously.
@@ -458,21 +460,23 @@ remediation: "Implement continuous supply chain security monitoring:\n\n**1. Dep
   \ vulnerability scans (RA-5)\n- Weekly dependency updates review (SA-12)\n- Monthly\
   \ SBOM generation (SR-4.2)\n- Real-time security alerts (SR-11)\n- Quarterly supply\
   \ chain audit (SA-12)\n"
+related_ksis:
+- KSI-SCR-MON
 evidence_artifacts:
 - artifact_type: logs
-  name: TPR operational logs
+  name: SCR operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: TPR configuration export
+  name: SCR configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: TPR compliance validation report
+  name: SCR compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -483,51 +487,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "tpr"
+      | where Message contains "scr"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track TPR related operations over last 30 days
+    description: Track SCR related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'tpr' | take 100"
-    description: Query recent TPR events
+      "AppTraces | where Message contains 'scr' | take 100"
+    description: Query recent SCR events
     output_format: json
   powershell:
-  - script: '# Query TPR configuration
+  - script: '# Query SCR configuration
 
       Get-AzTPRResource | Select-Object Name, Location, Properties'
-    description: Get TPR resource configuration
+    description: Get SCR resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for TPR compliance enforcement
-    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for SCR compliance enforcement
+    implementation: "# Azure Policy definition for SCR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'tpr.monitoring.supply_chain_missing-policy'\n  properties: {\n\
-      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'TPR Compliance\
-      \ Policy'\n    description: 'Enforces TPR compliance requirements'\n    policyRule:\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'SCR Compliance\
+      \ Policy'\n    description: 'Enforces SCR compliance requirements'\n    policyRule:\
       \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
       \        effect: 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for TPR violations
+    description: Azure Monitor alerts for SCR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'tpr.monitoring.supply_chain_missing-alert'\n  location: 'global'\n\
-      \  properties: {\n    description: 'Alert on TPR compliance violations'\n  \
+      \  properties: {\n    description: 'Alert on SCR compliance violations'\n  \
       \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
       \ 'PT15M'\n  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for TPR
-    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for SCR
+    implementation: "# GitHub Actions\n- name: Validate SCR Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCR Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
     azure_services:
     - Azure Pipelines
@@ -536,23 +540,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - TPR requirements documented and approved
+  - SCR requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review TPR FedRAMP requirements
+    action: Review SCR FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design TPR implementation architecture
+    action: Design SCR implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement TPR controls in code/IaC
+    action: Implement SCR controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for TPR
+    action: Configure Azure services for SCR
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/tpr/main.bicep
@@ -569,22 +573,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCR')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: TPR - TPR
+  control_family: SCR - SCR
   control_numbers: *id001
   ssp_sections:
   - section: 'sr-11: Implementation'
-    description_template: The system implements TPR controls in accordance with FedRAMP
-      20x requirements. TPR Requirements is addressed through a combination of Azure
+    description_template: The system implements SCR controls in accordance with FedRAMP
+      20x requirements. SCR Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce TPR compliance
+    implementation_details: Azure services are configured to enforce SCR compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      TPR requirements.
+      SCR requirements.
     evidence_references:
-    - TPR configuration exports from Azure Portal
+    - SCR configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -592,21 +596,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for TPR compliance
+    purpose: Primary service for SCR compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: TPR implementation
+    design_area: SCR implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement TPR controls as part of secure baseline
+    guidance: Implement SCR controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-TPR-04
+    requirement_id: KSI-SCR-MON
     requirement_name: Supply Chain Risk Monitoring
     impact_levels:
     - Low
@@ -632,11 +636,11 @@ testing:
 pattern_id: tpr.sources.insecure
 name: Insecure Third-Party Package Sources
 description: Detects usage of untrusted or insecure package sources (HTTP instead
-  of HTTPS, unofficial repositories). KSI-TPR-03 requires verified sources for all
+  of HTTPS, unofficial repositories). KSI-SCR-MIT requires verified sources for all
   dependencies.
 severity: CRITICAL
-family: TPR
-ksi_id: KSI-TPR-03
+family: SCR
+ksi_id: KSI-SCR-MIT
 nist_controls: &id001
 - sa-12
 - sc-8
@@ -645,7 +649,7 @@ pattern_type: configuration
 finding:
   title_template: 'Insecure package source detected: {file_path}'
   description_template: Third-party packages are being sourced from untrusted or insecure
-    sources (HTTP instead of HTTPS, or unofficial repositories). KSI-TPR-03 requires
+    sources (HTTP instead of HTTPS, or unofficial repositories). KSI-SCR-MIT requires
     all dependencies to be obtained from verified, trusted sources.
   remediation_template: Configure package managers to use only HTTPS sources (pypi.org,
     npmjs.org, etc.) and remove --trusted-host or HTTP registry configurations.
@@ -709,21 +713,23 @@ remediation: "Use only trusted, verified package sources with HTTPS:\n\n**Python
   \ key=\"Username\" value=\"token\" />\n      <add key=\"ClearTextPassword\" value=\"\
   %AZURE_ARTIFACTS_TOKEN%\" />\n    </private>\n  </packageSourceCredentials>\n</configuration>\n\
   ```\n"
+related_ksis:
+- KSI-SCR-MIT
 evidence_artifacts:
 - artifact_type: logs
-  name: TPR operational logs
+  name: SCR operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: TPR configuration export
+  name: SCR configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: TPR compliance validation report
+  name: SCR compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -734,51 +740,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "tpr"
+      | where Message contains "scr"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track TPR related operations over last 30 days
+    description: Track SCR related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'tpr' | take 100"
-    description: Query recent TPR events
+      "AppTraces | where Message contains 'scr' | take 100"
+    description: Query recent SCR events
     output_format: json
   powershell:
-  - script: '# Query TPR configuration
+  - script: '# Query SCR configuration
 
       Get-AzTPRResource | Select-Object Name, Location, Properties'
-    description: Get TPR resource configuration
+    description: Get SCR resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for TPR compliance enforcement
-    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for SCR compliance enforcement
+    implementation: "# Azure Policy definition for SCR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'tpr.sources.insecure-policy'\n  properties: {\n    policyType:\
-      \ 'Custom'\n    mode: 'All'\n    displayName: 'TPR Compliance Policy'\n    description:\
-      \ 'Enforces TPR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCR Compliance Policy'\n    description:\
+      \ 'Enforces SCR compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for TPR violations
+    description: Azure Monitor alerts for SCR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'tpr.sources.insecure-alert'\n  location: 'global'\n  properties:\
-      \ {\n    description: 'Alert on TPR compliance violations'\n    severity: 2\n\
+      \ {\n    description: 'Alert on SCR compliance violations'\n    severity: 2\n\
       \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for TPR
-    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for SCR
+    implementation: "# GitHub Actions\n- name: Validate SCR Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCR Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
     azure_services:
     - Azure Pipelines
@@ -787,23 +793,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - TPR requirements documented and approved
+  - SCR requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review TPR FedRAMP requirements
+    action: Review SCR FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design TPR implementation architecture
+    action: Design SCR implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement TPR controls in code/IaC
+    action: Implement SCR controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for TPR
+    action: Configure Azure services for SCR
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/tpr/main.bicep
@@ -820,22 +826,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCR')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: TPR - TPR
+  control_family: SCR - SCR
   control_numbers: *id001
   ssp_sections:
   - section: 'sa-12: Implementation'
-    description_template: The system implements TPR controls in accordance with FedRAMP
-      20x requirements. TPR Requirements is addressed through a combination of Azure
+    description_template: The system implements SCR controls in accordance with FedRAMP
+      20x requirements. SCR Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce TPR compliance
+    implementation_details: Azure services are configured to enforce SCR compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      TPR requirements.
+      SCR requirements.
     evidence_references:
-    - TPR configuration exports from Azure Portal
+    - SCR configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -843,21 +849,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for TPR compliance
+    purpose: Primary service for SCR compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: TPR implementation
+    design_area: SCR implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement TPR controls as part of secure baseline
+    guidance: Implement SCR controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-TPR-03
+    requirement_id: KSI-SCR-MIT
     requirement_name: Supply Chain Risk Management
     impact_levels:
     - Low
@@ -882,11 +888,11 @@ testing:
 ---
 pattern_id: tpr.sbom.missing
 name: Missing Software Bill of Materials (SBOM)
-description: Detects absence of SBOM generation or maintenance. KSI-TPR-03 requires
+description: Detects absence of SBOM generation or maintenance. KSI-SCR-MIT requires
   documented inventory of all third-party components.
 severity: MEDIUM
-family: TPR
-ksi_id: KSI-TPR-03
+family: SCR
+ksi_id: KSI-SCR-MIT
 nist_controls: &id001
 - sa-12
 - cm-8
@@ -896,7 +902,7 @@ pattern_type: configuration
 finding:
   title_template: 'Missing SBOM generation: {file_path}'
   description_template: No Software Bill of Materials (SBOM) generation detected in
-    CI/CD configuration. KSI-TPR-03 requires documented inventory of all third-party
+    CI/CD configuration. KSI-SCR-MIT requires documented inventory of all third-party
     components using CycloneDX or SPDX format.
   remediation_template: Implement automated SBOM generation in CI/CD pipeline using
     tools like Syft, CycloneDX, or SPDX generators to maintain current component inventory.
@@ -945,21 +951,24 @@ remediation: "Implement automated SBOM generation and maintenance:\n\n**1. GitHu
   \ and relationships\n- Known vulnerabilities (CVEs)\n- Timestamps and tooling metadata\n\
   \n**SBOM Formats:**\n- CycloneDX (recommended for FedRAMP)\n- SPDX (ISO/IEC 5962:2021)\n\
   - SWID Tags (ISO/IEC 19770-2:2015)\n"
+related_ksis:
+- KSI-SCR-MIT
+- KSI-PIY-GIV
 evidence_artifacts:
 - artifact_type: logs
-  name: TPR operational logs
+  name: SCR operational logs
   source: Azure Monitor - Application/Resource Logs
   frequency: continuous
   retention_months: 36
   format: JSON
 - artifact_type: configuration
-  name: TPR configuration export
+  name: SCR configuration export
   source: Azure Portal or IaC templates
   frequency: weekly
   retention_months: 36
   format: JSON/Bicep/Terraform
 - artifact_type: report
-  name: TPR compliance validation report
+  name: SCR compliance validation report
   source: Automated testing pipeline
   frequency: daily
   retention_months: 12
@@ -970,51 +979,51 @@ evidence_collection:
 
       | where TimeGenerated > ago(30d)
 
-      | where Message contains "tpr"
+      | where Message contains "scr"
 
       | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
 
       | order by TimeGenerated desc'
-    description: Track TPR related operations over last 30 days
+    description: Track SCR related operations over last 30 days
     retention_days: 730
   azure_cli:
   - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
-      "AppTraces | where Message contains 'tpr' | take 100"
-    description: Query recent TPR events
+      "AppTraces | where Message contains 'scr' | take 100"
+    description: Query recent SCR events
     output_format: json
   powershell:
-  - script: '# Query TPR configuration
+  - script: '# Query SCR configuration
 
       Get-AzTPRResource | Select-Object Name, Location, Properties'
-    description: Get TPR resource configuration
+    description: Get SCR resource configuration
 automation:
   policy_enforcement:
-    description: Azure Policy for TPR compliance enforcement
-    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+    description: Azure Policy for SCR compliance enforcement
+    implementation: "# Azure Policy definition for SCR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
       \ = {\n  name: 'tpr.sbom.missing-policy'\n  properties: {\n    policyType: 'Custom'\n\
-      \    mode: 'All'\n    displayName: 'TPR Compliance Policy'\n    description:\
-      \ 'Enforces TPR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \    mode: 'All'\n    displayName: 'SCR Compliance Policy'\n    description:\
+      \ 'Enforces SCR compliance requirements'\n    policyRule: {\n      if: {\n \
       \       // Add specific conditions\n      }\n      then: {\n        effect:\
       \ 'audit'\n      }\n    }\n  }\n}"
     azure_services:
     - Azure Policy
     - Azure Monitor
   continuous_monitoring:
-    description: Azure Monitor alerts for TPR violations
+    description: Azure Monitor alerts for SCR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
       \ {\n  name: 'tpr.sbom.missing-alert'\n  location: 'global'\n  properties: {\n\
-      \    description: 'Alert on TPR compliance violations'\n    severity: 2\n  \
+      \    description: 'Alert on SCR compliance violations'\n    severity: 2\n  \
       \  enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
       \  }\n}"
     azure_services:
     - Azure Monitor
     - Application Insights
   cicd_validation:
-    description: CI/CD pipeline validation for TPR
-    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+    description: CI/CD pipeline validation for SCR
+    implementation: "# GitHub Actions\n- name: Validate SCR Compliance\n  run: |\n\
       \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
       \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
-      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCR Compliance Check'\n\
       \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
     azure_services:
     - Azure Pipelines
@@ -1023,23 +1032,23 @@ implementation:
   prerequisites:
   - Azure subscription with Contributor access
   - Required Azure services provisioned
-  - TPR requirements documented and approved
+  - SCR requirements documented and approved
   - Development and testing environment configured
   steps:
   - step: 1
-    action: Review TPR FedRAMP requirements
+    action: Review SCR FedRAMP requirements
     azure_service: null
     validation: Requirements documented and team trained
   - step: 2
-    action: Design TPR implementation architecture
+    action: Design SCR implementation architecture
     azure_service: null
     validation: Architecture review completed and approved
   - step: 3
-    action: Implement TPR controls in code/IaC
+    action: Implement SCR controls in code/IaC
     azure_service: Application code and IaC
     validation: Code review completed, unit tests pass
   - step: 4
-    action: Configure Azure services for TPR
+    action: Configure Azure services for SCR
     azure_service: Azure Portal
     validation: Services configured per requirements
     bicep_template: templates/bicep/tpr/main.bicep
@@ -1056,22 +1065,22 @@ implementation:
     azure_service: null
     validation: Documentation complete and reviewed
   validation_queries:
-  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCR')]"
   - az monitor metrics list --resource $RESOURCE_ID
 ssp_mapping:
-  control_family: TPR - TPR
+  control_family: SCR - SCR
   control_numbers: *id001
   ssp_sections:
   - section: 'sa-12: Implementation'
-    description_template: The system implements TPR controls in accordance with FedRAMP
-      20x requirements. TPR Requirements is addressed through a combination of Azure
+    description_template: The system implements SCR controls in accordance with FedRAMP
+      20x requirements. SCR Requirements is addressed through a combination of Azure
       native services, application-level controls, and automated monitoring.
-    implementation_details: Azure services are configured to enforce TPR compliance
+    implementation_details: Azure services are configured to enforce SCR compliance
       requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
       Automated compliance checking in CI/CD pipeline validates all deployments against
-      TPR requirements.
+      SCR requirements.
     evidence_references:
-    - TPR configuration exports from Azure Portal
+    - SCR configuration exports from Azure Portal
     - Azure Monitor logs showing compliance status
     - CI/CD pipeline validation results
     - Automated compliance scan reports
@@ -1079,21 +1088,21 @@ azure_guidance:
   recommended_services:
   - service: Azure Monitor
     tier: Standard
-    purpose: Primary service for TPR compliance
+    purpose: Primary service for SCR compliance
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
     pillar: Security
-    design_area: TPR implementation
+    design_area: SCR implementation
     recommendation_id: SEC-01
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
   cloud_adoption_framework:
     stage: Secure
-    guidance: Implement TPR controls as part of secure baseline
+    guidance: Implement SCR controls as part of secure baseline
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-TPR-03
+    requirement_id: KSI-SCR-MIT
     requirement_name: Supply Chain Risk Management
     impact_levels:
     - Low
@@ -1118,8 +1127,8 @@ testing:
 pattern_id: tpr.dependency.scanning_cicd
 name: Dependency Scanning in CI/CD
 description: Detects dependency scanning tools in CI/CD pipelines
-family: TPR
-ksi_id: KSI-TPR-03
+family: SCR
+ksi_id: KSI-SCR-MIT
 category: cicd_scanning
 severity: INFO
 pattern_type: security_control
@@ -1137,19 +1146,19 @@ languages:
     - Snyk
 finding:
   title_template: Dependency Scanning Detected
-  description_template: "CI/CD pipeline includes dependency scanning tools, compliant with KSI-TPR-03"
+  description_template: "CI/CD pipeline includes dependency scanning tools, compliant with KSI-SCR-MIT"
   remediation_template: "N/A - Positive finding"
 tags:
 - dependency_scanning
 - positive
 related_ksis:
-- KSI-TPR-03
+- KSI-SCR-MIT
 ---
 pattern_id: tpr.dependency.no_scanning
 name: Missing Dependency Scanning
 description: Detects CI/CD pipelines that deploy without dependency scanning
-family: TPR
-ksi_id: KSI-TPR-03
+family: SCR
+ksi_id: KSI-SCR-MIT
 category: cicd_scanning
 severity: HIGH
 pattern_type: security_control
@@ -1184,13 +1193,13 @@ tags:
 - dependency_scanning
 - negative
 related_ksis:
-- KSI-TPR-03
+- KSI-SCR-MIT
 ---
 pattern_id: tpr.monitoring.vulnerability_tracking
 name: Third-Party Vulnerability Monitoring
 description: Detects automated monitoring of third-party software vulnerabilities
-family: TPR
-ksi_id: KSI-TPR-04
+family: SCR
+ksi_id: KSI-SCR-MON
 category: vulnerability_monitoring
 severity: INFO
 pattern_type: security_control
@@ -1208,19 +1217,19 @@ languages:
     - CVE
 finding:
   title_template: Third-Party Vulnerability Monitoring Detected
-  description_template: "Automated monitoring for third-party vulnerabilities configured, compliant with KSI-TPR-04"
+  description_template: "Automated monitoring for third-party vulnerabilities configured, compliant with KSI-SCR-MON"
   remediation_template: "N/A - Positive finding"
 tags:
 - vulnerability_monitoring
 - positive
 related_ksis:
-- KSI-TPR-04
+- KSI-SCR-MON
 ---
 pattern_id: tpr.monitoring.no_tracking
 name: No Vulnerability Monitoring
 description: Detects lack of third-party vulnerability monitoring
-family: TPR
-ksi_id: KSI-TPR-04
+family: SCR
+ksi_id: KSI-SCR-MON
 category: vulnerability_monitoring
 severity: CRITICAL
 pattern_type: security_control
@@ -1254,4 +1263,4 @@ tags:
 - vulnerability_monitoring
 - negative
 related_ksis:
-- KSI-TPR-04
+- KSI-SCR-MON

@@ -37,7 +37,7 @@ Patterns use a **dict format** where each language has its own configuration:
 ```yaml
 pattern_id: family.category.specific_name
 name: Human-Readable Pattern Name
-family: FAMILY  # ADS, CCM, CNA, IAM, MLA, RSC, SCN, SVC, UCM, VDR, COMMON
+family: FAMILY  # CR26 family code: IAM, MLA, SVC, VDR, VER, CDS, SCG, CMU, IEC, IVV, AFC, ... or COMMON
 severity: critical|high|medium|low
 description: |
   Multi-line description of what this pattern detects.
@@ -60,11 +60,12 @@ finding:
   description: Description of the finding
   recommendation: Remediation guidance with specific FRR reference
   references:
-    - FRR-XXX-01
-    - KSI-YYY-01
+    - VDR-CSO-DET   # CR26 rule ID, must exist in fedramp-consolidated-rules.json
+    - KSI-SCR-MON   # CR26 KSI ID
 tags: [optional, tags, for, categorization]
 nist_controls: [AC-1, SC-7]  # Optional
-related_ksis: [KSI-IAM-01]  # Optional
+related_ksis: [KSI-IAM-APM]  # Optional: KSI-* IDs from the CR26 rules JSON
+related_frrs: [VDR-CSO-DET]  # Optional: CR26 rule IDs (every pattern needs at least one of the two)
 requires_all: [other.pattern.id]  # Optional: Must match all listed patterns
 requires_any: [pattern1.id, pattern2.id]  # Optional: Must match at least one
 requires_absence: [pattern.to.avoid]  # Optional: Must NOT match these patterns
@@ -208,7 +209,7 @@ family: SVC
 severity: critical
 description: |
   Detects hardcoded secrets in source code.
-  KSI-SVC-06 requires secrets to be stored in secure vaults (Azure Key Vault).
+  KSI-SVC-ASM requires secrets to be stored in secure vaults (Azure Key Vault).
 pattern_type: configuration
 languages:
   python:
@@ -218,10 +219,9 @@ languages:
 finding:
   title: Hardcoded secret detected
   description: Code contains hardcoded credentials
-  recommendation: Store secrets in Azure Key Vault per KSI-SVC-06 (Secret Management)
+  recommendation: Store secrets in Azure Key Vault per KSI-SVC-ASM (Secret Management)
   references:
-    - FRR-RSC-01
-    - KSI-SVC-06
+    - KSI-SVC-ASM
 ```
 
 ## AST Query Patterns
@@ -374,10 +374,10 @@ languages:
 finding:
   title: Centralized logging configured
   description: Application uses centralized logging service
-  recommendation: Ensure all logs are exported to Azure Log Analytics per KSI-MLA-01
+  recommendation: Ensure all logs are exported to Azure Log Analytics per KSI-MLA-OSM
   references:
-    - FRR-CCM-01
-    - KSI-MLA-01
+    - CCM-OCR-AVL
+    - KSI-MLA-OSM
 ```
 
 ## Pattern Composition
@@ -561,9 +561,9 @@ regex_fallback: "http"  # Too broad - matches "https", "method", etc.
 ```yaml
 description: |
   Detects storage accounts without HTTPS enforcement.
-  KSI-SVC-02 requires encrypted network connections.
+  KSI-SVC-SIN requires encrypted network connections.
 finding:
-  recommendation: Set supportsHttpsTrafficOnly to true per KSI-SVC-02
+  recommendation: Set supportsHttpsTrafficOnly to true per KSI-SVC-SIN
 ```
 
 **DON'T**: Leave descriptions vague
@@ -650,13 +650,13 @@ def test_no_false_positives():
 
 **Problem**: Finding doesn't reference specific requirements
 
-**Solution**: Always include FRR and KSI references
+**Solution**: Always include CR26 rule and KSI references. Never invent IDs and never state numeric requirements CR26 does not contain (for example log retention periods or 7/15/30/90 day severity buckets; VDR-TFR-PVR uses the Potential Agency Impact N-rating, internet reachability and likely exploitability).
 
 ```yaml
 finding:
   references:
-    - FRR-RSC-01  # Primary requirement (RSC = Recommended Secure Configuration)
-    - KSI-SVC-06  # Related KSI (Secret Management)
+    - KSI-SVC-ASM  # Primary KSI (Automating Secret Management)
+    - SCG-CSO-RSC  # Related rule (Secure Configuration Guide)
 ```
 
 ### 6. Duplicate Language Configs
@@ -679,50 +679,72 @@ languages:
 
 ## Pattern File Organization
 
-Patterns are organized by family in `data/patterns/`:
+Patterns are organized by CR26 family in `data/patterns/`. Detection patterns live in the file of the KSI category or rule family they map to; the `family:` field is authoritative. Pattern ids keep their historical prefix (for example `ads.*`, `ucm.*`) as stable keys.
 
 ```
 data/patterns/
-├── ads_patterns.yaml      # Authorization Data Sharing (10 patterns)
-├── ccm_patterns.yaml      # Collaborative Continuous Monitoring (12 patterns)
-├── cna_patterns.yaml      # Configuration & Access (11 patterns)
-├── common_patterns.yaml   # Common/cross-cutting (8 patterns)
-├── iam_patterns.yaml      # Identity & Access Management (10 patterns)
-├── mla_patterns.yaml      # Logging & Auditing (11 patterns)
-├── rsc_patterns.yaml      # Resource Management (11 patterns)
-├── scn_patterns.yaml      # Security Scanning (13 patterns)
-├── svc_patterns.yaml      # Secrets & Vaults (13 patterns)
-├── ucm_patterns.yaml      # User Capability Management (11 patterns)
-└── vdr_patterns.yaml      # Vulnerability Detection & Response (10 patterns)
+├── afc_patterns.yaml            # Addressing FedRAMP Communication (16)
+├── ccm_patterns.yaml            # Collaborative Continuous Monitoring (25)
+├── cds_patterns.yaml            # Certification Data Sharing (28)
+├── ced_patterns.yaml            # KSI-CED training (12)
+├── cmt_patterns.yaml            # KSI-CMT change management (25)
+├── cmu_patterns.yaml            # Cryptographic Module Use (4)
+├── cna_patterns.yaml            # KSI-CNA cloud native architecture (33)
+├── common_patterns.yaml         # Cross-cutting Azure governance (8)
+├── cross_family_patterns.yaml   # Cross-rule patterns, family set per pattern (25)
+├── iam_patterns.yaml            # KSI-IAM (34)
+├── iec_patterns.yaml            # Incident Evaluation and Communication (9)
+├── inr_patterns.yaml            # KSI-INR incident response (9)
+├── ivv_patterns.yaml            # Independent Verification and Validation (22)
+├── mas_patterns.yaml            # Minimum Assessment Scope (9)
+├── mla_patterns.yaml            # KSI-MLA logging and monitoring (17)
+├── piy_patterns.yaml            # KSI-PIY policy and inventory (21)
+├── rpl_patterns.yaml            # KSI-RPL recovery (9)
+├── scg_patterns.yaml            # Secure Configuration Guide (10)
+├── scn_patterns.yaml            # Significant Change Notification (19)
+├── scr_patterns.yaml            # KSI-SCR supply chain risk (8)
+├── svc_patterns.yaml            # KSI-SVC service configuration (30)
+└── vdr_patterns.yaml            # Vulnerability detection and response, scanning (79)
 ```
 
-**Total**: 120 patterns across 11 families
+**Total**: 452 patterns across 25 `family:` values (CR26 FRR families AFC, AGU, CCM, CDS, CMU, FRC, IEC, IVV, MAS, SCG, SCN, SDR, VDR, VER; KSI categories CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, SCR, SVC; plus COMMON).
+
+Retired pre-CR26 families map as follows: ADS to CDS, FSI to AFC, UCM to CMU, PVA to IVV, ICP to IEC, RSC to SCG, TPR to SCR (as KSI-SCR). The KSI-AFR family was removed; its items became FRR families. VDR evaluation and reporting rules moved to VER.
 
 ## Pattern Coverage
 
-Current pattern library status:
+Current pattern library status (computed from the YAML; recompute after changes):
 
-| Family | Patterns | V2 Fields | Status |
-|--------|----------|-----------|--------|
-| ADS | 11 | Partial | ✅ Active |
-| AFR | 4 | Partial | ✅ Active |
-| CCM | 13 | Partial | ✅ Active |
-| CED | 4 | Partial | ✅ Active |
-| CMT | 4 | Partial | ✅ Active |
-| CNA | 11 | Partial | ✅ Active |
-| COMMON | 8 | Partial | ✅ Active |
-| IAM | 12 | Partial | ✅ Active |
-| INR | 2 | Partial | ✅ Active |
-| MLA | 11 | Partial | ✅ Active |
-| PIY | 8 | Partial | ✅ Active |
-| RPL | 2 | Partial | ✅ Active |
-| RSC | 11 | Partial | ✅ Active |
-| SCN | 13 | Partial | ✅ Active |
-| SVC | 18 | Partial | ✅ Active |
-| TPR | 4 | Partial | ✅ Active |
-| UCM | 11 | Partial | ✅ Active |
-| VDR | 10 | Partial | ✅ Active |
-| **Total** | **153** | **In Progress** | **18 Families** |
+| Family | Patterns |
+|--------|----------|
+| AFC | 18 |
+| AGU | 7 |
+| CCM | 22 |
+| CDS | 30 |
+| CED | 12 |
+| CMT | 25 |
+| CMU | 6 |
+| CNA | 35 |
+| COMMON | 8 |
+| FRC | 3 |
+| IAM | 34 |
+| IEC | 10 |
+| INR | 9 |
+| IVV | 14 |
+| MAS | 10 |
+| MLA | 17 |
+| PIY | 21 |
+| RPL | 9 |
+| SCG | 11 |
+| SCN | 22 |
+| SCR | 8 |
+| SDR | 1 |
+| SVC | 30 |
+| VDR | 60 |
+| VER | 30 |
+| **Total** | **452** |
+
+All 46 CR26 KSIs and 142 CR26 rule IDs are referenced by at least one pattern.
 
 **V2 Migration Status**: V2 fields (`evidence_artifacts`, `automation`, `implementation`, `ssp_mapping`) are being added to existing patterns. See [PATTERN_SCHEMA_V2.md](PATTERN_SCHEMA_V2.md) for migration roadmap.
 

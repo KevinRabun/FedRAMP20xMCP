@@ -167,7 +167,7 @@ async def get_patterns_for_requirement(
     Get all patterns related to a specific requirement (KSI or FRR).
     
     Args:
-        requirement_id: KSI or FRR ID (e.g., 'KSI-IAM-01', 'FRR-ADS-01')
+        requirement_id: KSI or FRR ID (e.g., 'KSI-IAM-APM', 'CDS-CSO-PUB')
         
     Returns:
         List of pattern dictionaries with metadata

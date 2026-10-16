@@ -33,7 +33,7 @@ tags:
 nist_controls:
 - cm-8
 related_ksis:
-- KSI-CNA-01
+- KSI-CNA-RNT
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -47,7 +47,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-01
+    requirement_id: KSI-CNA-RNT
     requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
@@ -143,8 +143,8 @@ nist_controls:
 - au-3
 - au-12
 related_ksis:
-- KSI-MLA-01
-- KSI-MLA-09
+- KSI-MLA-OSM
+- KSI-MLA-LET
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -217,7 +217,7 @@ implementation:
     azure_service: null
     validation: Manual verification required
   - step: 8
-    action: Configure log retention (1 year minimum for FedRAMP)
+    action: Configure a log retention period that meets your documented logging and audit policy (CR26 sets no numeric log retention rule)
     azure_service: null
     validation: Manual verification required
   - step: 9
@@ -297,7 +297,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-MLA-01
+    requirement_id: KSI-MLA-OSM
     requirement_name: Security Information and Event Management (SIEM)
     impact_levels:
     - Low
@@ -368,8 +368,8 @@ nist_controls:
 - ia-2
 - ia-5
 related_ksis:
-- KSI-IAM-01
-- KSI-SVC-02
+- KSI-IAM-APM
+- KSI-SVC-SIN
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -523,7 +523,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-IAM-01
+    requirement_id: KSI-IAM-APM
     requirement_name: Phishing-Resistant MFA
     impact_levels:
     - Low
@@ -574,8 +574,8 @@ nist_controls:
 - sc-7
 - ac-4
 related_ksis:
-- KSI-SVC-06
-- KSI-CNA-01
+- KSI-SVC-ASM
+- KSI-CNA-RNT
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -733,7 +733,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-06
+    requirement_id: KSI-SVC-ASM
     requirement_name: Secret Management
     impact_levels:
     - Low
@@ -799,8 +799,8 @@ nist_controls:
 - cm-2
 - cm-7
 related_ksis:
-- KSI-CNA-01
-- KSI-CNA-01
+- KSI-CNA-RNT
+- KSI-CNA-RNT
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -815,7 +815,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-01
+    requirement_id: KSI-CNA-RNT
     requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
@@ -911,7 +911,7 @@ nist_controls:
 - cm-3
 - cm-5
 related_ksis:
-- KSI-CNA-01
+- KSI-CNA-RNT
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -926,7 +926,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CNA-01
+    requirement_id: KSI-CNA-RNT
     requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
@@ -1011,7 +1011,7 @@ languages:
     regex_fallback: azurerm_(virtual_machine|mssql_database)
 finding:
   title_template: Backup not configured
-  description_template: Resource does not have backup enabled. FedRAMP requires backup for data availability and resilience.
+  description_template: Resource does not have backup enabled. Backups support recovery objectives (KSI-RPL-ABO).
   remediation_template: "Configure Azure Backup:\n\nBicep:\nresource backupVault 'Microsoft.RecoveryServices/vaults@2021-12-01' = {\n  name: 'backup-vault'\n  location: location\n  sku: {\n    name: 'Standard'\n  }\n  properties: {}\n}\n\nresource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2021-12-01' = {\n  parent: backupVault\n  name: 'daily-backup'\n  properties: {\n    backupManagementType: 'AzureIaasVM'\n    schedulePolicy: {\n      scheduleRunFrequency: 'Daily'\n      scheduleRunTimes: ['2023-01-01T02:00:00Z']\n    }\n    retentionPolicy: {\n      dailySchedule: {\n        retentionDuration: {\n          count: 30\n          durationType: 'Days'\n        }\n      }\n    }\n  }\n}\n"
 tags:
 - resilience
@@ -1021,8 +1021,8 @@ nist_controls:
 - cp-9
 - cp-10
 related_ksis:
-- KSI-RPL-01
-- KSI-RPL-02
+- KSI-RPL-RRO
+- KSI-RPL-ARP
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -1175,7 +1175,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-RPL-01
+    requirement_id: KSI-RPL-RRO
     requirement_name: Recovery Objectives
     impact_levels:
     - Low
@@ -1228,8 +1228,8 @@ nist_controls:
 - cp-6
 - cp-9
 related_ksis:
-- KSI-RPL-01
-- KSI-RPL-02
+- KSI-RPL-RRO
+- KSI-RPL-ARP
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -1382,7 +1382,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-RPL-01
+    requirement_id: KSI-RPL-RRO
     requirement_name: Recovery Objectives
     impact_levels:
     - Low

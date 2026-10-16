@@ -100,11 +100,11 @@ public class FRREvidenceCollector {
     // =========================================================================
 
     /**
-     * FRR-VDR-01: Critical Vulnerability Remediation
+     * VDR-CSO-DET: Critical Vulnerability Remediation
      * Collects evidence showing vulnerability remediation within SLA.
      */
     public EvidenceRecord collectVdr01Evidence() {
-        System.out.println("Collecting FRR-VDR-01 evidence: Critical Vulnerability Remediation");
+        System.out.println("Collecting VDR-CSO-DET evidence: Critical Vulnerability Remediation");
 
         String query = """
             SecurityRecommendation
@@ -129,7 +129,7 @@ public class FRREvidenceCollector {
         }
 
         return new EvidenceRecord(
-            "FRR-VDR-01",
+            "VDR-CSO-DET",
             "Critical Vulnerability Remediation",
             Instant.now(),
             subscriptionId,
@@ -143,10 +143,10 @@ public class FRREvidenceCollector {
     }
 
     /**
-     * FRR-VDR-08: Automated Patching
+     * VER-EVA-EIR: Automated Patching
      */
     public EvidenceRecord collectVdr08Evidence() {
-        System.out.println("Collecting FRR-VDR-08 evidence: Automated Patching");
+        System.out.println("Collecting VER-EVA-EIR evidence: Automated Patching");
 
         String query = """
             resources
@@ -171,7 +171,7 @@ public class FRREvidenceCollector {
         String complianceStatus = nonCompliantCount == 0 ? "compliant" : "non_compliant";
 
         return new EvidenceRecord(
-            "FRR-VDR-08",
+            "VER-EVA-EIR",
             "Automated Patching",
             Instant.now(),
             subscriptionId,
@@ -193,10 +193,10 @@ public class FRREvidenceCollector {
     // =========================================================================
 
     /**
-     * FRR-RSC-01: Security Baseline Compliance
+     * SCG-CSO-RSC: Security Baseline Compliance
      */
     public EvidenceRecord collectRsc01Evidence() {
-        System.out.println("Collecting FRR-RSC-01 evidence: Security Baseline Compliance");
+        System.out.println("Collecting SCG-CSO-RSC evidence: Security Baseline Compliance");
 
         String query = """
             securityresources
@@ -222,7 +222,7 @@ public class FRREvidenceCollector {
         String complianceStatus = complianceRate >= 90 ? "compliant" : "non_compliant";
 
         return new EvidenceRecord(
-            "FRR-RSC-01",
+            "SCG-CSO-RSC",
             "Security Baseline Compliance",
             Instant.now(),
             subscriptionId,
@@ -240,10 +240,10 @@ public class FRREvidenceCollector {
     // =========================================================================
 
     /**
-     * FRR-ADS-01: Audit Log Completeness
+     * CDS-CSO-PUB: Audit Log Completeness
      */
     public EvidenceRecord collectAds01Evidence() {
-        System.out.println("Collecting FRR-ADS-01 evidence: Audit Log Completeness");
+        System.out.println("Collecting CDS-CSO-PUB evidence: Audit Log Completeness");
 
         String query = """
             AzureActivity
@@ -268,7 +268,7 @@ public class FRREvidenceCollector {
         String complianceStatus = gaps == 0 ? "compliant" : "needs_review";
 
         return new EvidenceRecord(
-            "FRR-ADS-01",
+            "CDS-CSO-PUB",
             "Audit Log Completeness",
             Instant.now(),
             subscriptionId,
@@ -286,10 +286,10 @@ public class FRREvidenceCollector {
     // =========================================================================
 
     /**
-     * FRR-SCN-01: Network Security Configuration
+     * SCN-CSO-EVA: Network Security Configuration
      */
     public EvidenceRecord collectScn01Evidence() {
-        System.out.println("Collecting FRR-SCN-01 evidence: Network Security Configuration");
+        System.out.println("Collecting SCN-CSO-EVA evidence: Network Security Configuration");
 
         String query = """
             resources
@@ -309,7 +309,7 @@ public class FRREvidenceCollector {
         String complianceStatus = results.isEmpty() ? "compliant" : "non_compliant";
 
         return new EvidenceRecord(
-            "FRR-SCN-01",
+            "SCN-CSO-EVA",
             "Network Security Configuration",
             Instant.now(),
             subscriptionId,
@@ -330,10 +330,10 @@ public class FRREvidenceCollector {
     // =========================================================================
 
     /**
-     * FRR-CCM-01: Change Management Audit Trail
+     * CCM-OCR-AVL: Change Management Audit Trail
      */
     public EvidenceRecord collectCcm01Evidence() {
-        System.out.println("Collecting FRR-CCM-01 evidence: Change Management Audit Trail");
+        System.out.println("Collecting CCM-OCR-AVL evidence: Change Management Audit Trail");
 
         String query = """
             AzureActivity
@@ -354,7 +354,7 @@ public class FRREvidenceCollector {
             .count();
 
         return new EvidenceRecord(
-            "FRR-CCM-01",
+            "CCM-OCR-AVL",
             "Change Management Audit Trail",
             Instant.now(),
             subscriptionId,

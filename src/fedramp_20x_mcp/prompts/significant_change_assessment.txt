@@ -1,6 +1,6 @@
-I'll help you assess your planned change and determine FedRAMP notification requirements.
+I'll help you assess your planned change and determine FedRAMP notification requirements under the FedRAMP Consolidated Rules for 2026 (CR26, SCN family).
 
-**Significant Change Classification (SCN)**:
+**Significant Change Classification (SCN-CSO-EVA)**:
 
 **1. Change Description**
 Please describe the change you're planning:
@@ -8,43 +8,49 @@ Please describe the change you're planning:
 - What functionality is changing?
 - When is the change scheduled?
 
-**2. Change Categories (per FedRAMP SCN requirements)**:
+**2. Evaluation order (SCN-CSO-EVA)**:
+1. Is it a significant change? If not, no Significant Change Notification applies.
+2. Is it a Certification Class change? That requires a new assessment and cannot be done under the SCN rules (FRC-CCL-UCC, FRC-CCL-DCC).
+3. Is it a routine recurring change? Follow SCN-RTR (no formal notification: SCN-RTR-NNR).
+4. Is it a transformative change? Follow SCN-TRF.
+5. Otherwise it is an adaptive change. Follow SCN-ADP.
 
-**Routine/Recurring Changes**:
-- Regularly scheduled updates following documented procedures
-- Changes within normal operational parameters
-- No substantial impact to security posture
-- Examples: Patch updates, regular maintenance
+**3. Change types**:
 
-**Adaptive Changes**:
-- Modifications to existing functionality
-- Changes in response to operational needs
-- May affect some security controls
-- Examples: Configuration changes, minor feature updates
+**Routine Recurring Changes** (FRD-RTR):
+- Regular, repeatable changes following documented procedures
+- Providers SHOULD NOT make formal notifications (SCN-RTR-NNR)
 
-**Transformative Changes**:
-- Major architectural changes
-- New technologies or services
-- Significant impact to authorization boundary
-- Examples: Major version upgrades, infrastructure changes, adding new services
+**Adaptive Changes** (FRD-ADP):
+- Notify all necessary parties within 10 business days after finishing the change (SCN-ADP-NTF)
 
-**3. Impact Assessment**:
+**Transformative Changes** (FRD-TRF):
+- Initial plans at least 30 business days before starting (SCN-TRF-NIP)
+- Final plans at least 10 business days before starting (SCN-TRF-NFP)
+- Within 5 business days after finishing (SCN-TRF-NAF)
+- Within 5 business days after completing verification, assessment and/or validation (SCN-TRF-NAV)
+- Updated service documentation within 30 business days after finishing (SCN-TRF-UPD)
+- Providers SHOULD engage a third-party assessor when human validation is necessary (SCN-TRF-TPR)
+
+**4. Impact Assessment**:
 Does your change affect:
-- [ ] Authorization boundary?
+- [ ] The cloud service offering scope (Minimum Assessment Scope, MAS-CSO-IIR)?
 - [ ] Federal customer data handling?
-- [ ] Security controls implementation?
-- [ ] Third-party service dependencies?
+- [ ] Key Security Indicators or Rev5 controls (the plan must cover their verification and validation)?
+- [ ] Third-party information resources?
 - [ ] Cryptographic modules?
-- [ ] Information resources in assessment scope?
 
-**4. Notification Requirements**:
-Based on your classification:
-- **Routine**: Covered by continuous monitoring, no special notification
-- **Adaptive**: May require notification depending on impact
-- **Transformative**: Requires notification and may require re-assessment
+**5. Notification content (SCN-CSO-INF)**:
+Service Offering FedRAMP ID, assessor name (if applicable), related vulnerability (if applicable), change type and explanation of categorization, short description, reason, customer impact summary, plan and timeline (including verification of impacted KSIs or Rev5 controls), copy of the business or security impact analysis, and approver name and title.
+
+**6. Records and availability**:
+- Maintain auditable evaluation records (SCN-CSO-MAR)
+- Keep 12 months of historical notifications (SCN-CSO-HIS)
+- Provide human-readable and JSON formats (SCN-CSO-HRM)
+- Emergency changes may proceed first, with retroactive notification (SCN-CSO-EMG)
 
 **Next Steps**:
-1. Use get_control with "FRR-SCN-*" IDs to review detailed change requirements
+1. Use get_frr_metadata or list_frrs_by_family with "SCN" to review detailed change requirements
 2. Use search_requirements with "significant change" to find related guidance
 3. Document your change classification and justification
 4. Prepare notification if required

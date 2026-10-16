@@ -1,11 +1,10 @@
-I'll help you conduct a FedRAMP 20x gap analysis. Let's start by understanding your system:
+I'll help you conduct a FedRAMP 20x gap analysis against the FedRAMP Consolidated Rules for 2026 (CR26). Let's start by understanding your system:
 
-**PRODUCTION-FIRST ASSUMPTION:** This gap analysis evaluates **PRODUCTION systems** unless explicitly stated otherwise. FedRAMP authorization applies to systems processing federal data in production.
+**PRODUCTION-FIRST ASSUMPTION:** This gap analysis evaluates **PRODUCTION systems** unless explicitly stated otherwise. FedRAMP Certification applies to systems processing federal data in production.
 
-1. **Authorization Level**: What FedRAMP authorization level are you targeting?
-   - Low Impact
-   - Moderate Impact
-   - High Impact
+1. **Certification Class and Type**: What are you targeting?
+   - Certification Class: A, B, C or D (many rules vary by class; see FRD-CCL)
+   - Certification Type: FedRAMP 20x or FedRAMP Rev5 (pick one, FRC-CSO-POP)
 
 2. **Service Type**: What type of cloud service are you offering?
    - SaaS (Software as a Service)
@@ -13,22 +12,22 @@ I'll help you conduct a FedRAMP 20x gap analysis. Let's start by understanding y
    - IaaS (Infrastructure as a Service)
 
 3. **Current State**: Are you:
-   - Starting a new FedRAMP authorization
-   - Maintaining an existing authorization
+   - Starting a new FedRAMP Certification
+   - Maintaining an existing Certification (Ongoing Certification)
    - Addressing a significant change
 
 Based on your answers, I'll help you:
-- Identify applicable requirements from all FedRAMP 20x documents
-- Review Key Security Indicators (KSI) you need to track
+- Identify applicable rules from the Consolidated Rules for 2026 (17 FRR families, 245 rules)
+- Review the 46 Key Security Indicators (KSI) you need to track
 - Understand Minimum Assessment Scope (MAS) requirements
-- Check Vulnerability Detection and Response (VDR) obligations
+- Check Vulnerability Detection and Response (VDR) and Vulnerability Evaluation and Reporting (VER) obligations
 - Review Significant Change Notification (SCN) requirements
 
 **FRR Analysis Tools Available:**
-Use these tools to analyze FedRAMP Revised Requirements (FRR) compliance:
-- `analyze_frr_family` - Analyze entire FRR family (VDR, ADS, CCM, etc.)
-- `analyze_all_frrs` - Comprehensive analysis across all 199 FRRs
-- `get_frr_metadata` - Get NIST controls, KSIs, detection strategy for specific FRR
-- `list_frrs_by_family` - List all FRRs in family with implementation status
+Use these tools to analyze FedRAMP Rules (FRR) compliance:
+- `analyze_frr_family` - Analyze an entire FRR family (VDR, VER, CDS, CCM, etc.)
+- `analyze_all_frrs` - Comprehensive analysis across all FRRs
+- `get_frr_metadata` - Get NIST controls, KSIs, detection strategy for a specific FRR
+- `list_frrs_by_family` - List all FRRs in a family with implementation status
 
-**Next Steps**: Please share your authorization level and service type, and I'll provide tailored guidance.
+**Next Steps**: Please share your Certification Class and service type, and I'll provide tailored guidance.

@@ -172,31 +172,6 @@ spec:
         assert len(findings) == 0, f"Pattern rsc.allocation.priority_class should NOT detect compliant code"
 
 
-    def test_rsc_cost_budget_alert_positive(self, analyzer):
-        """Test rsc.cost.budget_alert: Cost Budget Alerts - Should detect"""
-        code = """// Bicep code for rsc.cost.budget_alert
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
-        
-        result = analyzer.analyze(code, "bicep")
-        
-        # Should detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.cost.budget_alert" == f.pattern_id]
-        assert len(findings) > 0, f"Pattern rsc.cost.budget_alert should detect this code"
-    
-    def test_rsc_cost_budget_alert_negative(self, analyzer):
-        """Test rsc.cost.budget_alert: Cost Budget Alerts - Should NOT detect"""
-        code = """param location string = resourceGroup().location
-
-output resourceLocation string = location
-"""
-        
-        result = analyzer.analyze(code, "bicep")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.cost.budget_alert" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern rsc.cost.budget_alert should NOT detect compliant code"
-
-
     def test_rsc_iac_app_service_plan_positive(self, analyzer):
         """Test rsc.iac.app_service_plan: Azure App Service Plan Configuration - Should detect"""
         code = """resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
@@ -253,31 +228,6 @@ output resourceLocation string = location
         # Should NOT detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.vm_size" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.iac.vm_size should NOT detect compliant code"
-
-
-    def test_rsc_iac_reserved_instances_positive(self, analyzer):
-        """Test rsc.iac.reserved_instances: Reserved Instance Usage - Should detect"""
-        code = """// Bicep code for rsc.iac.reserved_instances
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
-        
-        result = analyzer.analyze(code, "bicep")
-        
-        # Should detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.reserved_instances" == f.pattern_id]
-        assert len(findings) > 0, f"Pattern rsc.iac.reserved_instances should detect this code"
-    
-    def test_rsc_iac_reserved_instances_negative(self, analyzer):
-        """Test rsc.iac.reserved_instances: Reserved Instance Usage - Should NOT detect"""
-        code = """param location string = resourceGroup().location
-
-output resourceLocation string = location
-"""
-        
-        result = analyzer.analyze(code, "bicep")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.reserved_instances" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern rsc.iac.reserved_instances should NOT detect compliant code"
 
 
     def test_rsc_cicd_resource_validation_positive(self, analyzer):

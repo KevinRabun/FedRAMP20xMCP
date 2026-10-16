@@ -21,7 +21,7 @@ STORAGE_ACCOUNT = os.environ["EVIDENCE_STORAGE_ACCOUNT"]
 EVIDENCE_CONTAINER = "iam-evidence"
 
 async def collect_mfa_evidence():
-    \"\"\"Collect MFA enrollment and usage evidence for KSI-IAM-01\"\"\"
+    \"\"\"Collect MFA enrollment and usage evidence for KSI-IAM-APM\"\"\"
     # WAF Security: Use managed identity with explicit configuration
     credential = DefaultAzureCredential(
         exclude_environment_credential=False,
@@ -36,7 +36,7 @@ async def collect_mfa_evidence():
     
     mfa_report = {
         "collection_date": datetime.utcnow().isoformat(),
-        "ksi_id": "KSI-IAM-01",
+        "ksi_id": "KSI-IAM-APM",
         "total_users": 0,
         "users_with_mfa": 0,
         "mfa_methods": {},
@@ -82,7 +82,7 @@ async def collect_mfa_evidence():
     return mfa_report
 
 async def collect_conditional_access_evidence():
-    \"\"\"Collect Conditional Access policy evidence for KSI-IAM-05\"\"\"
+    \"\"\"Collect Conditional Access policy evidence for KSI-IAM-ELP\"\"\"
     credential = DefaultAzureCredential(
         exclude_environment_credential=False,
         exclude_managed_identity_credential=False,
@@ -95,7 +95,7 @@ async def collect_conditional_access_evidence():
     
     ca_report = {
         "collection_date": datetime.utcnow().isoformat(),
-        "ksi_id": "KSI-IAM-05",
+        "ksi_id": "KSI-IAM-ELP",
         "total_policies": len(policies.value),
         "enabled_policies": 0,
         "policies": []

@@ -1,39 +1,46 @@
 ````plaintext
-## Bicep Template for FRR-ADS (Authorization Data Sharing)
+## Bicep Template for CDS (Certification Data Sharing)
 
 ```bicep
-// frr_ads.bicep - Authorization Data Sharing API Infrastructure
-// Implements FRR-ADS family requirements for machine-readable data sharing,
-// API endpoints, authentication, and automated evidence collection
+// frr_ads.bicep - Certification Data Sharing API Infrastructure
+// (The former ADS family is now CDS in CR26; the file name is kept for caller compatibility.)
+// Infrastructure sketch for sharing FedRAMP Certification Data with programmatic access,
+// authentication, access logging and automated evidence collection.
 //
-// FRR-ADS Requirements Supported:
-// - FRR-ADS-01 to ADS-10: Core authorization data sharing requirements
-// - FRR-ADS-AC-01 to AC-02: Access control for API consumers
-// - FRR-ADS-EX-01: Exception documentation via API
-// - FRR-ADS-TC-01 to TC-07: Technical compliance data endpoints
+// CDS rules supported:
+// - CDS-CSO-PUB: Public information in human-readable and JSON formats
+// - CDS-CSO-UTC: Use a FedRAMP-compatible trust center
+// - CDS-CSO-CBF: Automation keeps human-readable and machine-readable formats consistent
+// - CDS-TRC-PAC: Documented programmatic access to all Certification Data
+// - CDS-TRC-ACL: Log access and keep access summaries for at least six months
+// - CDS-TRC-AAI: Inventory and history of agency users with access
 //
 // Related KSIs:
-// - KSI-CED-01: Continuous evidence collection and delivery
-// - KSI-IAM-01: Identity and access management
-// - KSI-CNA-01: Network security controls
+// - KSI-IAM-APM: Authentication
+// - KSI-CNA-RNT: Network security controls
+// - KSI-MLA-OSM: Logging
+//
+// Container and endpoint names are design suggestions, not CR26 requirements.
 
 targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
-param apiManagementName string = 'apim-ads-${uniqueString(resourceGroup().id)}'
-param functionAppName string = 'func-ads-${uniqueString(resourceGroup().id)}'
-param storageAccountName string = 'adsevidence${uniqueString(resourceGroup().id)}'
-param keyVaultName string = 'kv-ads-${uniqueString(resourceGroup().id)}'
+param apiManagementName string = 'apim-cds-${uniqueString(resourceGroup().id)}'
+param functionAppName string = 'func-cds-${uniqueString(resourceGroup().id)}'
+param storageAccountName string = 'cdsevidence${uniqueString(resourceGroup().id)}'
+param keyVaultName string = 'kv-cds-${uniqueString(resourceGroup().id)}'
+@description('Log retention in days. Organization-defined: CR26 sets no numeric log retention period (CDS-TRC-ACL separately requires access summaries for at least six months).')
+param logRetentionDays int
 
 // Key Vault for API keys and secrets
-// Supports: FRR-ADS-AC-01 (access control), FRR-UCM (cryptographic modules)
+// Supports: CDS-CSO-UTC (access control), KSI-SVC-ASM (secret management), CMU-CSO-CMD (cryptographic module documentation)
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
   properties: {
     sku: {
       family: 'A'
-      name: 'premium'  // MANDATORY: FedRAMP 20x requires HSM-backed Premium SKU
+      name: 'premium'  // HSM-backed keys; choose the SKU per CMU-CSO-UVM for your Certification Class
     }
     tenantId: subscription().tenantId
     enableRbacAuthorization: true
@@ -46,12 +53,12 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       ipRules: []
       virtualNetworkRules: []
     }
-    publicNetworkAccess: 'Disabled'  // MANDATORY: FedRAMP 20x requires private access
+    publicNetworkAccess: 'Disabled'  // KSI-CNA-RNT: private access
   }
 }
 
-// Storage Account for authorization data and evidence
-// Supports: FRR-ADS-01 (machine-readable data), FRR-ADS-TC (technical compliance)
+// Storage Account for Certification Data and evidence
+// Supports: CDS-CSO-PUB (JSON data), CDS-CSO-HAD (historical snapshots)
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
@@ -81,7 +88,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
           keyType: 'Account'
         }
       }
-      keySource: 'Microsoft.Keyvault'  // MANDATORY: Use Customer-Managed Keys
+      keySource: 'Microsoft.Keyvault'  // KSI-SVC-ASM: customer-managed keys (design default)
       keyvaultproperties: {
         keyname: 'storage-encryption-key'
         keyvaulturi: keyVault.properties.vaultUri
@@ -90,15 +97,13 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-// Blob containers for authorization data categories
-// Supports: FRR-ADS-TC-01 to TC-07 (categorized compliance data)
-resource authorizationContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${storageAccount.name}/default/authorization-packages'
+// Blob containers for Certification Data categories (names are design suggestions)
+resource certificationContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/certification-packages'
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-ADS authorization packages (FedRAMP 20x requirements)'
-      retention: '7 years'
+      purpose: 'Certification Package and Certification Data snapshots (CDS-CSO-HAD)'
     }
   }
 }
@@ -108,8 +113,7 @@ resource continuousMonitoringContainer 'Microsoft.Storage/storageAccounts/blobSe
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-ADS-TC-01 continuous monitoring data'
-      retention: '3 years'
+      purpose: 'Ongoing Certification Report inputs (CCM-OCR-AVL)'
     }
   }
 }
@@ -119,8 +123,7 @@ resource securityControlsContainer 'Microsoft.Storage/storageAccounts/blobServic
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-ADS-TC-02 security control implementation evidence'
-      retention: '7 years'
+      purpose: 'Security Decision Record evidence (SDR-CSO-FRR, SDR-CSX-KSI)'
     }
   }
 }
@@ -130,16 +133,15 @@ resource vulnerabilityDataContainer 'Microsoft.Storage/storageAccounts/blobServi
   properties: {
     publicAccess: 'None'
     metadata: {
-      purpose: 'FRR-ADS-TC-03 vulnerability scan results'
-      retention: '3 years'
+      purpose: 'Vulnerability detection and response reports (VER-RPT-PER)'
     }
   }
 }
 
 // App Service Plan for Azure Functions (API endpoints)
-// Supports: FRR-ADS-01 to ADS-10 (API hosting)
+// Supports: CDS-TRC-PAC (programmatic access hosting)
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
-  name: 'plan-ads-${uniqueString(resourceGroup().id)}'
+  name: 'plan-cds-${uniqueString(resourceGroup().id)}'
   location: location
   sku: {
     name: 'P1v3'
@@ -151,8 +153,8 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   }
 }
 
-// Azure Functions for authorization data API
-// Supports: FRR-ADS-01 (machine-readable endpoints), FRR-ADS-AC-01 (authentication)
+// Azure Functions for the Certification Data API
+// Supports: CDS-CSO-PUB (JSON endpoints), CDS-TRC-PAC (programmatic access)
 resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
   name: functionAppName
   location: location
@@ -164,7 +166,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     clientAffinityEnabled: false
-    publicNetworkAccess: 'Disabled'  // MANDATORY: Use private endpoints
+    publicNetworkAccess: 'Disabled'  // KSI-CNA-RNT: use private endpoints
     siteConfig: {
       linuxFxVersion: 'PYTHON|3.11'
       minTlsVersion: '1.2'
@@ -198,8 +200,9 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
-// API Management for authorization data API
-// Supports: FRR-ADS-01 (API gateway), FRR-ADS-AC-01 (authentication/authorization)
+// API Management for the Certification Data API
+// Supports: CDS-TRC-PAC (API gateway), KSI-IAM-APM (authentication)
+// Note: trust centers MUST share data without interruption (CDS-TRC-USH); prefer self-service or just-in-time access provisioning over manual approvals
 resource apiManagement 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
   name: apiManagementName
   location: location
@@ -213,7 +216,7 @@ resource apiManagement 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
   properties: {
     publisherEmail: 'compliance@contoso.com'
     publisherName: 'FedRAMP Compliance Team'
-    virtualNetworkType: 'Internal'  // MANDATORY: FedRAMP 20x requires private APIs
+    virtualNetworkType: 'Internal'  // design choice: private API. Public JSON for CDS-CSO-PUB may need a public front end
     customProperties: {
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10': 'False'
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11': 'False'
@@ -225,14 +228,14 @@ resource apiManagement 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
   }
 }
 
-// API for Authorization Package Data (FRR-ADS-01)
-resource authorizationApi 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+// API for Certification Data (CDS-TRC-PAC)
+resource certificationApi 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
   parent: apiManagement
-  name: 'authorization-data-api'
+  name: 'certification-data-api'
   properties: {
-    displayName: 'Authorization Data API'
-    description: 'FRR-ADS machine-readable authorization package data endpoints'
-    path: 'authorization'
+    displayName: 'Certification Data API'
+    description: 'Programmatic access to FedRAMP Certification Data (CDS-TRC-PAC)'
+    path: 'certification-data'
     protocols: ['https']
     subscriptionRequired: true
     authenticationSettings: {
@@ -245,19 +248,19 @@ resource authorizationApi 'Microsoft.ApiManagement/service/apis@2023-05-01-previ
   }
 }
 
-// API Operations for FRR-ADS-TC technical compliance endpoints
-resource getTechnicalControls 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
-  parent: authorizationApi
-  name: 'get-technical-controls'
+// API Operations for Certification Data endpoints
+resource getSecurityDecisionRecord 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: certificationApi
+  name: 'get-security-decision-record'
   properties: {
-    displayName: 'Get Technical Controls'
+    displayName: 'Get Security Decision Record'
     method: 'GET'
-    urlTemplate: '/technical-controls'
-    description: 'FRR-ADS-TC-02: Retrieve technical security control implementation status'
+    urlTemplate: '/security-decision-record'
+    description: 'SDR-CSO-FRR, SDR-CSX-KSI: Retrieve Security Decision Record data'
     responses: [
       {
         statusCode: 200
-        description: 'Technical controls data (JSON)'
+        description: 'Security Decision Record data (JSON)'
         representations: [
           {
             contentType: 'application/json'
@@ -269,13 +272,13 @@ resource getTechnicalControls 'Microsoft.ApiManagement/service/apis/operations@2
 }
 
 resource getVulnerabilityData 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
-  parent: authorizationApi
+  parent: certificationApi
   name: 'get-vulnerability-data'
   properties: {
     displayName: 'Get Vulnerability Data'
     method: 'GET'
     urlTemplate: '/vulnerabilities'
-    description: 'FRR-ADS-TC-03: Retrieve vulnerability scan results and remediation status'
+    description: 'VER-RPT-PER, VER-RPT-VDT: Retrieve vulnerability reports including accepted vulnerabilities'
     responses: [
       {
         statusCode: 200
@@ -290,18 +293,18 @@ resource getVulnerabilityData 'Microsoft.ApiManagement/service/apis/operations@2
   }
 }
 
-resource getContinuousMonitoring 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
-  parent: authorizationApi
-  name: 'get-continuous-monitoring'
+resource getOngoingCertificationReport 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: certificationApi
+  name: 'get-ongoing-certification-report'
   properties: {
-    displayName: 'Get Continuous Monitoring Data'
+    displayName: 'Get Ongoing Certification Report'
     method: 'GET'
-    urlTemplate: '/continuous-monitoring'
-    description: 'FRR-ADS-TC-01: Retrieve continuous monitoring metrics and alerts'
+    urlTemplate: '/ongoing-certification-report'
+    description: 'CCM-OCR-AVL: Retrieve Ongoing Certification Report data'
     responses: [
       {
         statusCode: 200
-        description: 'Continuous monitoring data (JSON)'
+        description: 'Ongoing Certification Report data (JSON)'
         representations: [
           {
             contentType: 'application/json'
@@ -312,23 +315,23 @@ resource getContinuousMonitoring 'Microsoft.ApiManagement/service/apis/operation
   }
 }
 
-// Log Analytics Workspace for API audit logs
-// Retention: 730 days (FedRAMP 20x requirement)
+// Log Analytics Workspace for API audit logs (CDS-TRC-ACL access logging)
+// Retention is organization-defined (CR26 sets no numeric log retention period)
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: 'law-ads-${uniqueString(resourceGroup().id)}'
+  name: 'law-cds-${uniqueString(resourceGroup().id)}'
   location: location
   properties: {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 730  // MANDATORY: FedRAMP 20x requires 2-year retention
+    retentionInDays: logRetentionDays  // organization-defined
     features: {
       enableLogAccessUsingOnlyResourcePermissions: true
     }
   }
 }
 
-// Diagnostic Settings for API Management (FRR-ADS-AC-01 audit logs)
+// Diagnostic Settings for API Management (CDS-TRC-ACL access logs)
 resource apiDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: apiManagement
   name: 'api-audit-logs'
@@ -340,7 +343,7 @@ resource apiDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
         enabled: true
         retentionPolicy: {
           enabled: true
-          days: 730
+          days: logRetentionDays
         }
       }
     ]
@@ -350,7 +353,7 @@ resource apiDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
         enabled: true
         retentionPolicy: {
           enabled: true
-          days: 730
+          days: logRetentionDays
         }
       }
     ]
@@ -362,7 +365,7 @@ output apiManagementUrl string = apiManagement.properties.gatewayUrl
 output functionAppName string = functionApp.name
 output storageAccountName string = storageAccount.name
 output keyVaultUri string = keyVault.properties.vaultUri
-output authorizationContainerUrl string = '${storageAccount.properties.primaryEndpoints.blob}authorization-packages'
+output certificationContainerUrl string = '${storageAccount.properties.primaryEndpoints.blob}certification-packages'
 output logAnalyticsWorkspaceId string = logAnalytics.id
 ```
 
@@ -370,47 +373,47 @@ output logAnalyticsWorkspaceId string = logAnalytics.id
 
 1. **Create Resource Group:**
    ```bash
-   az group create --name rg-ads-compliance --location eastus
+   az group create --name rg-cds-compliance --location eastus
    ```
 
 2. **Deploy Template:**
    ```bash
    az deployment group create \
-     --resource-group rg-ads-compliance \
-     --template-file frr_ads.bicep
+     --resource-group rg-cds-compliance \
+     --template-file frr_ads.bicep \
+     --parameters logRetentionDays=<organization-defined>
    ```
 
 3. **Deploy Azure Functions Code:**
    ```bash
-   cd azure-functions/ads-api
-   func azure functionapp publish func-ads-<unique-id>
+   cd azure-functions/cds-api
+   func azure functionapp publish func-cds-<unique-id>
    ```
 
 4. **Configure API Management Policies:**
    - Add OAuth2 authentication (Entra ID)
-   - Configure rate limiting (100 requests/min)
+   - Configure rate limiting suited to your consumers (design choice)
    - Enable response caching for static data
    - Set up subscription key management
 
 5. **Test API Endpoints:**
    ```bash
    curl -H "Ocp-Apim-Subscription-Key: YOUR_KEY" \
-     https://apim-ads-<unique-id>.azure-api.net/authorization/technical-controls
+     https://apim-cds-<unique-id>.azure-api.net/certification-data/security-decision-record
    ```
 
-## API Endpoints (FRR-ADS-TC)
+## Suggested API Endpoints (design suggestion, not CR26 requirements)
 
-| Endpoint | FRR Requirement | Description |
-|----------|-----------------|-------------|
-| `/continuous-monitoring` | FRR-ADS-TC-01 | Continuous monitoring metrics and alerts |
-| `/technical-controls` | FRR-ADS-TC-02 | Security control implementation status |
-| `/vulnerabilities` | FRR-ADS-TC-03 | Vulnerability scan results and remediation |
-| `/incidents` | FRR-ADS-TC-04 | Security incident reports and resolution |
-| `/configuration-changes` | FRR-ADS-TC-05 | Configuration management audit trail |
-| `/access-reviews` | FRR-ADS-TC-06 | Access control review results |
-| `/compliance-posture` | FRR-ADS-TC-07 | Overall compliance posture summary |
+| Endpoint | Rules | Description |
+|----------|-------|-------------|
+| `/ongoing-certification-report` | CCM-OCR-AVL | Ongoing Certification Report data |
+| `/security-decision-record` | SDR-CSO-FRR, SDR-CSX-KSI | Per-rule and per-KSI explanations, verification, validation |
+| `/vulnerabilities` | VER-RPT-PER, VER-RPT-VDT, VER-RPT-AVI | Vulnerability reports, accepted vulnerabilities |
+| `/incidents` | IEC-CSO-IIR, IEC-CSO-OIR, IEC-CSO-FIR | Incident reports |
+| `/significant-changes` | SCN-CSO-HIS, SCN-CSO-HRM | Significant Change Notifications (12 months) |
+| `/access-log-summary` | CDS-TRC-ACL, CDS-TRC-AAI | Access log summaries and agency access inventory |
 
-## Machine-Readable Formats (FRR-ADS-01)
+## Machine-Readable Formats (CDS-CSO-PUB)
 
 All endpoints return JSON with the following structure:
 ```json
@@ -426,17 +429,18 @@ All endpoints return JSON with the following structure:
 }
 ```
 
-## Authentication (FRR-ADS-AC-01)
+## Authentication (CDS-TRC-PAC, KSI-IAM-APM)
 
 - **Method**: OAuth 2.0 (Microsoft Entra ID)
-- **Scopes**: `api://ads-api/read`, `api://ads-api/write`
+- **Scopes**: `api://cds-api/read` (use write scopes only for the publishing pipeline)
 - **Subscription Keys**: Required for all API calls
 - **IP Allowlist**: Configure in API Management policies
 
 ## Evidence Collection Schedule
 
-- **Continuous monitoring**: Real-time collection, hourly aggregation
-- **Vulnerability data**: Daily updates
-- **Security controls**: Weekly snapshots
-- **Compliance posture**: Monthly reports
+Choose cadences from the rules that apply to your Certification Class, for example:
+- **Vulnerability reports**: at least monthly (VER-TFR-MHR)
+- **Ongoing Certification Report**: every 3 months (CCM-OCR-AVL)
+- **Certification Package maintenance**: CPO-CSX-CPM (20x) or CPO-CSF-CPM (Rev5), by Class
+- **Certification Data snapshots**: aligned to each Ongoing Certification Report (CDS-CSO-HAD)
 ````

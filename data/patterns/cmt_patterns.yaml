@@ -1,6 +1,6 @@
 pattern_id: cmt.vcs.repository_integration
 name: Version Control Integration
-description: Detects version control integration in CI/CD pipelines (KSI-CMT-01)
+description: Detects version control integration in CI/CD pipelines (KSI-CMT-LMC)
 family: CMT
 severity: HIGH
 pattern_type: pipeline_check
@@ -42,7 +42,7 @@ languages:
     - GIT_STRATEGY
 finding:
   title_template: Version control integration detected (positive finding)
-  description_template: Pipeline has proper version control integration. KSI-CMT-01 requires all changes to be tracked in VCS.
+  description_template: Pipeline has proper version control integration. KSI-CMT-LMC requires all changes to be tracked in VCS.
   remediation_template: N/A - Positive finding indicating compliance
   evidence_collection:
   - Git repository configuration
@@ -62,7 +62,7 @@ nist_controls:
 - cm-3.1
 - cm-5
 related_ksis:
-- KSI-CMT-01
+- KSI-CMT-LMC
 evidence_collection:
   azure_monitor_kql:
   - query: 'AzureActivity
@@ -184,7 +184,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CMT-01
+    requirement_id: KSI-CMT-LMC
     requirement_name: Log and Monitor Changes
     impact_levels:
     - Low
@@ -223,7 +223,7 @@ evidence_artifacts:
 ---
 pattern_id: cmt.vcs.missing_integration
 name: Missing Version Control
-description: Detects deployment without version control tracking (KSI-CMT-01)
+description: Detects deployment without version control tracking (KSI-CMT-LMC)
 family: CMT
 severity: CRITICAL
 pattern_type: pipeline_check
@@ -251,7 +251,7 @@ languages:
     regex_fallback: Publish-Az(WebApp|FunctionApp)(?!.*git)
 finding:
   title_template: Deployment without version control tracking
-  description_template: Deployment pipeline does not verify source is from version control. KSI-CMT-01 requires all changes to be tracked in VCS before deployment.
+  description_template: Deployment pipeline does not verify source is from version control. KSI-CMT-LMC requires all changes to be tracked in VCS before deployment.
   remediation_template: "Add version control verification:\n\nGitHub Actions:\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      # REQUIRED: Checkout source from VCS\n      - uses: actions/checkout@v4\n        with:\n          fetch-depth: 0  # Full history for audit trail\n      \n      # Verify clean working directory\n      - name: Check for uncommitted changes\n        run: |\n          if [ -n \"$(git status --porcelain)\" ]; then\n            echo \"ERROR: Uncommitted changes detected\"\n            exit 1\n          fi\n      \n      # Record deployment metadata\n      - name: Record deployment metadata\n        run: |\n          git log -1 --format=\"%H|%an|%ae|%ad|%s\" > deployment-metadata.txt\n          echo \"COMMIT_SHA=${GITHUB_SHA}\" >> $GITHUB_ENV\n      \n      # Deploy\n      - uses: azure/webapps-deploy@v2\n        with:\n          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}\n          package: .\n\nAzure Pipelines:\nstages:\n  - stage: Deploy\n    jobs:\n\
     \      - job: DeployWebApp\n        steps:\n          # REQUIRED: Checkout with full history\n          - checkout: self\n            fetchDepth: 0\n            clean: true\n          \n          # Verify source integrity\n          - script: |\n              git status\n              if [ -n \"$(git status --porcelain)\" ]; then\n                echo \"##vso[task.logissue type=error]Uncommitted changes detected\"\n                exit 1\n              fi\n            displayName: 'Verify clean working directory'\n          \n          # Record deployment metadata\n          - script: |\n              echo \"$(Build.SourceVersion)|$(Build.RequestedFor)|$(Build.RequestedForEmail)|$(Build.SourceVersionMessage)\" > deployment-metadata.txt\n            displayName: 'Record deployment metadata'\n          \n          # Deploy\n          - task: AzureWebApp@1\n            inputs:\n              appName: $(webAppName)\n\nRequired Version Control Evidence:\n- Git commit SHA\n- Committer name\
     \ and email\n- Commit timestamp\n- Commit message\n- Branch name\n- Pull request ID (if applicable)\n"
@@ -273,7 +273,7 @@ nist_controls:
 - cm-3.1
 - cm-5
 related_ksis:
-- KSI-CMT-01
+- KSI-CMT-LMC
 evidence_collection:
   azure_monitor_kql:
   - query: 'AzureActivity
@@ -395,7 +395,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CMT-01
+    requirement_id: KSI-CMT-LMC
     requirement_name: Log and Monitor Changes
     impact_levels:
     - Low
@@ -434,7 +434,7 @@ evidence_artifacts:
 ---
 pattern_id: cmt.testing.pre_deploy_gates
 name: Pre-Deployment Testing Gates
-description: Detects pre-deployment testing gates in CI/CD (KSI-CMT-03)
+description: Detects pre-deployment testing gates in CI/CD (KSI-CMT-VTD)
 family: CMT
 severity: CRITICAL
 pattern_type: pipeline_check
@@ -459,7 +459,7 @@ languages:
     regex_fallback: deploy:.*needs:.*test
 finding:
   title_template: Deployment without pre-deployment testing gates
-  description_template: Deployment job does not depend on testing stages. KSI-CMT-03 requires testing gates before production deployment.
+  description_template: Deployment job does not depend on testing stages. KSI-CMT-VTD requires testing gates before production deployment.
   remediation_template: "Add pre-deployment testing gates:\n\nGitHub Actions:\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Run unit tests\n        run: npm test\n      - name: Run security tests\n        run: npm run security-scan\n      - name: Run integration tests\n        run: npm run integration-test\n  \n  staging_deploy:\n    needs: test  # REQUIRED: Deploy only if tests pass\n    runs-on: ubuntu-latest\n    environment: staging\n    steps:\n      - uses: azure/webapps-deploy@v2\n        with:\n          app-name: myapp-staging\n  \n  production_deploy:\n    needs: staging_deploy  # REQUIRED: Deploy only if staging succeeds\n    runs-on: ubuntu-latest\n    environment:\n      name: production\n      url: https://myapp.com\n    steps:\n      - uses: azure/webapps-deploy@v2\n        with:\n          app-name: myapp-production\n\nAzure Pipelines:\nstages:\n  - stage: Test\n    jobs:\n      - job: RunTests\n        steps:\n\
     \          - script: dotnet test --collect:\"XPlat Code Coverage\"\n            displayName: 'Run unit tests'\n          - script: dotnet run --project SecurityScanner\n            displayName: 'Run security tests'\n  \n  - stage: DeployStaging\n    dependsOn: Test  # REQUIRED: Deploy only if tests pass\n    condition: succeeded()\n    jobs:\n      - deployment: DeployWebApp\n        environment: staging\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - task: AzureWebApp@1\n  \n  - stage: DeployProduction\n    dependsOn: DeployStaging  # REQUIRED: Deploy only if staging succeeds\n    condition: succeeded()\n    jobs:\n      - deployment: DeployWebApp\n        environment: production\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - task: AzureWebApp@1\n\nRequired Testing Gates:\n1. Unit tests (code coverage >= 80%)\n2. Integration tests\n3. Security scans (SAST, dependency checks)\n\
     4. Configuration validation\n5. Staging environment verification\n6. Manual approval for production (optional but recommended)\n"
@@ -481,7 +481,7 @@ nist_controls:
 - cm-4
 - sa-11
 related_ksis:
-- KSI-CMT-03
+- KSI-CMT-VTD
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -600,7 +600,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CMT-03
+    requirement_id: KSI-CMT-VTD
     requirement_name: Automated Testing and Validation
     impact_levels:
     - Low
@@ -621,7 +621,7 @@ testing:
 ---
 pattern_id: cmt.rollback.deployment_strategy
 name: Rollback Capability
-description: Detects rollback/blue-green deployment strategy (KSI-CMT-04)
+description: Detects rollback/blue-green deployment strategy (KSI-CMT-RVP)
 family: CMT
 severity: HIGH
 pattern_type: deployment_strategy
@@ -665,7 +665,7 @@ languages:
     regex_fallback: strategy:\s*(canary|rolling)|Action:\s*Swap\s*Slots
 finding:
   title_template: Deployment without rollback capability
-  description_template: '{resource_type} does not have rollback mechanism. KSI-CMT-04 requires ability to rollback failed deployments.'
+  description_template: '{resource_type} does not have rollback mechanism. KSI-CMT-RVP requires ability to rollback failed deployments.'
   remediation_template: "Implement rollback capability:\n\nBicep (Deployment Slots):\nresource webApp 'Microsoft.Web/sites@2022-09-01' = {\n  name: appName\n  location: location\n  properties: {\n    // ... config\n  }\n}\n\n// Create staging slot for blue-green deployments\nresource stagingSlot 'Microsoft.Web/sites/slots@2022-09-01' = {\n  name: '${webApp.name}/staging'\n  location: location\n  properties: {\n    // Same config as production\n  }\n}\n\nTerraform:\nresource \"azurerm_app_service\" \"main\" {\n  name                = \"myapp\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n  app_service_plan_id = azurerm_app_service_plan.main.id\n}\n\nresource \"azurerm_app_service_slot\" \"staging\" {\n  name                = \"staging\"\n  app_service_name    = azurerm_app_service.main.name\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n  app_service_plan_id\
     \ = azurerm_app_service_plan.main.id\n}\n\nGitHub Actions (Deployment with Rollback):\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      # Deploy to staging slot\n      - uses: azure/webapps-deploy@v2\n        id: deploy_staging\n        with:\n          app-name: myapp\n          slot-name: staging\n          package: .\n      \n      # Smoke test staging slot\n      - name: Smoke test\n        id: smoke_test\n        run: |\n          curl -f https://myapp-staging.azurewebsites.net/health || exit 1\n      \n      # Swap slots (production ← staging)\n      - uses: azure/appservice-settings@v1\n        id: swap_slots\n        with:\n          app-name: myapp\n          slot-name: staging\n          action: swap\n      \n      # Monitor production\n      - name: Monitor production\n        id: monitor\n        run: sleep 60 && curl -f https://myapp.azurewebsites.net/health\n      \n      # ROLLBACK: Swap back if monitoring fails\n      - name: Rollback on failure\n     \
     \   if: failure() && steps.swap_slots.outcome == 'success'\n        uses: azure/appservice-settings@v1\n        with:\n          app-name: myapp\n          slot-name: staging\n          action: swap  # Swap back to original state\n\nAzure Pipelines (Deployment with Rollback):\nstages:\n  - stage: Deploy\n    jobs:\n      - deployment: DeployWebApp\n        environment: production\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                # Deploy to staging slot\n                - task: AzureWebApp@1\n                  name: DeployStaging\n                  inputs:\n                    appName: myapp\n                    slotName: staging\n                    package: $(Pipeline.Workspace)/drop\n                \n                # Smoke test\n                - script: curl -f https://myapp-staging.azurewebsites.net/health\n                  name: SmokeTest\n                \n                # Swap slots\n                - task: AzureAppServiceManage@0\n\
@@ -691,7 +691,7 @@ nist_controls:
 - cm-5
 - si-12
 related_ksis:
-- KSI-CMT-04
+- KSI-CMT-RVP
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
@@ -810,7 +810,7 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-CMT-04
+    requirement_id: KSI-CMT-RVP
     requirement_name: Change Management Procedure
     impact_levels:
     - Low
@@ -830,7 +830,7 @@ testing:
 ---
 pattern_id: cmt.compliance.ksi_cmt_02
 name: Redeployment Detection
-description: Detects compliance indicators for KSI-CMT-02 - Redeployment
+description: Detects compliance indicators for KSI-CMT-RMV - Redeployment
 family: CMT
 severity: MEDIUM
 pattern_type: configuration
@@ -841,8 +841,8 @@ languages:
     regex_fallback: .*
 finding:
   title_template: Redeployment compliance check
-  description_template: Configuration may not fully implement KSI-CMT-02 - Redeployment
-  remediation_template: Review and implement KSI-CMT-02 requirements per FedRAMP 20x guidance
+  description_template: Configuration may not fully implement KSI-CMT-RMV - Redeployment
+  remediation_template: Review and implement KSI-CMT-RMV requirements per FedRAMP 20x guidance
   evidence_collection:
   - Configuration exports from Azure resources
   - Policy compliance reports
@@ -857,31 +857,31 @@ tags:
 nist_controls:
 - fedramp-20x
 related_ksis:
-- KSI-CMT-02
+- KSI-CMT-RMV
 evidence_artifacts:
 - artifact_type: configuration
-  name: KSI-CMT-02 compliance configuration
+  name: KSI-CMT-RMV compliance configuration
   source: Azure Resource Graph
   frequency: daily
   retention_months: 36
   format: JSON
 - artifact_type: report
-  name: KSI-CMT-02 compliance report
+  name: KSI-CMT-RMV compliance report
   source: Microsoft Defender for Cloud
   frequency: weekly
   retention_months: 36
   format: JSON
 automation:
   automation_1:
-    description: Azure Policy for KSI-CMT-02 compliance enforcement
-    implementation: "# Azure Policy for KSI-CMT-02 compliance\n# GitHub Actions\n- name: KSI-CMT-02 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.compliance.ksi_cmt_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-CMT-02 Validation'\n  inputs:\n    script: |\n      # Validate KSI-CMT-02 compliance\n      python validate.py --pattern cmt.compliance.ksi_cmt_02\n"
+    description: Azure Policy for KSI-CMT-RMV compliance enforcement
+    implementation: "# Azure Policy for KSI-CMT-RMV compliance\n# GitHub Actions\n- name: KSI-CMT-RMV Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.compliance.ksi_cmt_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-CMT-RMV Validation'\n  inputs:\n    script: |\n      # Validate KSI-CMT-RMV compliance\n      python validate.py --pattern cmt.compliance.ksi_cmt_02\n"
     azure_services:
     - Azure Policy
     - Azure Monitor
     - Microsoft Defender for Cloud
   automation_2:
-    description: Continuous monitoring for KSI-CMT-02
-    implementation: '# Azure Monitor for KSI-CMT-02 continuous monitoring
+    description: Continuous monitoring for KSI-CMT-RMV
+    implementation: '# Azure Monitor for KSI-CMT-RMV continuous monitoring
 
       # Log Analytics Query
 
@@ -889,7 +889,7 @@ automation:
 
       | where CategoryValue == "Policy"
 
-      | where OperationNameValue contains "KSI-CMT-02"
+      | where OperationNameValue contains "KSI-CMT-RMV"
 
       | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
 
@@ -917,13 +917,13 @@ languages:
     - nist-sp-800-53
 finding:
   title_template: Configuration Baseline Enforcement Detected
-  description_template: "Azure Policy configured for security baseline enforcement and configuration drift detection, compliant with KSI-CMT-01"
+  description_template: "Azure Policy configured for security baseline enforcement and configuration drift detection, compliant with KSI-CMT-LMC"
   remediation_template: "N/A - Positive finding"
 tags:
 - configuration_baseline
 - positive
 related_ksis:
-- KSI-CMT-01
+- KSI-CMT-LMC
 ---
 pattern_id: cmt.baseline.no_enforcement
 name: No Configuration Baseline Enforcement
@@ -947,7 +947,7 @@ tags:
 - configuration_baseline
 - negative
 related_ksis:
-- KSI-CMT-01
+- KSI-CMT-LMC
 ---
 pattern_id: cmt.immutable.versioned_images
 name: Immutable Infrastructure with Versioned Images
@@ -965,13 +965,13 @@ languages:
     - ImmutableInfrastructure
 finding:
   title_template: Immutable Infrastructure Detected
-  description_template: "Immutable infrastructure deployment using versioned container images, compliant with KSI-CMT-02"
+  description_template: "Immutable infrastructure deployment using versioned container images, compliant with KSI-CMT-RMV"
   remediation_template: "N/A - Positive finding"
 tags:
 - immutable_infrastructure
 - positive
 related_ksis:
-- KSI-CMT-02
+- KSI-CMT-RMV
 ---
 pattern_id: cmt.immutable.direct_modification
 name: Direct Modification of Production Resources
@@ -995,7 +995,7 @@ tags:
 - immutable_infrastructure
 - negative
 related_ksis:
-- KSI-CMT-02
+- KSI-CMT-RMV
 ---
 pattern_id: cmt.testing.automated_pipeline
 name: Automated Testing in CI/CD Pipeline
@@ -1013,13 +1013,13 @@ languages:
     - bandit
 finding:
   title_template: Automated Testing Pipeline Detected
-  description_template: "CI/CD pipeline includes automated security testing, compliance validation, and vulnerability scanning, compliant with KSI-CMT-03"
+  description_template: "CI/CD pipeline includes automated security testing, compliance validation, and vulnerability scanning, compliant with KSI-CMT-VTD"
   remediation_template: "N/A - Positive finding"
 tags:
 - automated_testing
 - positive
 related_ksis:
-- KSI-CMT-03
+- KSI-CMT-VTD
 ---
 pattern_id: cmt.testing.no_automation
 name: No Automated Testing
@@ -1043,7 +1043,7 @@ tags:
 - automated_testing
 - negative
 related_ksis:
-- KSI-CMT-03
+- KSI-CMT-VTD
 ---
 pattern_id: cmt.change_management.documented_process
 name: Documented Change Management Process
@@ -1061,13 +1061,13 @@ languages:
     - Compliance Check
 finding:
   title_template: Documented Change Management Process Detected
-  description_template: "Formal change management process with approvals, security review, and compliance validation, compliant with KSI-CMT-04"
+  description_template: "Formal change management process with approvals, security review, and compliance validation, compliant with KSI-CMT-RVP"
   remediation_template: "N/A - Positive finding"
 tags:
 - change_management
 - positive
 related_ksis:
-- KSI-CMT-04
+- KSI-CMT-RVP
 ---
 pattern_id: cmt.change_management.no_process
 name: No Change Management Process
@@ -1091,4 +1091,2353 @@ tags:
 - change_management
 - negative
 related_ksis:
-- KSI-CMT-04
+- KSI-CMT-RVP
+---
+pattern_id: ccm.version_control.git_usage
+name: Git Version Control Usage
+family: CMT
+severity: high
+description: 'Detects Git version control system usage for change management.
+
+  Aligns with KSI-CMT-LMC: Version Control and Change Logging.
+
+  '
+pattern_type: configuration
+languages:
+  python:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+  csharp:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+  java:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+  typescript:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+finding:
+  title: Git version control detected
+  description: Project uses Git for version control and change tracking
+  recommendation: Ensure all configuration changes go through Git workflow per KSI-CMT-LMC
+  references:
+  - KSI-CMT-LMC
+related_ksis:
+- KSI-CMT-LMC
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.version_control.git_usage-policy'\n  properties: {\n   \
+      \ policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n\
+      \    description: 'Enforces CMT compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.version_control.git_usage-alert'\n  location: 'global'\n \
+      \ properties: {\n    description: 'Alert on CMT compliance violations'\n   \
+      \ severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-LMC
+    requirement_name: Logging Changes
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_version_control_git_usage
+---
+pattern_id: ccm.change_logging.audit_log
+name: Change Audit Logging
+family: CMT
+severity: high
+description: Detects logging of configuration changes for audit trail
+pattern_type: function_call
+languages:
+  python:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+  csharp:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+  java:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+  typescript:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+finding:
+  title: Configuration change logging detected
+  description: Code logs configuration changes for audit purposes
+  recommendation: Include user, timestamp, old/new values per KSI-CMT-LMC
+  references:
+  - KSI-CMT-LMC
+related_ksis:
+- KSI-CMT-LMC
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.change_logging.audit_log-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n    description:\
+      \ 'Enforces CMT compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.change_logging.audit_log-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CMT compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-LMC
+    requirement_name: Logging Changes
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_change_logging_audit_log
+---
+pattern_id: ccm.approval_workflow.pull_request
+name: Pull Request Approval Workflow
+family: CMT
+severity: high
+description: Detects pull request workflow for change approval
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (pull_request|merge_request)|(required_approving_review_count|approval_count)|(CODEOWNERS|code-review)
+finding:
+  title: Pull request approval workflow configured
+  description: Repository requires PR approval before merging changes
+  recommendation: Require at least 2 approvals for production changes per KSI-CMT-RVP
+  references:
+  - KSI-CMT-RVP
+  - KSI-CMT-RMV
+related_ksis:
+- KSI-CMT-RVP
+- KSI-CMT-RMV
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.approval_workflow.pull_request-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance\
+      \ Policy'\n    description: 'Enforces CMT compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.approval_workflow.pull_request-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CMT compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-RVP
+    requirement_name: Reviewing Change Procedures
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_approval_workflow_pull_request
+---
+pattern_id: ccm.automated_testing.pre_deploy
+name: Automated Testing Before Deployment
+family: CMT
+severity: critical
+description: 'Detects automated testing in CI/CD before deployment.
+
+  Aligns with KSI-CMT-VTD: Automated Testing and Validation.
+
+  '
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (run:.*test|script:.*test|pytest|jest|mvn test)|(task:.*VSTest@|task:.*DotNetCoreCLI@.*test)
+  azure_pipelines:
+    regex_fallback: (run:.*test|script:.*test|pytest|jest|mvn test)|(task:.*VSTest@|task:.*DotNetCoreCLI@.*test)
+  gitlab_ci:
+    regex_fallback: (run:.*test|script:.*test|pytest|jest|mvn test)|(task:.*VSTest@|task:.*DotNetCoreCLI@.*test)
+finding:
+  title: Automated testing before deployment
+  description: CI/CD pipeline runs automated tests before deployment
+  recommendation: Include unit, integration, and security tests per KSI-CMT-VTD
+  references:
+  - KSI-CMT-VTD
+related_ksis:
+- KSI-CMT-VTD
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.automated_testing.pre_deploy-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance\
+      \ Policy'\n    description: 'Enforces CMT compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.automated_testing.pre_deploy-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CMT compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-VTD
+    requirement_name: Validating Throughout Deployment
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_automated_testing_pre_deploy
+---
+pattern_id: ccm.rollback.capability
+name: Rollback Capability
+family: CMT
+severity: high
+description: Detects rollback capability in deployment process
+pattern_type: configuration
+languages:
+  python:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  csharp:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  java:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  typescript:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  yaml:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+finding:
+  title: Rollback capability detected
+  description: Deployment process includes rollback capability
+  recommendation: Test rollback procedure regularly per KSI-CMT-RMV
+  references:
+  - KSI-CMT-RMV
+related_ksis:
+- KSI-CMT-RMV
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.rollback.capability-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n    description:\
+      \ 'Enforces CMT compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.rollback.capability-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CMT compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-RMV
+    requirement_name: Redeploying vs Modifying
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_rollback_capability
+---
+pattern_id: ccm.baseline.configuration
+name: Baseline Configuration Management
+family: CMT
+severity: high
+description: Detects baseline configuration management practices
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (baseline|standard.*config|default.*settings)|(config.*template|configuration.*baseline)
+  json:
+    regex_fallback: (baseline|standard.*config|default.*settings)|(config.*template|configuration.*baseline)
+finding:
+  title: Baseline configuration detected
+  description: Configuration includes baseline/standard settings
+  recommendation: Document and version control baseline configurations per KSI-SVC-ACM
+  references:
+  - KSI-SVC-ACM
+related_ksis:
+- KSI-SVC-ACM
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.baseline.configuration-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n    description:\
+      \ 'Enforces CMT compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.baseline.configuration-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CMT compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-ACM
+    requirement_name: Automating Configuration Management
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_baseline_configuration
+---
+pattern_id: ccm.change_approval.explicit
+name: Explicit Change Approval Check
+family: CMT
+severity: high
+description: Detects explicit change approval checks in code
+pattern_type: function_call
+languages:
+  python:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+  csharp:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+  java:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+  typescript:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+finding:
+  title: Explicit change approval check
+  description: Code enforces change approval before execution
+  recommendation: Integrate with ticketing system (ServiceNow, JIRA) per KSI-CMT-RVP
+  references:
+  - KSI-CMT-RVP
+related_ksis:
+- KSI-CMT-RVP
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.change_approval.explicit-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n    description:\
+      \ 'Enforces CMT compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.change_approval.explicit-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CMT compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-RVP
+    requirement_name: Reviewing Change Procedures
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_change_approval_explicit
+---
+pattern_id: ccm.iac.arm_template_validation
+name: ARM Template Validation
+family: CMT
+severity: high
+description: Detects ARM/Bicep template validation for IaC change management
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (az deployment.*validate|bicep build|arm-ttk)|(task:.*AzureResourceManagerTemplateDeployment@.*validate)
+  azure_pipelines:
+    regex_fallback: (az deployment.*validate|bicep build|arm-ttk)|(task:.*AzureResourceManagerTemplateDeployment@.*validate)
+  gitlab_ci:
+    regex_fallback: (az deployment.*validate|bicep build|arm-ttk)|(task:.*AzureResourceManagerTemplateDeployment@.*validate)
+finding:
+  title: ARM/Bicep template validation
+  description: Pipeline validates ARM templates before deployment
+  recommendation: Include policy compliance checks per KSI-CNA-IBP
+  references:
+  - KSI-MLA-EVC
+  - KSI-CNA-IBP
+related_ksis:
+- KSI-MLA-EVC
+- KSI-CNA-IBP
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.iac.arm_template_validation-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance\
+      \ Policy'\n    description: 'Enforces CMT compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.iac.arm_template_validation-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CMT compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-EVC
+    requirement_name: Evaluating Configurations
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_iac_arm_template_validation
+---
+pattern_id: ccm.iac.terraform_plan
+name: Terraform Plan for Change Preview
+family: CMT
+severity: high
+description: Detects Terraform plan step for change preview and approval
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (terraform plan|tf plan)|(terraform apply.*-auto-approve)
+  azure_pipelines:
+    regex_fallback: (terraform plan|tf plan)|(terraform apply.*-auto-approve)
+  gitlab_ci:
+    regex_fallback: (terraform plan|tf plan)|(terraform apply.*-auto-approve)
+finding:
+  title: Terraform plan for change preview
+  description: Pipeline runs terraform plan to preview changes
+  recommendation: Require manual approval between plan and apply per KSI-MLA-EVC
+  references:
+  - KSI-MLA-EVC
+related_ksis:
+- KSI-MLA-EVC
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.iac.terraform_plan-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n    description:\
+      \ 'Enforces CMT compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.iac.terraform_plan-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CMT compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-EVC
+    requirement_name: Evaluating Configurations
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_iac_terraform_plan
+---
+pattern_id: ccm.cicd.deployment_gate
+name: Deployment Gate/Approval
+family: CMT
+severity: critical
+description: Detects deployment gates or manual approval steps in CI/CD
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
+  azure_pipelines:
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
+  gitlab_ci:
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
+finding:
+  title: Deployment gate/approval configured
+  description: CI/CD includes deployment gate or manual approval
+  recommendation: Require approval from authorized personnel per KSI-CMT-VTD
+  references:
+  - KSI-CMT-VTD
+related_ksis:
+- KSI-CMT-VTD
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.cicd.deployment_gate-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n    description:\
+      \ 'Enforces CMT compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.cicd.deployment_gate-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CMT compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-VTD
+    requirement_name: Validating Throughout Deployment
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_cicd_deployment_gate
+---
+pattern_id: ccm.cicd.configuration_backup
+name: Configuration Backup Before Change
+family: CMT
+severity: medium
+description: Detects configuration backup steps before applying changes
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (backup.*config|snapshot.*before|export.*settings)|(az.*export|terraform.*state.*pull)
+  azure_pipelines:
+    regex_fallback: (backup.*config|snapshot.*before|export.*settings)|(az.*export|terraform.*state.*pull)
+  gitlab_ci:
+    regex_fallback: (backup.*config|snapshot.*before|export.*settings)|(az.*export|terraform.*state.*pull)
+finding:
+  title: Configuration backup before change
+  description: Pipeline backs up configuration before applying changes
+  recommendation: Store backups in immutable storage per KSI-RPL-ABO
+  references:
+  - KSI-RPL-ABO
+related_ksis:
+- KSI-RPL-ABO
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.cicd.configuration_backup-policy'\n  properties: {\n   \
+      \ policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n\
+      \    description: 'Enforces CMT compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.cicd.configuration_backup-alert'\n  location: 'global'\n \
+      \ properties: {\n    description: 'Alert on CMT compliance violations'\n   \
+      \ severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-RPL-ABO
+    requirement_name: Aligning Backups with Objectives
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_cicd_configuration_backup
+---
+pattern_id: ccm.missing_version_control
+name: Missing Version Control Evidence
+family: CMT
+severity: critical
+description: Detects absence of version control configuration
+pattern_type: configuration
+languages:
+  python: {}
+  csharp: {}
+  java: {}
+  typescript: {}
+requires_absence:
+- ccm.version_control.git_usage
+finding:
+  title: No version control evidence detected
+  description: Project lacks Git or other version control system
+  severity: critical
+  recommendation: Implement Git version control immediately per KSI-CMT-LMC
+  references:
+  - KSI-CMT-LMC
+related_ksis:
+- KSI-CMT-LMC
+evidence_artifacts:
+- artifact_type: logs
+  name: CMT operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CMT configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CMT compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CMT related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CMT events
+    output_format: json
+  powershell:
+  - script: '# Query CMT configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CMT resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CMT compliance enforcement
+    implementation: "# Azure Policy definition for CMT\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.missing_version_control-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CMT Compliance Policy'\n    description:\
+      \ 'Enforces CMT compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CMT violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.missing_version_control-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CMT compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CMT
+    implementation: "# GitHub Actions\n- name: Validate CMT Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CMT Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CMT requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CMT FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CMT implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CMT controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CMT
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CMT')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CMT - CMT
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CMT controls in accordance with FedRAMP
+      20x requirements. CMT Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CMT compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CMT requirements.
+    evidence_references:
+    - CMT configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CMT compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CMT implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CMT controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-LMC
+    requirement_name: Logging Changes
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_missing_version_control

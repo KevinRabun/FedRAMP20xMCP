@@ -5,7 +5,7 @@ This module contains tool implementation functions for documentation.
 """
 import json
 import logging
-from typing import Any
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ async def get_documentation_file_impl(filename: str, data_loader) -> str:
     Get the full content of a specific FedRAMP documentation file.
     
     Args:
-        filename: The markdown filename (e.g., "overview.md", "key-security-indicators.md")
+        filename: The documentation path relative to FedRAMP/2026 content/ (e.g., "providers/20x/index.md", "rules.md")
     
     Returns:
         Full markdown content of the documentation file
@@ -107,7 +107,7 @@ async def list_documentation_files_impl(data_loader) -> str:
     List all available FedRAMP documentation files.
     
     Returns:
-        List of all markdown documentation files from https://github.com/FedRAMP/docs/tree/main/docs
+        List of all markdown documentation files from the FedRAMP/2026 repository (content/ folder)
     """
     try:
         # Ensure documentation is loaded
@@ -122,26 +122,15 @@ async def list_documentation_files_impl(data_loader) -> str:
         result = "# Available FedRAMP Documentation Files\n\n"
         result += f"**Total:** {len(files)} files\n\n"
         
-        # Group by type
-        standards = [f for f in files if f not in ['overview.md', 'guidelines.md', 'index.md'] and not f.startswith('20x') and not f.startswith('rev5')]
-        guides = [f for f in files if f in ['overview.md', 'guidelines.md', 'index.md']]
-        other = [f for f in files if f not in standards and f not in guides]
-        
-        if standards:
-            result += "## FedRAMP 20x Standards\n\n"
-            for f in sorted(standards):
-                result += f"- {f}\n"
-            result += "\n"
-        
-        if guides:
-            result += "## General Documentation\n\n"
-            for f in sorted(guides):
-                result += f"- {f}\n"
-            result += "\n"
-        
-        if other:
-            result += "## Other Documentation\n\n"
-            for f in sorted(other):
+        # Group by top-level folder (providers/, agencies/, assessors/, authority/, ...)
+        groups: Dict[str, List[str]] = {}
+        for f in files:
+            top = f.split('/')[0] if '/' in f else '(root)'
+            groups.setdefault(top, []).append(f)
+
+        for top in sorted(groups):
+            result += f"## {top}\n\n"
+            for f in sorted(groups[top]):
                 result += f"- {f}\n"
             result += "\n"
         
