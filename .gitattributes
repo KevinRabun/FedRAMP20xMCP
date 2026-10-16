@@ -1,0 +1,3 @@
+# Rules snapshots are hashed (sha256 recorded in scan provenance): keep them
+# byte-identical to the upstream FedRAMP file on every platform.
+src/fedramp_20x_mcp/rules_data/*.json -text
